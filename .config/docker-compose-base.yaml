@@ -1,0 +1,25 @@
+services:
+  grafana:
+    user: root
+    container_name: 'nedas-test2-panel'
+
+    build:
+      context: .
+      args:
+        grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
+        grafana_version: ${GRAFANA_VERSION:-11.3.2}
+        development: ${DEVELOPMENT:-false}
+        anonymous_auth_enabled: ${ANONYMOUS_AUTH_ENABLED:-true}
+    ports:
+      - 3000:3000/tcp
+    volumes:
+      - ../dist:/var/lib/grafana/plugins/nedas-test2-panel
+      - ../provisioning:/etc/grafana/provisioning
+      - ..:/root/nedas-test2-panel
+
+    environment:
+      NODE_ENV: development
+      GF_LOG_FILTERS: plugin.nedas-test2-panel:debug
+      GF_LOG_LEVEL: debug
+      GF_DATAPROXY_LOGGING: 1
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: nedas-test2-panel
