@@ -16,7 +16,7 @@ interface YamlRule {
 }
 
 interface MatchElement {
-  element: String
+  element: string
   if?: ConditionElement
   else_if?: ConditionElement[]
   else?: ConditionElement
@@ -24,22 +24,32 @@ interface MatchElement {
 
 interface ConditionElement {
   condition: string
-  action: ActionElemenet
+  action: ActionElement
 }
 
-interface ActionElemenet{
-  bind: BindElement[];
-}
-
-interface BindElement {
-  variable: string;
+interface ActionElement{
+  bindData: string[];
+  bindClass: string[];
 }
 
 interface Node {
   row?: number;
   value?: string;
-  next?: Record<string, Node> | null;
+  type: string;
+  endRow?: number;
 }
+
+interface TemplateObject {
+  [key: string]: Node | Record<string, any>;
+}
+
+interface ClassStyle {
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: string;
+  [key: string]: string | undefined;
+}
+
 
 export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data }) => {
   const { yamlConfig, template } = options;
@@ -61,6 +71,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   }
 
   const rules: YamlRule[] = parsedYaml.rules || [];
+  const classBindings = new Map<string, string[]>();
 
   const table = data.series[0]?.fields.reduce((acc, field) => {
     acc[field.name] = field.values.toArray();
@@ -78,53 +89,135 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   console.log('Extracted Data:', rows);
 
-  const parseMermaidToTree = (input: string): { tree: Record<string, Node>; edges: [string, string, string][] } => {
-    const tree: Record<string, Node> = {};
-    const edges: [string, string, string][] = []; // Stores [from, to, label]
+  const parseStyleString = (style: string): ClassStyle => {
+    const styleObj: ClassStyle = {};
+    
+    const regex = /([a-zA-Z-]+)\s*[:=]\s*([^,;]+)/g;
+    let match;
+    
+    while ((match = regex.exec(style)) !== null) {
+      const [, property, value] = match;
+      styleObj[property] = value;
+    }
+  
+    return styleObj;
+  };
+
+  const parseMermaidToMap = (input: string): { object: TemplateObject; edges: [string, string, string][]; classDefs: Map<string, ClassStyle> } => {
+    const object: TemplateObject = { };
+    const edges: [string, string, string][] = []; 
+    const classDefs: Map<string, ClassStyle> = new Map(); 
     const lines = input.split('\n').map(line => line.trim()).filter(line => line);
-    const stack: { node: Record<string, Node>; depth: number }[] = [];
-    let current = tree;
-    let currentDepth = 0;
+    const subgraphStack: string[] = [];
   
     lines.forEach((line, index) => {
-      const match = line.match(/^(\s*)/);
-      const depth = match ? match[0].length : 0;
-  
       if (line.startsWith('subgraph')) {
         const subgraphMatch = line.match(/subgraph\s+([\w\d_-]+)\s+\[(.*?)\]/);
         if (subgraphMatch) {
           const [, id, label] = subgraphMatch;
-          current[id] = { row: index, value: label, next: {} };
-  
-          stack.push({ node: current, depth: currentDepth });
-          current = current[id].next!;
-          currentDepth = depth;
+          object[id] = { row: index, value: label, type: 'subgraph' };
+          subgraphStack.push(id);
         }
       } else if (line.startsWith('end')) {
-        while (stack.length > 0 && stack[stack.length - 1].depth >= currentDepth) {
-          const prev = stack.pop();
-          if (prev) {
-            current = prev.node;
-            currentDepth = prev.depth;
+        if (subgraphStack.length > 0) {
+          const lastSubgraph = subgraphStack.pop();
+          if (lastSubgraph) {
+            object[lastSubgraph].endRow = index;
           }
         }
       } else if (line.includes('-->') || line.includes('---')) {
-        
         const edgeMatch = line.match(/^([\w\d_-]+)\s*[-]+>\s*(\|([^|]+)\|)?\s*([\w\d_-]+)/);
         if (edgeMatch) {
           const [, from, , label = '', to] = edgeMatch;
           edges.push([from, to, label.trim()]);
         }
+      } else if (line.startsWith('classDef')) {
+        const classDefMatch = line.match(/^classDef\s+([\w\d_-]+)\s+(.*)$/);
+        if (classDefMatch) {
+          const [, className, classStyle] = classDefMatch;
+          
+          const style = parseStyleString(classStyle);
+          classDefs.set(className, style);
+        }
       } else {
         const nodeMatch = line.match(/^([\w\d_-]+)[(\[{](.*?)[)\]}]$/);
         if (nodeMatch) {
           const [, id, text] = nodeMatch;
-          current[id] = { row: index, value: text, next: null };
+          if (subgraphStack.length > 0) {
+
+            object[id] = { row: index, value: text, type: 'node' };
+          } else {
+            object[id] = { row: index, value: text, type: 'node' };
+          }
         }
       }
     });
   
-    return { tree, edges };
+    return { object, edges, classDefs };
+};
+
+  console.log(parseMermaidToMap(template).object)
+
+  const bindData = (object: TemplateObject, element: string, row: Record<string, any>, dataBinding: string[]) => {
+    if (object[element]) {
+      const node = object[element];
+
+      const bindingMap: Record<string, any> = Object.fromEntries(
+          dataBinding
+              .filter(binding => binding.includes("=")) 
+              .map(binding => binding.split("=").map(part => part.replace(/['"]/g, '').trim())) 
+      );
+
+      const isDefaultBinding = dataBinding.includes("default");
+
+      if (node.value) {
+          node.value = node.value.replace(/\$(\w+)/g, (match: any, variable: any) => {
+              if (isDefaultBinding) {
+                  return row[variable] !== undefined ? row[variable] : match; 
+              } else if(bindingMap) {
+                  return (bindingMap[variable] !== undefined ? bindingMap[variable] : row[variable] !== undefined ? row[variable] : match); // Else use explicit binding
+              } else {
+                return row[variable] !== undefined ? row[variable] : match;
+              }
+          });
+      }
+  }
+  };
+
+
+
+
+  
+
+  const bindClasses = (element: string, classNames: string[], classBindings: Map<string, string[]>) => {
+
+    classNames.forEach(className => {
+      if (!classBindings.has(className)) {
+        classBindings.set(className, []);
+      }
+  
+      const elements = classBindings.get(className);
+      if (elements && !elements.includes(element)) {
+        elements.push(element);
+      }
+    });
+  };
+  
+
+  const executeAction = (templateMap: TemplateObject, actionElement: ActionElement, element: string, row: Record<string, any>, rule: YamlRule) => {
+    Object.keys(actionElement).forEach(action => {
+      switch (action) {
+        case "bindData":
+          console.log('bindingdata')
+          bindData(templateMap, element, row, actionElement[action]);
+          break;
+        case "bindClass":
+          bindClasses(element, actionElement[action], classBindings)
+          break;
+        default:
+          console.warn(`Unknown action type: ${action}`);
+      }
+    }); 
   };
   
   const evaluateCondition = (condition: string, row: Record<string, any>): boolean => {
@@ -140,159 +233,120 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   };
 
-  // const findPathUsingRule = (tree: Record<string, Node>, condition: ConditionElement, values: Record<string, any>): void => {
-  //   Object.entries(tree).forEach(([nodeKey, node]) => {
-  //     let splitKeys = nodeKey.split('_');
-  //     let mainKey = splitKeys[0];  
-  //     let secondKey = splitKeys[1]; 
-
-  //     if (values[mainKey] && String(values[mainKey]) === String(secondKey)) {
-  //       if (node.value && condition.action.bind.some(binding => node.value.includes(`$${binding.variable}`))) {
-  //         condition.action.bind.forEach(binding => {
-  //           const variable = binding.variable;
-  //           if (node.value && node.value.includes(`$${variable}`)) {
-  //             node.value = node.value.replace(new RegExp(`\\$${variable}`, 'g'), values[variable] || `$${variable}`);
-  //             return
-  //           }
-  //         });
-  //       }
-  //     }
-  //     if (node.next) {
-  //       findPathUsingRule(node.next, condition, values);
-  //     }
-  //   });
-  // };
-
-  const findAndApplyBindings = (
-    tree: Record<string, Node>,
-    rule: YamlRule,
-    rows: Record<string, any>[]
-  ) => {
-    for (const [key, node] of Object.entries(tree)) {
-      if (key === rule.match.element || node.value === rule.match.element) {
-        rows.forEach(row => {
-          if(rule.match.if){
-            if (evaluateCondition(rule.match.if.condition, row)) {
-              console.log(`IF - Condition matched for node ${key}`, row);
-              console.log(`CONDITION: ${rule.match.if.condition}`)
-              rule.match.if.action.bind.forEach(binding => {
-                if (node.value && node.value.includes(`$${binding.variable}`)) {
-                  node.value = node.value.replace(
-                    new RegExp(`\\$${binding.variable}`, 'g'),
-                    row[binding.variable] || `$${binding.variable}`
-                  );
-                }
-              });
-              return
-            }
-          }
-          if(rule.match.else_if){
-            console.log(`ELSE_IF - Condition matched for node ${key}`, row);
-            const elseIfArray = Array.isArray(rule.match.else_if) ? rule.match.else_if : [rule.match.else_if];
-            let conditionMatched: boolean = false
-            elseIfArray .forEach(else_if => {
-              console.log(`CONDITION: ${else_if.condition}`)
-              if((evaluateCondition(else_if.condition, row))){
-                else_if.action.bind.forEach(binding=>{
-                  if (node.value && node.value.includes(`$${binding.variable}`)) {
-                    node.value = node.value.replace(
-                      new RegExp(`\\$${binding.variable}`, 'g'),
-                      row[binding.variable] || `$${binding.variable}`
-                    );
-                  } 
-                })
-                conditionMatched = true
-                return
-              }
-            });
-            if(conditionMatched){
-              return
-            }
-          }
-          if(rule.match.else){
-            console.log(`ELSE - Condition matched for node ${key}`, row);
-            console.log(`CONDITION: ${rule.match.else}`)
-            rule.match.else.action.bind.forEach(binding => {
-              if (node.value && node.value.includes(`$${binding.variable}`)) {
-                node.value = node.value.replace(
-                  new RegExp(`\\$${binding.variable}`, 'g'),
-                  row[binding.variable] || `$${binding.variable}`
-                );
-              }
-            });
-          }
-          
-        });
-      }
-      if (node.next) {
-        findAndApplyBindings(node.next, rule, rows);
-      }
-    }
-  };
+  const determineAction = (rule: YamlRule, row: Record<string, any>): { action: ActionElement; data: any } | null => {
+    let matchedAction: ConditionElement | null = null;
   
-   
-  let templateTree = parseMermaidToTree(template);
-  console.log('Initial Parsed Tree:', templateTree);
+    if (rule.match.if && evaluateCondition(rule.match.if.condition, row)) {
+      console.log(`IF - Matched for ${rule.match.element}`, row);
+      matchedAction = rule.match.if;
+    } else if (rule.match.else_if) {
+      const elseIfArray = Array.isArray(rule.match.else_if) ? rule.match.else_if : [rule.match.else_if];
+      for (const elseIf of elseIfArray) {
+        if (evaluateCondition(elseIf.condition, row)) {
+          console.log(`ELSE_IF - Matched for ${rule.match.element}`, row);
+          matchedAction = elseIf;
+          break;
+        }
+      }
+    } else if (rule.match.else) {
+      console.log(`ELSE - Matched for ${rule.match.element}`, row);
+      matchedAction = rule.match.else;
+    }
+  
+    return matchedAction ? { action: matchedAction.action, data: row } : null;
+  };
+
+  const findAndApplyBindings = (templateMap: TemplateObject, rule: YamlRule, rows: Record<string, any>[]) => {
+    rows.some((row) => {
+      const actionData = determineAction(rule, row);
+      if (actionData) {
+        executeAction(templateMap, actionData.action, rule.match.element, actionData.data, rule);
+      }
+      return actionData!==null
+    });
+  };
+
+ 
+  let templateMap = parseMermaidToMap(template)
+  console.log('Initial Parsed Tree:', templateMap);
   console.log(rules)
   rules.forEach(rule => {
     if(rule.match.if)
     {
       console.log(rule)
-      findAndApplyBindings(templateTree.tree, rule, rows)
+      findAndApplyBindings(templateMap.object, rule, rows)
     }
   });
 
-  // rules.forEach(rule => {
-  //   rows.forEach(row => {
-  //     if(rule.match.if){
-  //       if (evaluateCondition(rule.match.if.condition, row)) {
-  //         findPathUsingRule(templateTree.tree, rule.match.if, row);
-  //         return
-  //       }else if(rule.match.else_if){
-  //         if (evaluateCondition(rule.match.else_if.condition, row)) {
-  //           findPathUsingRule(templateTree.tree, rule.match.else_if, row);
-  //           return
-  //         }
-  //       }else if(rule.match.else){
-  //         if (evaluateCondition('true', row)) {
-  //           findPathUsingRule(templateTree.tree, rule.match.else, row);
-  //           return
-  //         }
-  //       }
-  //     }
-  //   });
-  // });
+  
+  console.log('Updated map:', templateMap)
 
-  console.log('Updated Tree:', templateTree);
+  const rebuildMermaid = (object: TemplateObject, edges: [string, string, string][], classBindings: Map<string, string[]>, classDefs: Map<string, ClassStyle>): string => {
+    let output = 'graph TB\n';
+    const addedNodes: Set<string> = new Set();
+    const classGrouping: Map<string, string[]> = new Map(); 
 
-  const rebuildMermaid = (obj: Record<string, Node>, edges: [string, string, string][], depth = 0): string => {
-    let output = '';
-    const indent = '  '.repeat(depth);
-    const nodeKeys = Object.keys(obj);
+    Object.keys(object).forEach((key) => {
+        const node = object[key];
 
-    nodeKeys.forEach((key) => {
-        const node = obj[key];
+        if (node.type === 'subgraph') {
+            output += `  subgraph ${key} [${node.value}]\n`;
 
-        if (node.next) {
-            output += `${indent}subgraph ${key} [${node.value}]\n`;
-            output += rebuildMermaid(node.next, edges, depth + 1);
-            output += `${indent}end\n`;
-        } else {
-            output += `${indent}${key}(${node.value})\n`;
+            Object.keys(object).forEach((subKey) => {
+                const subNode = object[subKey];
+                if (subNode.row > node.row && subNode.row <= (node.endRow || Number.MAX_VALUE)) {
+                    if (!addedNodes.has(subKey)) {
+                        output += `    ${subKey}(${subNode.value})\n`;
+                        addedNodes.add(subKey); 
+                    }
+                }
+            });
+
+            output += '  end\n'; 
         }
     });
 
-    if (depth === 0) {
-        edges.forEach(([from, to, label]) => {
-            const edgeLabel = label ? `|${label}|` : '';
-            output += `${from} -->${edgeLabel} ${to}\n`;
-        });
-    }
+    Object.keys(object).forEach((key) => {
+        const node = object[key];
+        if (node.type === 'node' && !node.endRow && !addedNodes.has(key)) {
+            output += `${key}(${node.value})\n`;
+            addedNodes.add(key); 
+        }
+    });
+
+    edges.forEach(([from, to, label]) => {
+        const edgeLabel = label ? `|${label}|` : '';
+        output += `${from} -->${edgeLabel} ${to}\n`;
+    });
+
+    classBindings.forEach((elements, className) => {
+        if (elements.length > 0) {
+            if (!classGrouping.has(className)) {
+                classGrouping.set(className, []);
+            }
+            classGrouping.get(className)?.push(...elements);
+        }
+    });
+
+    classGrouping.forEach((elements, className) => {
+        output += `class ${elements.join(',')} ${className};\n`;
+    });
+
+    classDefs.forEach((style, className) => {
+        let styleStr = '';
+        for (const [key, value] of Object.entries(style)) {
+            styleStr += `${key}:${value},`;
+        }
+        styleStr = styleStr.slice(0, -1) + ';';
+        output += `classDef ${className} ${styleStr}\n`;
+    });
 
     return output;
 };
 
-  let generatedChart2 = `graph TB\n` + rebuildMermaid(templateTree.tree, templateTree.edges);
+  console.log('class bindings', classBindings)
+
+  let generatedChart2 = rebuildMermaid(templateMap.object, templateMap.edges, classBindings, templateMap.classDefs);
   console.log('Generated Mermaid Chart:', generatedChart2);
 
   useEffect(() => {
