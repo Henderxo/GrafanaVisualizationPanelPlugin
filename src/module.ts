@@ -4,6 +4,7 @@ import { MainPanel } from 'components/MainPanel';
 import { FileUploadEditor } from 'components/FileUpload';
 import { CustomTextEditor } from 'components/CustomTextEditor';
 import { FileExport } from 'components/FileExport';
+import { YamlEditor } from 'components/YamlEditor';
 
 export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions((builder) => {
   return builder
@@ -38,6 +39,13 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       settings: {
         chartType: 'Export YAML Config'
       }
+    })
+    .addCustomEditor({
+      id: "yamlEditor",
+      path: "yamlConfig",
+      name: "Edit YAML Configuration",
+      description: "Opens a modal to edit YAML",
+      editor: YamlEditor,
     })
     .addCustomEditor({
       id: 'yamlConfigEditor',

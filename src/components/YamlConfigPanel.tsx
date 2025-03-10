@@ -4,6 +4,7 @@ import yaml from 'js-yaml';
 import { PanelData } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
+import { isString } from 'mermaid/dist/utils';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;
@@ -15,8 +16,17 @@ interface YamlRule {
   match: MatchElement;
 }
 
+interface YamlFunctions{
+  id: string;
+  function: FunctionElement
+}
+
 interface MatchElement {
   element: string
+  function: string | FunctionElement
+}
+
+interface FunctionElement {
   if?: ConditionElement
   else_if?: ConditionElement[]
   else?: ConditionElement
@@ -51,6 +61,9 @@ interface ClassStyle {
 }
 
 
+
+
+
 export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data }) => {
   const { yamlConfig, template } = options;
   const chartRef = useRef<HTMLDivElement>(null);
@@ -71,6 +84,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   }
 
   const rules: YamlRule[] = parsedYaml.rules || [];
+  const functions: YamlFunctions[] = parsedYaml.functions || []
   const classBindings = new Map<string, string[]>();
 
   const table = data.series[0]?.fields.reduce((acc, field) => {
@@ -103,13 +117,19 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     return styleObj;
   };
 
-  const parseMermaidToMap = (input: string): { object: TemplateObject; edges: [string, string, string][]; classDefs: Map<string, ClassStyle> } => {
+  const parseMermaidToMap = (input: string): { object: TemplateObject; edges: [string, string, string][]; classDefs: Map<string, ClassStyle>, config: Partial<FlowchartConfig> } => {
     const object: TemplateObject = { };
     const edges: [string, string, string][] = []; 
     const classDefs: Map<string, ClassStyle> = new Map(); 
+    let config: string = "";
     const lines = input.split('\n').map(line => line.trim()).filter(line => line);
     const subgraphStack: string[] = [];
   
+    const configMatch = input.match(/%%\{init:\s*([\s\S]*?)\}%%/);
+    if (configMatch) {
+      config = configMatch[0]; 
+    }
+
     lines.forEach((line, index) => {
       if (line.startsWith('subgraph')) {
         const subgraphMatch = line.match(/subgraph\s+([\w\d_-]+)\s+\[(.*?)\]/);
@@ -153,10 +173,11 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       }
     });
   
-    return { object, edges, classDefs };
+    return { object, edges, classDefs, config };
 };
 
   console.log(parseMermaidToMap(template).object)
+  console.log(parseMermaidToMap(template).config)
 
   const bindData = (object: TemplateObject, element: string, row: Record<string, any>, dataBinding: string[]) => {
     if (object[element]) {
@@ -233,14 +254,18 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   };
 
-  const determineAction = (rule: YamlRule, row: Record<string, any>): { action: ActionElement; data: any } | null => {
+  const determineAction = (rule: YamlRule, row: Record<string, any>, functions: YamlFunctions[]): { action: ActionElement; data: any } | null => {
     let matchedAction: ConditionElement | null = null;
-  
-    if (rule.match.if && evaluateCondition(rule.match.if.condition, row)) {
+
+    let newFunction: FunctionElement | undefined = typeof rule.match.function === 'string'?functions.find((func) => func.id === rule.match.function)?.function:rule.match.function
+    if(!newFunction){
+      return null
+    }
+    if (newFunction.if && evaluateCondition(newFunction.if.condition, row)) {
       console.log(`IF - Matched for ${rule.match.element}`, row);
-      matchedAction = rule.match.if;
-    } else if (rule.match.else_if) {
-      const elseIfArray = Array.isArray(rule.match.else_if) ? rule.match.else_if : [rule.match.else_if];
+      matchedAction = newFunction.if;
+    } else if (newFunction.else_if) {
+      const elseIfArray = Array.isArray(newFunction.else_if) ? newFunction.else_if : [newFunction.else_if];
       for (const elseIf of elseIfArray) {
         if (evaluateCondition(elseIf.condition, row)) {
           console.log(`ELSE_IF - Matched for ${rule.match.element}`, row);
@@ -248,17 +273,17 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           break;
         }
       }
-    } else if (rule.match.else) {
+    } else if (newFunction.else) {
       console.log(`ELSE - Matched for ${rule.match.element}`, row);
-      matchedAction = rule.match.else;
+      matchedAction = newFunction.else;
     }
   
     return matchedAction ? { action: matchedAction.action, data: row } : null;
   };
 
-  const findAndApplyBindings = (templateMap: TemplateObject, rule: YamlRule, rows: Record<string, any>[]) => {
+  const findAndApplyBindings = (templateMap: TemplateObject, rule: YamlRule, rows: Record<string, any>[], functions: YamlFunctions[]) => {
     rows.some((row) => {
-      const actionData = determineAction(rule, row);
+      const actionData = determineAction(rule, row, functions);
       if (actionData) {
         executeAction(templateMap, actionData.action, rule.match.element, actionData.data, rule);
       }
@@ -271,18 +296,19 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   console.log('Initial Parsed Tree:', templateMap);
   console.log(rules)
   rules.forEach(rule => {
-    if(rule.match.if)
+    if(rule.match.function)
     {
       console.log(rule)
-      findAndApplyBindings(templateMap.object, rule, rows)
+      findAndApplyBindings(templateMap.object, rule, rows, functions)
     }
   });
 
   
   console.log('Updated map:', templateMap)
 
-  const rebuildMermaid = (object: TemplateObject, edges: [string, string, string][], classBindings: Map<string, string[]>, classDefs: Map<string, ClassStyle>): string => {
-    let output = 'graph TB\n';
+  const rebuildMermaid = (object: TemplateObject, edges: [string, string, string][], classBindings: Map<string, string[]>, classDefs: Map<string, ClassStyle>, config: FlowchartConfig): string => {
+    let output = `${config} \n`;
+    output += `graph TB\n`;
     const addedNodes: Set<string> = new Set();
     const classGrouping: Map<string, string[]> = new Map(); 
 
@@ -346,7 +372,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   console.log('class bindings', classBindings)
 
-  let generatedChart2 = rebuildMermaid(templateMap.object, templateMap.edges, classBindings, templateMap.classDefs);
+  let generatedChart2 = rebuildMermaid(templateMap.object, templateMap.edges, classBindings, templateMap.classDefs, templateMap.config);
   console.log('Generated Mermaid Chart:', generatedChart2);
 
   useEffect(() => {
