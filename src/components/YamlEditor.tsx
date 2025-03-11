@@ -1,13 +1,203 @@
-import React, { useEffect, useState } from "react";
-import { Button, Modal, CodeEditor } from "@grafana/ui";
+import React, { useEffect, useState, useRef } from "react";
+import { Button, Modal } from "@grafana/ui";
 import { StandardEditorProps } from "@grafana/data";
 import { css } from "@emotion/css";
-import * as monaco from 'monaco-editor';
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { configureMonacoYaml } from "monaco-yaml";
+
 interface Props extends StandardEditorProps<string> {}
 
 export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [localYaml, setLocalYaml] = useState(value || "");
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isModalOpen || !containerRef.current) return;
+
+    console.log("Initializing Monaco Editor...");
+
+    monaco.languages.register({ id: "yaml" });
+
+    configureMonacoYaml(monaco, {
+      enableSchemaRequest: true,
+      validate: true,
+      hover: true,
+      completion: true,
+      format: true, 
+      schemas: [
+        {
+          fileMatch: ["**/config.yaml"],
+          schema: {
+            type: "object",
+            properties: {
+              functions: {
+                type: "array",
+                description: "List of functions",
+                items: {
+                  type: "object",
+                  required: ["id", "function"],
+                  properties: {
+                    id: { type: "string", description: "Unique function ID" },
+                    function: {
+                      type: "object",
+                      properties: {
+                        if: {
+                          type: "object",
+                          required: ["condition", "action"],
+                          properties: {
+                            condition: { type: "string", description: "Logical condition" },
+                            action: {
+                              type: "object",
+                              properties: {
+                                bindData: {
+                                  type: "array",
+                                  items: { type: "string" },
+                                  description: "Data bindings",
+                                },
+                                bindClass: {
+                                  type: "array",
+                                  items: {
+                                    type: "string",
+                                    enum: ["active", "inactive", "highUsage", "warning", "alert", "unknown", "highLoad", "lowDisk", "highPerformance", "lowMemory"],
+                                  },
+                                  description: "Class bindings",
+                                },
+                              },
+                            },
+                          },
+                        },
+                        else_if: {
+                          type: "object",
+                          properties: {
+                            condition: { type: "string" },
+                            action: {
+                              type: "object",
+                              properties: {
+                                bindData: {
+                                  type: "array",
+                                  items: { type: "string" },
+                                },
+                                bindClass: {
+                                  type: "array",
+                                  items: { type: "string" },
+                                },
+                              },
+                            },
+                          },
+                        },
+                        else: {
+                          type: "object",
+                          properties: {
+                            action: {
+                              type: "object",
+                              properties: {
+                                bindData: {
+                                  type: "array",
+                                  items: { type: "string" },
+                                },
+                                bindClass: {
+                                  type: "array",
+                                  items: { type: "string" },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          uri: "https://example.com/schema/config-schema",
+        },
+      ],
+    });
+
+    const editor = monaco.editor.create(containerRef.current, {
+        value: localYaml,
+        language: "yaml",
+        theme: "vs-dark",
+        automaticLayout: true,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        quickSuggestions: {
+          other: true,
+          comments: false,
+          strings: true
+        },
+        suggestOnTriggerCharacters: true,
+        wordBasedSuggestions: 'currentDocument',
+        snippetSuggestions: 'inline',
+        parameterHints: { enabled: true }
+      });
+
+    editorRef.current = editor;
+
+    editor.onDidChangeModelContent(() => {
+      setLocalYaml(editor.getValue());
+    });
+
+    monaco.languages.registerCompletionItemProvider("yaml", {
+        provideCompletionItems: (model, position) => {
+          const word = model.getWordUntilPosition(position);
+          const range = new monaco.Range(
+            position.lineNumber,
+            word.startColumn,
+            position.lineNumber,
+            word.endColumn
+          );
+      
+          const suggestions: monaco.languages.CompletionItem[] = [
+            {
+              label: "functions",
+              kind: monaco.languages.CompletionItemKind.Field,
+              insertText: "functions:\n  - id: \n    function:\n      if:\n        condition: \n        action:\n          bindData: []\n          bindClass: []",
+              documentation: "List of functions",
+              range,
+            },
+            {
+              label: "rules",
+              kind: monaco.languages.CompletionItemKind.Field,
+              insertText: "rules:\n  - name: \n    condition: \n    action: ",
+              documentation: "List of rules",
+              range,
+            },
+            {
+              label: "if",
+              kind: monaco.languages.CompletionItemKind.Keyword,
+              insertText: "if:\n  condition: \n  action:\n    bindData: []\n    bindClass: []",
+              documentation: "If condition for function",
+              range,
+            },
+            {
+              label: "else_if",
+              kind: monaco.languages.CompletionItemKind.Keyword,
+              insertText: "else_if:\n  condition: \n  action:\n    bindData: []\n    bindClass: []",
+              documentation: "Else if condition for function",
+              range,
+            },
+            {
+              label: "else",
+              kind: monaco.languages.CompletionItemKind.Keyword,
+              insertText: "else:\n  action:\n    bindData: []\n    bindClass: []",
+              documentation: "Else condition for function",
+              range,
+            },
+          ];
+      
+          return { suggestions };
+        },
+      });
+      
+    return () => {
+      console.log("Disposing Monaco Editor...");
+      editor.dispose();
+    };
+  }, [isModalOpen]); // Run only when modal opens/closes
 
   const handleSave = () => {
     onChange(localYaml);
@@ -16,7 +206,11 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
 
   return (
     <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-      <Button style={{ width: '100%', display: 'flex', justifyContent: 'center' }} variant="primary" onClick={() => setModalOpen(true)}>
+      <Button
+        style={{ width: "100%", display: "flex", justifyContent: "center" }}
+        variant="primary"
+        onClick={() => setModalOpen(true)}
+      >
         Edit YAML Config
       </Button>
 
@@ -38,43 +232,7 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
               flex-direction: column;
             `}
           >
-
-            <CodeEditor
-            value={localYaml}
-            language="yaml"
-            height="600px"
-            monacoOptions={{
-                theme: 'vs-dark',
-                automaticLayout: true,
-                scrollBeyondLastLine: false, 
-                suggestOnTriggerCharacters: true,
-                acceptSuggestionOnCommitCharacter: true
-            }}
-            onEditorDidMount={(editor, monaco) => {
-                monaco.editor.setTheme('vs-dark')
-            }}
-            onSave={handleSave}
-            onBlur={(value) => setLocalYaml(value)}
-            />      
-
-            {/* <Editor
-              value={localYaml}
-              language="yaml"
-              height="600px"
-              theme="vs-dark"
-              options={{
-                automaticLayout: true,
-                scrollBeyondLastLine: false,
-                suggestOnTriggerCharacters: true,
-                acceptSuggestionOnCommitCharacter: true,
-              }}
-              onChange={(value) => setLocalYaml(value || "")}
-              onMount={(editor, monaco) => {
-                monaco.editor.setTheme('vs-dark');
-              }}
-            /> */}
-
-
+            <div ref={containerRef} style={{ height: "600px", width: "100%" }} />
 
             <div style={{ display: "flex", flexDirection: "row-reverse", marginTop: "15px" }}>
               <Button variant="secondary" onClick={handleSave}>
