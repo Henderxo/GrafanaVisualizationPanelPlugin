@@ -204,6 +204,8 @@ const config = async (env): Promise<Configuration> => {
             },
           },
         ],
+        filename: '[name].worker.js',
+        globalAPI: true
       }),
       
       // Insert create plugin version information into the bundle

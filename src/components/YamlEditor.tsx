@@ -10,6 +10,7 @@ interface Props extends StandardEditorProps<string> {}
 export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [localYaml, setLocalYaml] = useState(value || "");
+  const [areSuggestionsSet, setSuggestions] = useState(false)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -141,7 +142,9 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
       setLocalYaml(editor.getValue());
     });
 
-    monaco.languages.registerCompletionItemProvider("yaml", {
+    if(!areSuggestionsSet){
+      setSuggestions(true)
+      monaco.languages.registerCompletionItemProvider("yaml", {
         provideCompletionItems: (model, position) => {
           const word = model.getWordUntilPosition(position);
           const range = new monaco.Range(
@@ -192,11 +195,15 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
           return { suggestions };
         },
       });
+    }
+    
       
-    return () => {
-      console.log("Disposing Monaco Editor...");
-      editor.dispose();
-    };
+      return () => {
+        if (editorRef.current) {
+          editorRef.current.dispose();
+          editorRef.current = null;
+        }
+      };
   }, [isModalOpen]); // Run only when modal opens/closes
 
   const handleSave = () => {
