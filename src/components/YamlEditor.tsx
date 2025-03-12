@@ -22,100 +22,268 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
     monaco.languages.register({ id: "yaml" });
 
     configureMonacoYaml(monaco, {
-      enableSchemaRequest: true,
+      enableSchemaRequest: false,
       validate: true,
       hover: true,
       completion: true,
       format: true, 
       schemas: [
         {
-          fileMatch: ["**/config.yaml"],
+          fileMatch: ['*'],
           schema: {
-            type: "object",
-            properties: {
-              functions: {
-                type: "array",
-                description: "List of functions",
-                items: {
-                  type: "object",
-                  required: ["id", "function"],
-                  properties: {
-                    id: { type: "string", description: "Unique function ID" },
-                    function: {
-                      type: "object",
-                      properties: {
-                        if: {
-                          type: "object",
-                          required: ["condition", "action"],
-                          properties: {
-                            condition: { type: "string", description: "Logical condition" },
-                            action: {
-                              type: "object",
-                              properties: {
-                                bindData: {
-                                  type: "array",
-                                  items: { type: "string" },
-                                  description: "Data bindings",
-                                },
-                                bindClass: {
-                                  type: "array",
-                                  items: {
-                                    type: "string",
-                                    enum: ["active", "inactive", "highUsage", "warning", "alert", "unknown", "highLoad", "lowDisk", "highPerformance", "lowMemory"],
-                                  },
-                                  description: "Class bindings",
-                                },
-                              },
-                            },
-                          },
-                        },
-                        else_if: {
-                          type: "object",
-                          properties: {
-                            condition: { type: "string" },
-                            action: {
-                              type: "object",
-                              properties: {
-                                bindData: {
-                                  type: "array",
-                                  items: { type: "string" },
-                                },
-                                bindClass: {
-                                  type: "array",
-                                  items: { type: "string" },
-                                },
-                              },
-                            },
-                          },
-                        },
-                        else: {
-                          type: "object",
-                          properties: {
-                            action: {
-                              type: "object",
-                              properties: {
-                                bindData: {
-                                  type: "array",
-                                  items: { type: "string" },
-                                },
-                                bindClass: {
-                                  type: "array",
-                                  items: { type: "string" },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
+            "type": "object",
+            "properties": {
+              "functions": {
+                "type": "array",
+                "description": "List of functions",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "function"],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique function ID"
                     },
-                  },
-                },
+                    "function": {
+                      "type": "object",
+                      "properties": {
+                        "if": {
+                          "type": "object",
+                          "required": ["condition", "action"],
+                          "properties": {
+                            "condition": {
+                              "type": "string",
+                              "description": "Condition for if statement"
+                            },
+                            "action": {
+                              "type": "object",
+                              "required": ["bindData", "bindClass"],
+                              "properties": {
+                                "bindData": {
+                                  "type": "array",
+                                  "items": { "type": "string" },
+                                  "description": "Data bindings"
+                                },
+                                "bindClass": {
+                                  "type": "array",
+                                  "items": { "type": "string" },
+                                  "enum": [
+                                    "active", "inactive", "highUsage", "warning", "alert", 
+                                    "unknown", "highLoad", "lowDisk", "highPerformance", "lowMemory"
+                                  ],
+                                  "description": "Class bindings"
+                                }
+                              },
+                              "additionalProperties": false,
+                              "anyOf": [
+                                { "required": ["bindData"] },
+                                { "required": ["bindClass"] }
+                              ]
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "else_if": {
+                          "type": "object",
+                          "properties": {
+                            "condition": {
+                              "type": "string",
+                              "description": "Condition for else if statement"
+                            },
+                            "action": {
+                              "type": "object",
+                              "required": ["bindData", "bindClass"],
+                              "properties": {
+                                "bindData": {
+                                  "type": "array",
+                                  "items": { "type": "string" },
+                                  "description": "Data bindings"
+                                },
+                                "bindClass": {
+                                  "type": "array",
+                                  "items": { "type": "string" },
+                                  "description": "Class bindings"
+                                }
+                              },
+                              "additionalProperties": false,
+                              "anyOf": [
+                                { "required": ["bindData"] },
+                                { "required": ["bindClass"] }
+                              ]
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "else": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "object",
+                              "required": ["bindData", "bindClass"],
+                              "properties": {
+                                "bindData": {
+                                  "type": "array",
+                                  "items": { "type": "string" },
+                                  "description": "Data bindings"
+                                },
+                                "bindClass": {
+                                  "type": "array",
+                                  "items": { "type": "string" },
+                                  "description": "Class bindings"
+                                }
+                              },
+                              "additionalProperties": false,
+                              "anyOf": [
+                                { "required": ["bindData"] },
+                                { "required": ["bindClass"] }
+                              ]
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                }
               },
+              "rules": {
+                "type": "array",
+                "description": "List of rules",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "match"],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique rule ID"
+                    },
+                    "match": {
+                      "type": "object",
+                      "required": ["element", "function"],
+                      "properties": {
+                        "element": {
+                          "type": "string",
+                          "description": "Element associated with the rule"
+                        },
+                        "function": {
+                          "type": "object",
+                          "properties": {
+                            "if": {
+                              "type": "object",
+                              "required": ["condition", "action"],
+                              "properties": {
+                                "condition": {
+                                  "type": "string",
+                                  "description": "Condition for if statement"
+                                },
+                                "action": {
+                                  "type": "object",
+                                  "required": ["bindData", "bindClass"],
+                                  "properties": {
+                                    "bindData": {
+                                      "type": "array",
+                                      "items": { "type": "string" },
+                                      "description": "Data bindings"
+                                    },
+                                    "bindClass": {
+                                      "type": "array",
+                                      "items": { "type": "string" },
+                                      "enum": [
+                                        "active", "inactive", "highUsage", "warning", "alert", 
+                                        "unknown", "highLoad", "lowDisk", "highPerformance", "lowMemory"
+                                      ],
+                                      "description": "Class bindings"
+                                    }
+                                  },
+                                  "additionalProperties": false,
+                                  "anyOf": [
+                                    { "required": ["bindData"] },
+                                    { "required": ["bindClass"] }
+                                  ]
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "else_if": {
+                              "type": "object",
+                              "properties": {
+                                "condition": {
+                                  "type": "string",
+                                  "description": "Condition for else if statement"
+                                },
+                                "action": {
+                                  "type": "object",
+                                  "required": ["bindData", "bindClass"],
+                                  "properties": {
+                                    "bindData": {
+                                      "type": "array",
+                                      "items": { "type": "string" },
+                                      "description": "Data bindings"
+                                    },
+                                    "bindClass": {
+                                      "type": "array",
+                                      "items": { "type": "string" },
+                                      "description": "Class bindings"
+                                    }
+                                  },
+                                  "additionalProperties": false,
+                                  "anyOf": [
+                                    { "required": ["bindData"] },
+                                    { "required": ["bindClass"] }
+                                  ]
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "else": {
+                              "type": "object",
+                              "properties": {
+                                "action": {
+                                  "type": "object",
+                                  "required": ["bindData", "bindClass"],
+                                  "properties": {
+                                    "bindData": {
+                                      "type": "array",
+                                      "items": { "type": "string" },
+                                      "description": "Data bindings"
+                                    },
+                                    "bindClass": {
+                                      "type": "array",
+                                      "items": { "type": "string" },
+                                      "description": "Class bindings"
+                                    }
+                                  },
+                                  "additionalProperties": false,
+                                  "anyOf": [
+                                    { "required": ["bindData"] },
+                                    { "required": ["bindClass"] }
+                                  ]
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
             },
+            "additionalProperties": false
           },
           uri: "https://example.com/schema/config-schema",
         },
       ],
+    });
+
+    monaco.editor.onDidChangeMarkers((e) => {
+      const model = editor.getModel();
+      const markers = monaco.editor.getModelMarkers({ model });
+      console.log("Validation Errors:", markers); // You should see validation errors here
     });
 
     const editor = monaco.editor.create(containerRef.current, {
