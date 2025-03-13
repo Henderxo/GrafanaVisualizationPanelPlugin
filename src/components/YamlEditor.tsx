@@ -392,7 +392,7 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
       {isModalOpen && (
         <Modal
           className={css`
-            width: 1400px;
+            width: 1750px;
           `}
           title="Edit YAML Configuration"
           isOpen={isModalOpen}
@@ -407,7 +407,7 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
               flex-direction: column;
             `}
           >
-            <div ref={containerRef} style={{ height: "600px", width: "100%" }} />
+            <div ref={containerRef} style={{ height: "800px", width: "100%" }} />
 
             <div style={{ display: "flex", flexDirection: "row-reverse", marginTop: "15px" }}>
               <Button variant="secondary" onClick={handleSave}>
