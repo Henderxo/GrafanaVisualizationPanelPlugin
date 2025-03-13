@@ -117,9 +117,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     return styleObj;
   };
 
-  const parseMermaidToMap = (input: string): { object: TemplateObject; edges: [string, string, string][]; classDefs: Map<string, ClassStyle>, config: Partial<FlowchartConfig> } => {
+  const parseMermaidToMap = (input: string): { object: TemplateObject; edges: [string, string, string, string][]; classDefs: Map<string, ClassStyle>, config: Partial<FlowchartConfig> } => {
     const object: TemplateObject = { };
-    const edges: [string, string, string][] = []; 
+    const edges: [string, string, string, string][] = []; 
     const classDefs: Map<string, ClassStyle> = new Map(); 
     let config: string = "";
     const lines = input.split('\n').map(line => line.trim()).filter(line => line);
@@ -145,11 +145,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
             object[lastSubgraph].endRow = index;
           }
         }
-      } else if (line.includes('-->') || line.includes('---')) {
-        const edgeMatch = line.match(/^([\w\d_-]+)\s*[-]+>\s*(\|([^|]+)\|)?\s*([\w\d_-]+)/);
+      } else if (line.includes('-->') || line.includes('---') || line.includes('-.->')) {
+        const edgeMatch = line.match(/^([\w\d_-]+)\s*([-]+>|\-\.\-\>|\-\-\>|\-\-)\s*(\|([^|]+)\|)?\s*([\w\d_-]+)/);
+        
         if (edgeMatch) {
-          const [, from, , label = '', to] = edgeMatch;
-          edges.push([from, to, label.trim()]);
+          const [, from, arrowType, , label = '', to] = edgeMatch;
+          // Push the edge with the arrow type included
+          edges.push([from, to, label.trim(), arrowType.trim()]);
         }
       } else if (line.startsWith('classDef')) {
         const classDefMatch = line.match(/^classDef\s+([\w\d_-]+)\s+(.*)$/);
@@ -306,7 +308,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   
   console.log('Updated map:', templateMap)
 
-  const rebuildMermaid = (object: TemplateObject, edges: [string, string, string][], classBindings: Map<string, string[]>, classDefs: Map<string, ClassStyle>, config: FlowchartConfig): string => {
+  const rebuildMermaid = (object: TemplateObject, edges: [string, string, string, string][], classBindings: Map<string, string[]>, classDefs: Map<string, ClassStyle>, config: string): string => {
     let output = `${config} \n`;
     output += `graph TB\n`;
     const addedNodes: Set<string> = new Set();
@@ -340,9 +342,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         }
     });
 
-    edges.forEach(([from, to, label]) => {
+    edges.forEach(([from, to, label, arrowType]) => {
         const edgeLabel = label ? `|${label}|` : '';
-        output += `${from} -->${edgeLabel} ${to}\n`;
+        output += `${from} ${arrowType}${edgeLabel} ${to}\n`;
     });
 
     classBindings.forEach((elements, className) => {
