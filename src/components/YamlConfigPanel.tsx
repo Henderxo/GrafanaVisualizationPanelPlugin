@@ -24,6 +24,7 @@ interface YamlStylingRule{
   id: string
   scope: string
   type: string
+  elements?: string[]
   proprity: number
   function: FunctionElement[]
 }
@@ -339,29 +340,78 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   };
 
   const findAndApplyStyling = (templateMap: TemplateObject, rule: YamlStylingRule, rows: Record<string, any>[]) =>{
-    Object.keys(templateMap).forEach(object =>{
-      if(templateMap[object].data){
-        const actionDataList = determineAction(rule, templateMap[object].data, functions);
-        if (actionDataList) {
-          actionDataList.forEach(actionData=>{
-            Object.keys(actionData.action).forEach(action =>{
-              switch (action) {
-                case "bindData":
-                  templateMap[object].bindData = actionData.action[action]
-                  break;
-                  case "applyClass":
-                    actionData.action[action].forEach(className =>{
-                      templateMap[object].bindClasses.push(className)
-                    })
-                    break;
-                default:
-                  console.warn(`Unknown action type: ${action}`);
-              }
-            })
-          })
+    let elementList: string[] = []
+    let specialElements = ''
+    if(rule.elements){
+      if(rule.elements.some(element =>{
+        switch (element){
+          case 'nodes':
+            specialElements = 'node'
+            break
+          case 'subgraphs':
+            specialElements = 'subgraph'
+            break
+          default:
+            break
         }
+        return specialElements !== ''
+        })){
+        Object.keys(templateMap).forEach(objectName =>{
+          if(specialElements === 'all' || templateMap[objectName].type == specialElements){
+            elementList.push(objectName)
+          }
+        })
+      }else{
+        elementList = rule.elements
       }
-    })
+      elementList.forEach(object =>{
+        if(templateMap[object].data){
+          const actionDataList = determineAction(rule, templateMap[object].data, functions);
+          if (actionDataList) {
+            actionDataList.forEach(actionData=>{
+              Object.keys(actionData.action).forEach(action =>{
+                switch (action) {
+                  case "bindData":
+                    templateMap[object].bindData = actionData.action[action]
+                    break;
+                    case "applyClass":
+                      actionData.action[action].forEach(className =>{
+                        templateMap[object].bindClasses.push(className)
+                      })
+                      break;
+                  default:
+                    console.warn(`Unknown action type: ${action}`);
+                }
+              })
+            })
+          }
+        }
+      })
+    }else{
+      Object.keys(templateMap).forEach(object =>{
+        if(templateMap[object].data){
+          const actionDataList = determineAction(rule, templateMap[object].data, functions);
+          if (actionDataList) {
+            actionDataList.forEach(actionData=>{
+              Object.keys(actionData.action).forEach(action =>{
+                switch (action) {
+                  case "bindData":
+                    templateMap[object].bindData = actionData.action[action]
+                    break;
+                    case "applyClass":
+                      actionData.action[action].forEach(className =>{
+                        templateMap[object].bindClasses.push(className)
+                      })
+                      break;
+                  default:
+                    console.warn(`Unknown action type: ${action}`);
+                }
+              })
+            })
+          }
+        }
+      })
+    }
   }
 
  
