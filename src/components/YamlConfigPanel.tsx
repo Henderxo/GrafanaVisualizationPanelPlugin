@@ -237,22 +237,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   };
   
-
-  // const executeAction = (templateMap: TemplateObject, actionElement: Action, elements: string[], row: Record<string, any>) => {
-  //   Object.keys(actionElement).forEach(action => {
-  //     switch (action) {
-  //       case "bindData":
-  //         bindData(templateMap, elements, row, actionElement[action]);
-  //         break;
-  //       case "applyClass":
-  //         bindClasses(elements, actionElement[action], classBindings)
-  //         break;
-  //       default:
-  //         console.warn(`Unknown action type: ${action}`);
-  //     }
-  //   }); 
-  // };
-  
   const evaluateCondition = (condition: string, row: Record<string, any>): boolean => {
     try {
       const keys = Object.keys(row);
@@ -277,18 +261,22 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         }
         func = foundFunction; 
       }
+      let valueFound = false
       if (func.if && evaluateCondition(func.if.condition, row)) {
         matchedAction.push(func.if); 
+        valueFound = true
       } 
       else if (func.else_if) {
         const elseIfArray = Array.isArray(func.else_if) ? func.else_if : [func.else_if];
         for (const elseIf of elseIfArray) {
           if (evaluateCondition(elseIf.condition, row)) {
             matchedAction.push(elseIf);
+            valueFound = true
+            break
           }
         }
       } 
-      else if (func.else) {
+      if (func.else && !valueFound) {
         matchedAction.push(func.else);
       }
     }
@@ -300,9 +288,28 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       const actionDataList = determineAction(rule, row, functions);
       if (actionDataList) {
         let elementList: string[] = []
-        if(typeof rule.elements === 'string' && rule.elements === "all"){
+        let specialElements = ''
+        if(rule.elements.some(element =>{
+          switch (element){
+            case 'all':
+              specialElements = 'all'
+              break
+            case 'nodes':
+              specialElements = 'node'
+              break
+            case 'subgraphs':
+              specialElements = 'subgraph'
+              break
+            default:
+              break
+          }
+          return specialElements !== ''
+          }))
+        {
           Object.keys(templateMap).forEach(objectName =>{
-            elementList.push(objectName)
+            if(specialElements === 'all' || templateMap[objectName].type == specialElements){
+              elementList.push(objectName)
+            }
           })
         }else{
           elementList = rule.elements
