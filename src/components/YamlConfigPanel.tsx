@@ -14,17 +14,18 @@ interface OtherViewPanelProps {
 interface YamlBindRule {
   id: string;
   scope: string
+  type: string
   elements: string[]
   priority: number
-  function: string | FunctionElement | FunctionElement[]
+  function: (string | FunctionElement)[]
 }
 
 interface YamlStylingRule{
   id: string
   scope: string
-  elements: string[]
+  type: string
   proprity: number
-  functions: FunctionElement[]
+  function: FunctionElement[]
 }
 
 interface YamlFunctions{
@@ -63,8 +64,6 @@ interface Node {
   bindClasses: string[]
   data: Record<string, any>
 }
-
-
 
 interface TemplateObject {
   [key: string]: Node | Record<string, any>;
@@ -223,12 +222,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   };
 
   const bindClasses = (element: string, classNames: string[], classBindings: Map<string, string[]>) => {
-
+    console.log(classNames)
     classNames.forEach(className => {
+      console.log(className)
       if (!classBindings.has(className)) {
         classBindings.set(className, []);
       }
-  
+      console.log(classBindings)
       const elements = classBindings.get(className);
       if (elements && !elements.includes(element)) {
         elements.push(element);
@@ -266,47 +266,30 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   };
 
-  const determineAction = (rule: YamlBindRule, row: Record<string, any>, functions: YamlFunctions[]):  ConditionElement[] | null => {
+  const determineAction = (rule: YamlBindRule | YamlStylingRule, row: Record<string, any>, functions: YamlFunctions[]):  ConditionElement[] | null => {
     let matchedAction: ConditionElement[] = []
 
-    let newFunction: FunctionElement | FunctionElement[] | undefined = typeof rule.function === 'string'
-    ? functions.find((func) => func.id === rule.function)?.function
-    : rule.function;
-
-    if(!newFunction){
-      return null
-    }
-    if(Array.isArray(newFunction)){
-      for (const func of newFunction) {
-        if (func.if && evaluateCondition(func.if.condition, row)) {
-          matchedAction.push(func.if); 
-        } 
-        else if (func.else_if) {
-          const elseIfArray = Array.isArray(func.else_if) ? func.else_if : [func.else_if];
-          for (const elseIf of elseIfArray) {
-            if (evaluateCondition(elseIf.condition, row)) {
-              matchedAction.push(elseIf);
-            }
-          }
-        } 
-        else if (func.else) {
-          matchedAction.push(func.else);
+    for (let func of rule.function) {
+      if (typeof func === 'string') {
+        const foundFunction = functions.find((functionn) => functionn.id === func)?.function;
+        if (!foundFunction) {
+          continue;
         }
+        func = foundFunction; 
       }
-    }else{
-      if (newFunction.if && evaluateCondition(newFunction.if.condition, row)) {
-        matchedAction.push(newFunction.if);  
-      } else if (newFunction.else_if) {
-        const elseIfArray = Array.isArray(newFunction.else_if) ? newFunction.else_if : [newFunction.else_if];
-        
-
+      if (func.if && evaluateCondition(func.if.condition, row)) {
+        matchedAction.push(func.if); 
+      } 
+      else if (func.else_if) {
+        const elseIfArray = Array.isArray(func.else_if) ? func.else_if : [func.else_if];
         for (const elseIf of elseIfArray) {
           if (evaluateCondition(elseIf.condition, row)) {
-            matchedAction.push(elseIf);  
+            matchedAction.push(elseIf);
           }
         }
-      } else if (newFunction.else) {
-        matchedAction.push(newFunction.else);  
+      } 
+      else if (func.else) {
+        matchedAction.push(func.else);
       }
     }
     return matchedAction.length > 0 ? matchedAction : null;
@@ -332,7 +315,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
                   templateMap[element].bindData = actionData.action[action]
                   break;
                 case "applyClass":
-                  templateMap[element].bindClasses.push(actionData.action[action])
+                  actionData.action[action].forEach(className =>{
+                    templateMap[element].bindClasses.push(className)
+                  })
                   break;
                 default:
                   console.warn(`Unknown action type: ${action}`);
@@ -341,31 +326,54 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           })
           templateMap[element].data = row
         });
-        //executeAction(templateMap, actionData.action.action, rule.elements, actionData.data);
       }
       return actionDataList!==null
     });
-    console.log(rows)
   };
+
+  const findAndApplyStyling = (templateMap: TemplateObject, rule: YamlStylingRule, rows: Record<string, any>[]) =>{
+    Object.keys(templateMap).forEach(object =>{
+      if(templateMap[object].data){
+        const actionDataList = determineAction(rule, templateMap[object].data, functions);
+        if (actionDataList) {
+          actionDataList.forEach(actionData=>{
+            Object.keys(actionData.action).forEach(action =>{
+              switch (action) {
+                case "bindData":
+                  templateMap[object].bindData = actionData.action[action]
+                  break;
+                  case "applyClass":
+                    actionData.action[action].forEach(className =>{
+                      templateMap[object].bindClasses.push(className)
+                    })
+                    break;
+                default:
+                  console.warn(`Unknown action type: ${action}`);
+              }
+            })
+          })
+        }
+      }
+    })
+  }
 
  
   let templateMap = parseMermaidToMap(template)
   console.log('Initial Parsed Tree:', templateMap);
   console.log(bindingRules)
   console.log(stylingRules)
-  stylingRules.forEach(rule =>{
-    bindingRules.forEach((bindingRule, index) =>{
-
-    })
-  })
   bindingRules.forEach(rule => {
-    if(rule.function)
-    {
+    if(rule.function){
       console.log(rule)
       findAndApplyBindings(templateMap.object, rule, rows, functions)
     }
   });
-
+  stylingRules.forEach(rule => {
+    if(rule.function){
+      console.log(rule)
+      findAndApplyStyling(templateMap.object, rule, functions)
+    }
+  });
   Object.keys(templateMap.object).forEach(ObjectName => {
     if(templateMap.object[ObjectName].bindData){
       bindData(templateMap.object, ObjectName, templateMap.object[ObjectName].data, templateMap.object[ObjectName].bindData);
@@ -418,6 +426,8 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         output += `${from} ${arrowType}${edgeLabel} ${to}\n`;
     });
 
+    console.log(classBindings)
+
     classBindings.forEach((elements, className) => {
         if (elements.length > 0) {
             if (!classGrouping.has(className)) {
@@ -428,8 +438,12 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     });
 
     classGrouping.forEach((elements, className) => {
-        output += `class ${elements.join(',')} ${className};\n`;
+
+      output += `class ${elements.join(',')} ${className};\n`;
+
     });
+
+
 
     classDefs.forEach((style, className) => {
         let styleStr = '';
