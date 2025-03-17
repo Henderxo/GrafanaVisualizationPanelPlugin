@@ -223,20 +223,19 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   };
 
   const bindClasses = (element: string, classNames: string[], classBindings: Map<string, string[]>) => {
-    console.log(classNames)
+    console.log(classNames);
     classNames.forEach(className => {
-      console.log(className)
-      if (!classBindings.has(className)) {
-        classBindings.set(className, []);
-      }
-      console.log(classBindings)
-      const elements = classBindings.get(className);
-      if (elements && !elements.includes(element)) {
-        elements.push(element);
-      }
-    });
+        if (!classBindings.has(element)) {
+            classBindings.set(element, []);
+        }
+        const currentClasses = classBindings.get(element);
 
-  };
+        if (currentClasses && !currentClasses.includes(className)) {
+            currentClasses.push(className);
+        }
+    });
+};
+
   
   const evaluateCondition = (condition: string, row: Record<string, any>): boolean => {
     try {
@@ -414,7 +413,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   }
 
- 
   let templateMap = parseMermaidToMap(template)
   console.log('Initial Parsed Tree:', templateMap);
   console.log(bindingRules)
@@ -483,21 +481,10 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         output += `${from} ${arrowType}${edgeLabel} ${to}\n`;
     });
 
-    console.log(classBindings)
-
-    classBindings.forEach((elements, className) => {
-        if (elements.length > 0) {
-            if (!classGrouping.has(className)) {
-                classGrouping.set(className, []);
-            }
-            classGrouping.get(className)?.push(...elements);
-        }
-    });
-
-    classGrouping.forEach((elements, className) => {
-
-      output += `class ${elements.join(',')} ${className};\n`;
-
+    classBindings.forEach((classNames, element) => {
+      classNames.forEach(name=>{
+        output+= `class ${element} ${name};\n`
+      })
     });
 
 
