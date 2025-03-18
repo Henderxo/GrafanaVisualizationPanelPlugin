@@ -7,7 +7,7 @@ function extractTableData(data: PanelData): Record<string, any[]>{
   }, {} as Record<string, any[]>);
 }
 
-function mapDataToRows(data: PanelData): Record<string, any>{
+function mapDataToRows(data: PanelData): Record<string, any>[]{
     const tableData = extractTableData(data)
     return tableData[Object.keys(tableData)[0]].map((_, i) =>
     Object.keys(tableData).reduce((acc, key) => {

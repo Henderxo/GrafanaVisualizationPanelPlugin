@@ -7,6 +7,9 @@ import createPanZoom from 'panzoom';
 import { ClassStyle, StylingData, YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, TemplateObject } from 'types/types';
 import { parseMermaidToMap } from 'utils/MermaidUtils';
 import { extractTableData } from 'utils/TransformationUtils';
+import { mapDataToRows } from 'utils/TransformationUtils';
+import { bindData } from 'utils/DataBindingUtils';
+import { Console } from 'console';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;
@@ -36,65 +39,32 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   const stylingRules: YamlStylingRule[] = parsedYaml.stylingRules || [];
   const functions: YamlFunctions[] = parsedYaml.functions || []
   const classBindings = new Map<string, string[]>();
-
   const table = extractTableData(data)
-  console.log(table)
-  console.log("AJKSDKSJA")
   if (!table) return <div>No Data Available</div>;
-
-
-  const rows = table[Object.keys(table)[0]].map((_, i) =>
-    Object.keys(table).reduce((acc, key) => {
-      acc[key] = table[key][i];
-      return acc;
-    }, {} as Record<string, any>)
-  );
-
-  console.log('Extracted Data:', rows);
-  console.log(parseMermaidToMap(template).object)
-  console.log(parseMermaidToMap(template).config)
-
-  const bindData = (object: TemplateObject, element: string, row: Record<string, any>, dataBinding: string[]) => {
-    if (object[element]) {
-      const node = object[element];
-
-      const bindingMap: Record<string, any> = Object.fromEntries(
-          dataBinding
-              .filter(binding => binding.includes("=")) 
-              .map(binding => binding.split("=").map(part => part.replace(/['"]/g, '').trim())) 
-      );
-
-      const isDefaultBinding = dataBinding.includes("default");
-
-      if (node.value) {
-          node.value = node.value.replace(/\$(\w+)/g, (match: any, variable: any) => {
-              if (isDefaultBinding) {
-                  return row[variable] !== undefined ? row[variable] : match; 
-              } else if(bindingMap) {
-                  return (bindingMap[variable] !== undefined ? bindingMap[variable] : row[variable] !== undefined ? row[variable] : match); // Else use explicit binding
-              } else {
-                return row[variable] !== undefined ? row[variable] : match;
-              }
-          });
-      }
-    }
-  };
+  const rows = mapDataToRows(data)
+  console.log('Extracted rows Data:', rows);
+  let templateMap = parseMermaidToMap(template)
+  console.log('Initial Parsed Tree:', templateMap);
 
   const bindClasses = (element: string, classData: StylingData[], classBindings: Map<string, string[]>) => {
     classData.sort((a,b) => a.priority - b.priority)
     classData.forEach(data => {
+      console.log(data.class)
         if (!classBindings.has(element)) {
             classBindings.set(element, []);
         }
         const currentClasses = classBindings.get(element);
 
-        if (currentClasses && !currentClasses.includes(data.class)) {
+        if (currentClasses) {
+          const classIndex = currentClasses.indexOf(data.class);
+          if (classIndex !== -1) {
+              currentClasses.splice(classIndex, 1); 
+          }
             currentClasses.push(data.class);
         }
     });
-};
+  };
 
-  
   const evaluateCondition = (condition: string, row: Record<string, any>): boolean => {
     try {
       const keys = Object.keys(row);
@@ -277,8 +247,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   }
 
-  let templateMap = parseMermaidToMap(template)
-  console.log('Initial Parsed Tree:', templateMap);
   console.log(bindingRules)
   console.log(stylingRules)
   bindingRules.forEach(rule => {
@@ -293,24 +261,24 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       findAndApplyStyling(templateMap.object, rule, functions)
     }
   });
+  console.log(classBindings)
+  console.log("Important")
   Object.keys(templateMap.object).forEach(ObjectName => {
     if(templateMap.object[ObjectName].bindData.bindData.length > 0){
       bindData(templateMap.object, ObjectName, templateMap.object[ObjectName].data, templateMap.object[ObjectName].bindData.bindData);
     }
     if(templateMap.object[ObjectName].stylingData){
+      console.log(templateMap.object[ObjectName].stylingData)
+      console.log(ObjectName)
       bindClasses(ObjectName, templateMap.object[ObjectName].stylingData, classBindings)
     }
   });
 
 
-  
-  console.log('Updated map:', templateMap)
-
   const rebuildMermaid = (object: TemplateObject, edges: [string, string, string, string][], classBindings: Map<string, string[]>, classDefs: Map<string, ClassStyle>, config: string): string => {
     let output = `${config} \n`;
     output += `graph TB\n`;
     const addedNodes: Set<string> = new Set();
-    const classGrouping: Map<string, string[]> = new Map(); 
 
     Object.keys(object).forEach((key) => {
         const node = object[key];
@@ -350,8 +318,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         output+= `class ${element} ${name};\n`
       })
     });
-
-
 
     classDefs.forEach((style, className) => {
         let styleStr = '';
