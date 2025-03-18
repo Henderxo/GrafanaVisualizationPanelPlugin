@@ -53,43 +53,68 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       name: 'YAML Configuration',
       description: 'Define rules for Mermaid chart in YAML format',
       editor: CustomTextEditor,
-      defaultValue: `rules:
-  - id: "Rule_1"
-    match:
-      if: 
-        condition: "Datacenter == 'Kaunas'"
-        bind:
-          - variable: "CPU"
-          - variable: "Memory"
-          - variable: "Network"
+      defaultValue: `stylingRules:
+  - id: "Rule8"
+    function:
+      - if:
+          condition: "CPU < 50"
+          action:
+            applyClass: ["alert"]
+        else_if:
+          - condition: "CPU > 50"
+            action:
+              applyClass: ["warning", "inactive"]
+        else:
+          action:
+            applyClass: ["active"]
+  - id: "Rule8"
+    elements: ["Switch_2"]
+    function:
+      - if:
+          condition: "CPU > 50"
+          action:
+            applyClass: ["active"]
 
-  - id: "Rule_2"
-    match:
-      if: 
-        condition: "Server == '1'"
-        bind:
-          - variable: "Disk"
+bindingRules:
+  - id: "Rule1"
+    elements: ["Router_1", "Router_2"]
+    function:
+      - if:
+          condition: "CPU < 50"
+          action:
+            bindData: ["CPU=999999"]
+  - id: "Rule8"
+    elements: ["Firewall_1"]
+    function:
+      - if:
+          condition: "CPU > 50"
+          action:
+            bindData: [""]
 
-  - id: "Rule_3"
-    match:
-      if: 
-        condition: "Rack == '2'"
-        bind:
-          - variable: "Network"
+  - id: "Rule2"
+    elements: ["Server_1", "Server_2"]
+    function:
+      - if:
+          condition: "CPU == 70"
+          action:
+            bindData: [""]
 
-  - id: "Rule_4"
-    match:
-      if: 
-        condition: "Datacenter == 'Vilnius'"
-        bind:
-          - variable: "Disk"
-      else_if:
-        - condition: "Rack == '1'"
-          bind:
-            - variable: "Memory"
-      else:
-        bind:
-          - variable: "Power"
+  - id: "Rule8"
+    elements: ["Switch_1", "Switch_2"]
+    function:
+      - if:
+          condition: "CPU > 70"
+          action:
+            bindData: [""]
+
+  - id: "Rule52"
+    elements: ["Switch_1"]
+    function:
+      - if:
+          condition: "CPU == 50"
+          action:
+            bindData: [""]
+      
       `,
       settings:{
         rows: 5,
@@ -122,31 +147,53 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       name: 'Mermaid Template',
       description: 'Define rules for Mermaid chart to display',
       editor: CustomTextEditor,
-      defaultValue: `graph TD
-  subgraph Datacenter_Kaunas [Kaunas DC]
-    subgraph Rack_2 [Rack 2]
-      Server_1_2[Usage: $CPU, $Memory, $Network, $Disk]
-      Server_2_2[Usage: $CPU, $Memory, $Network]
-    end
-    subgraph Rack_3 [Rack 3]
-      Server_1_3[Usage: $CPU, $Memory, $Network, $Disk]
-    end
+      defaultValue: `graph TB
+  subgraph DC_Kaunas [Kaunas Data Center]
+    Router_1(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)
+    Router_2(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)
+    Firewall_1(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)
   end
 
-  subgraph Datacenter_Vilnius [Vilnius DC]
-    subgraph Rack_1 [Rack 1]
-      Server_1_1[Usage: $CPU, $Memory, $Network, $Disk]
-      Server_2_1[Usage: $CPU, $Memory, $Network]
-    end
+  subgraph DC_Vilnius [Vilnius Data Center]
+    Switch_1(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)
+    Switch_2(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)
+    Server_1(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)
+    Server_2(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)
   end
+  
+  %% Internal connections within Kaunas
+  Router_1 -->|Data Flow| Router_2
+  Router_1 -->|Security Pass| Firewall_1
+  Router_2 -.->|Backup| Firewall_1
+  
+  %% Internal connections within Vilnius
+  Switch_1 -->|Replicates| Server_1
+  Switch_2 -->|Replicates| Server_2
+  Server_1 -.->|Backup Data| Server_2
+  
+  %% Cross-Datacenter Connections
+  Router_1 -->|Backup| Switch_1
+  Router_2 -.->|Data Sync| Switch_2
+  Firewall_1 -->|Secure Tunnel| Server_1
+  Server_1 -.->|Secure Replication| Server_2
 
-  Datacenter_Kaunas --> Datacenter_Vilnius
-  Rack_2 --> Server_1_2
-  Rack_2 --> Server_2_2
-  Rack_3 --> Server_1_3
-  Rack_1 --> Server_1_1
-  Rack_1 --> Server_2_1
-      `,
+  %% Miscellaneous Connections
+  Switch_1 -.->|Data Transfer| Router_2
+  Switch_2 -->|Monitor| Router_1
+  Router_2 -->|Security Sync| Server_1
+  Server_2 -.->|Backup Sync| Router_1
+
+  %% Class Definitions
+  classDef active fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,font-weight:bold;
+  classDef inactive fill:#F44336,stroke:#B71C1C,stroke-width:2px,opacity:0.6;
+  classDef highUsage fill:#FFEB3B,stroke:#F57C00,stroke-width:2px;
+  classDef warning fill:#FF5722,stroke:#D32F2F,stroke-width:2px;
+  classDef lowDisk fill:#F44336,stroke:#B71C1C,stroke-width:2px;
+  classDef lowCapacity fill:#FFC107,stroke:#FF9800,stroke-width:2px;
+  classDef highPerformance fill:#3F51B5,stroke:#1A237E,stroke-width:2px;
+  classDef alert fill:#FF9800,stroke:#F44336,stroke-width:2px;
+  classDef unknown fill:#B0BEC5,stroke:#78909C,stroke-width:2px;
+`,
       settings:{
         rows: 5,
         placeholder: 'Enter Mermaid configuration...'

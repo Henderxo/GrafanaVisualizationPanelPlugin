@@ -25,8 +25,18 @@ interface YamlStylingRule{
   scope: string
   type: string
   elements?: string[]
-  proprity: number
+  priority: number
   function: FunctionElement[]
+}
+
+interface BindData{
+  bindData: string[]
+  priority: number
+}
+
+interface StylingData{
+  class: string
+  priority: number
 }
 
 interface YamlFunctions{
@@ -56,18 +66,42 @@ interface Action{
   applyText: string[];
 }
 
-interface Node {
-  row?: number;
-  value?: string;
+interface DiagramElement {
+  row: number;
+  value: string;
   type: string;
   endRow?: number;
-  bindData: string[]
-  bindClasses: string[]
-  data: Record<string, any>
+  bindData: BindData
+  stylingData: StylingData[]
+  data?: Record<string, any>
+}
+
+class Element implements DiagramElement {
+  row: number;
+  value: string;
+  type: string;
+  bindData: BindData;
+  stylingData: StylingData[];
+  data?: Record<string, any>;
+  endRow?: number;
+
+  constructor(
+    row: number = 0,
+    value: string = "",
+    type: string = "node",
+    bindData: BindData = { bindData: [], priority: -1 },
+    stylingData: StylingData[] = [],  
+  ) {
+    this.row = row;
+    this.value = value;
+    this.type = type;
+    this.bindData = bindData;
+    this.stylingData = stylingData;
+  }
 }
 
 interface TemplateObject {
-  [key: string]: Node | Record<string, any>;
+  [key: string]: Element | Record<string, any>;
 }
 
 interface ClassStyle {
@@ -150,7 +184,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         const subgraphMatch = line.match(/subgraph\s+([\w\d_-]+)\s+\[(.*?)\]/);
         if (subgraphMatch) {
           const [, id, label] = subgraphMatch;
-          object[id] = { row: index, value: label, type: 'subgraph', bindClasses: [] };
+          object[id] = new Element(index, label, 'subgraph')
           subgraphStack.push(id);
         }
       } else if (line.startsWith('end')) {
@@ -181,14 +215,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         if (nodeMatch) {
           const [, id, text] = nodeMatch;
           if (subgraphStack.length > 0) {
-            object[id] = { row: index, value: text, type: 'node', bindClasses: [] };
+            object[id] = new Element(index, text,'node');
           } else {
-            object[id] = { row: index, value: text, type: 'node', bindClasses: [] };
+            object[id] = new Element(index, text,'node');
           }
         }
       }
     });
-  
     return { object, edges, classDefs, config };
 };
 
@@ -222,16 +255,16 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   };
 
-  const bindClasses = (element: string, classNames: string[], classBindings: Map<string, string[]>) => {
-    console.log(classNames);
-    classNames.forEach(className => {
+  const bindClasses = (element: string, classData: StylingData[], classBindings: Map<string, string[]>) => {
+    classData.sort((a,b) => a.priority - b.priority)
+    classData.forEach(data => {
         if (!classBindings.has(element)) {
             classBindings.set(element, []);
         }
         const currentClasses = classBindings.get(element);
 
-        if (currentClasses && !currentClasses.includes(className)) {
-            currentClasses.push(className);
+        if (currentClasses && !currentClasses.includes(data.class)) {
+            currentClasses.push(data.class);
         }
     });
 };
@@ -319,19 +352,25 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
             Object.keys(actionData.action).forEach(action =>{
               switch (action) {
                 case "bindData":
-                  templateMap[element].bindData = actionData.action[action]
+                  let tempPriority = rule.priority?rule.priority:-1
+                  if(templateMap[element].bindData.priority <= tempPriority){
+                    console.log(templateMap[element].bindData.priority <= tempPriority)
+                    templateMap[element].bindData.bindData = actionData.action[action]
+                    templateMap[element].bindData.priority = rule.priority?rule.priority:-1
+                    templateMap[element].data = row
+                  }
                   break;
                 case "applyClass":
-                  actionData.action[action].forEach(className =>{
-                    templateMap[element].bindClasses.push(className)
-                  })
+                    actionData.action[action].forEach(className =>{
+                      templateMap[element].stylingData.push({class: className, priority: rule.priority?rule.priority:-1})
+                    })
                   break;
                 default:
                   console.warn(`Unknown action type: ${action}`);
               }
             })
           })
-          templateMap[element].data = row
+          
         });
       }
       return actionDataList!==null
@@ -375,7 +414,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
                     break;
                     case "applyClass":
                       actionData.action[action].forEach(className =>{
-                        templateMap[object].bindClasses.push(className)
+                        templateMap[object].stylingData.push({class: className, priority: rule.priority?rule.priority:-1})
                       })
                       break;
                   default:
@@ -399,7 +438,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
                     break;
                     case "applyClass":
                       actionData.action[action].forEach(className =>{
-                        templateMap[object].bindClasses.push(className)
+                        templateMap[object].stylingData.push({class: className, priority: rule.priority?rule.priority:-1})
                       })
                       break;
                   default:
@@ -430,11 +469,11 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   });
   Object.keys(templateMap.object).forEach(ObjectName => {
-    if(templateMap.object[ObjectName].bindData){
-      bindData(templateMap.object, ObjectName, templateMap.object[ObjectName].data, templateMap.object[ObjectName].bindData);
+    if(templateMap.object[ObjectName].bindData.bindData.length > 0){
+      bindData(templateMap.object, ObjectName, templateMap.object[ObjectName].data, templateMap.object[ObjectName].bindData.bindData);
     }
-    if(templateMap.object[ObjectName].bindClasses){
-      bindClasses(ObjectName, templateMap.object[ObjectName].bindClasses, classBindings)
+    if(templateMap.object[ObjectName].stylingData){
+      bindClasses(ObjectName, templateMap.object[ObjectName].stylingData, classBindings)
     }
   });
 
