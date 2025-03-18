@@ -25,6 +25,7 @@ export interface DiagramElement {
     elements: string[];
     priority: number;
     function: (string | FunctionElement)[];
+    bindData?: string[]
   }
 
   export interface YamlStylingRule{
@@ -81,9 +82,9 @@ export interface DiagramElement {
   }
   
   export interface Action {
-    bindData: string[];
-    applyClass: string[];
-    applyText: string[];
+    bindData?: string[];
+    applyClass?: string[];
+    applyText?: string[];
   }
   
   export interface ClassStyle {

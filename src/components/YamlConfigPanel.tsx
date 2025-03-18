@@ -4,12 +4,13 @@ import yaml from 'js-yaml';
 import { PanelData } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
-import { ClassStyle, StylingData, YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, TemplateObject } from 'types/types';
+import { ClassStyle, StylingData, YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, TemplateObject, Element, BindData, Action } from 'types/types';
 import { parseMermaidToMap } from 'utils/MermaidUtils';
 import { extractTableData } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData } from 'utils/DataBindingUtils';
 import { Console } from 'console';
+import { ElementSelectionContext } from '@grafana/ui';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;
@@ -115,69 +116,73 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     rows.some((row) => {
       const actionDataList = determineAction(rule, row, functions);
       if (actionDataList) {
-        let elementList: string[] = []
-        let specialElements = ''
-        if(rule.elements.some(element =>{
-          switch (element){
-            case 'all':
-              specialElements = 'all'
-              break
-            case 'nodes':
-              specialElements = 'node'
-              break
-            case 'subgraphs':
-              specialElements = 'subgraph'
-              break
-            default:
-              break
-          }
-          return specialElements !== ''
-          }))
-        {
-          Object.keys(templateMap).forEach(objectName =>{
-            if(specialElements === 'all' || templateMap[objectName].type == specialElements){
-              elementList.push(objectName)
-            }
-          })
-        }else{
-          elementList = rule.elements
-        }
+        let elementList: string[] = getElements(rule, templateMap)
         elementList.forEach(element => {
-          actionDataList.forEach(actionData=>{
-            Object.keys(actionData.action).forEach(action =>{
-              switch (action) {
-                case "bindData":
-                  let tempPriority = rule.priority?rule.priority:-1
-                  if(templateMap[element].bindData.priority <= tempPriority){
-                    console.log(templateMap[element].bindData.priority <= tempPriority)
-                    templateMap[element].bindData.bindData = actionData.action[action]
-                    templateMap[element].bindData.priority = rule.priority?rule.priority:-1
-                    templateMap[element].data = row
-                  }
-                  break;
-                case "applyClass":
-                    actionData.action[action].forEach(className =>{
-                      templateMap[element].stylingData.push({class: className, priority: rule.priority?rule.priority:-1})
-                    })
-                  break;
-                default:
-                  console.warn(`Unknown action type: ${action}`);
-              }
-            })
+          actionDataList.forEach(action=>{
+            addActions(action.action, templateMap[element], rule, row)
           })
-          
         });
       }
       return actionDataList!==null
     });
   };
 
-  const findAndApplyStyling = (templateMap: TemplateObject, rule: YamlStylingRule, rows: Record<string, any>[]) =>{
+  const addActions = (
+    Action: Action,
+    Element: Record<string, any> | Element,
+    rule: YamlBindRule | YamlStylingRule,
+    row?: any
+  ) => {
+      Object.keys(Action).forEach(action => {
+        switch (action) {
+          case "bindData":
+            const tempPriority = rule.priority ? rule.priority : -1
+            if (Element.bindData && Element.bindData.priority <= tempPriority) {
+              Element.bindData.bindData = Action[action];
+              Element.bindData.priority = tempPriority;
+              if (row) {
+                Object.keys(row).forEach((key) => {
+                  if (key in Element.data) {
+                    Element.data[key] = row[key];
+                  } else {
+                    Element.data[key] = row[key];
+                  }
+                });
+              } 
+              Action[action]?.forEach((actionX) => {
+                const [key, value] = actionX.split('=');
+                Element.data = {
+                  ...Element.data,
+                  [key]: isNaN(Number(value)) ? value : Number(value), 
+                };
+              });
+              
+            }
+            break;
+  
+          case "applyClass":
+            Action[action].forEach((className: string) => {
+              Element.stylingData.push({
+                class: className,
+                priority: rule.priority ? rule.priority : -1,
+              });
+            });
+            break;
+  
+          default:
+            console.warn(`Unknown action type: ${action}`);
+        }
+      });
+  };
+
+  const getElements = (rule: YamlBindRule | YamlStylingRule, templateMap: TemplateObject):string[]=>{
     let elementList: string[] = []
     let specialElements = ''
     if(rule.elements){
       if(rule.elements.some(element =>{
         switch (element){
+          case 'all':
+            specialElements = 'all'
           case 'nodes':
             specialElements = 'node'
             break
@@ -197,54 +202,24 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       }else{
         elementList = rule.elements
       }
-      elementList.forEach(object =>{
-        if(templateMap[object].data){
-          const actionDataList = determineAction(rule, templateMap[object].data, functions);
-          if (actionDataList) {
-            actionDataList.forEach(actionData=>{
-              Object.keys(actionData.action).forEach(action =>{
-                switch (action) {
-                  case "bindData":
-                    templateMap[object].bindData = actionData.action[action]
-                    break;
-                    case "applyClass":
-                      actionData.action[action].forEach(className =>{
-                        templateMap[object].stylingData.push({class: className, priority: rule.priority?rule.priority:-1})
-                      })
-                      break;
-                  default:
-                    console.warn(`Unknown action type: ${action}`);
-                }
-              })
-            })
-          }
-        }
-      })
     }else{
-      Object.keys(templateMap).forEach(object =>{
-        if(templateMap[object].data){
-          const actionDataList = determineAction(rule, templateMap[object].data, functions);
-          if (actionDataList) {
-            actionDataList.forEach(actionData=>{
-              Object.keys(actionData.action).forEach(action =>{
-                switch (action) {
-                  case "bindData":
-                    templateMap[object].bindData = actionData.action[action]
-                    break;
-                    case "applyClass":
-                      actionData.action[action].forEach(className =>{
-                        templateMap[object].stylingData.push({class: className, priority: rule.priority?rule.priority:-1})
-                      })
-                      break;
-                  default:
-                    console.warn(`Unknown action type: ${action}`);
-                }
-              })
-            })
-          }
-        }
-      })
+      elementList = Object.keys(templateMap)
     }
+    return elementList
+  }
+
+  const findAndApplyStyling = (templateMap: TemplateObject, rule: YamlStylingRule, rows: Record<string, any>[]) =>{
+    let elementList: string[] = getElements(rule, templateMap)
+    elementList.forEach(object =>{
+      if(templateMap[object].data){
+        const actionDataList = determineAction(rule, templateMap[object].data, functions);
+        if(actionDataList){
+          actionDataList.forEach(action=>{
+            addActions(action.action, templateMap[object], rule)
+          })
+        }
+      }
+    })
   }
 
   console.log(bindingRules)
@@ -253,6 +228,12 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     if(rule.function){
       console.log(rule)
       findAndApplyBindings(templateMap.object, rule, rows, functions)
+    }else if(rule.bindData){
+      console.log('element start')
+      getElements(rule, templateMap.object).forEach(element=>{
+        console.log(element)
+        addActions({bindData: rule.bindData},templateMap.object[element],rule)
+      })
     }
   });
   stylingRules.forEach(rule => {
@@ -268,8 +249,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       bindData(templateMap.object, ObjectName, templateMap.object[ObjectName].data, templateMap.object[ObjectName].bindData.bindData);
     }
     if(templateMap.object[ObjectName].stylingData){
-      console.log(templateMap.object[ObjectName].stylingData)
-      console.log(ObjectName)
       bindClasses(ObjectName, templateMap.object[ObjectName].stylingData, classBindings)
     }
   });
