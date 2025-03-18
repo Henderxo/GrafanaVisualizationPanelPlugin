@@ -54,7 +54,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       description: 'Define rules for Mermaid chart in YAML format',
       editor: CustomTextEditor,
       defaultValue: `stylingRules:
-  - id: "Rule8"
+  - id: "StyleRule1"
     function:
       - if:
           condition: "CPU < 50"
@@ -67,53 +67,67 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
         else:
           action:
             applyClass: ["active"]
-  - id: "Rule8"
+  - id: "StyleRule2"
     elements: ["Switch_2"]
     function:
       - if:
           condition: "CPU > 50"
           action:
             applyClass: ["active"]
+  - id: "StyleRule3"
+    elements: ["Switch_2"]
+    priority: 5
+    function:
+      - if:
+          condition: "CPU > 50"
+          action:
+            applyClass: ["inactive"]
 
 bindingRules:
-  - id: "Rule1"
+
+  - id: "BindRule1"
+    elements: ["nodes"]
+    bindData: ["CPU=7777777777"]
+    
+  - id: "BindRule2"
     elements: ["Router_1", "Router_2"]
     function:
       - if:
           condition: "CPU < 50"
           action:
-            bindData: ["CPU=999999"]
-  - id: "Rule8"
+            bindData: ["BOOM='ItExploded'"]
+  - id: "BindRule3"
     elements: ["Firewall_1"]
     function:
       - if:
           condition: "CPU > 50"
           action:
-            bindData: [""]
+            bindData: []
 
-  - id: "Rule2"
+  - id: "BindRule4"
     elements: ["Server_1", "Server_2"]
     function:
       - if:
           condition: "CPU == 70"
           action:
-            bindData: [""]
+            bindData: []
 
-  - id: "Rule8"
+  - id: "BindRule5"
+    priority: 1
     elements: ["Switch_1", "Switch_2"]
     function:
       - if:
-          condition: "CPU > 70"
+          condition: "CPU < 70"
           action:
-            bindData: [""]
+            bindData: []
 
-  - id: "Rule52"
+  - id: "BindRule6"
     elements: ["Switch_1"]
     function:
       - if:
           condition: "CPU == 50"
           action:
-            bindData: [""]
+            bindData: ["CPU=7784"]
       
       `,
       settings:{
