@@ -1,7 +1,7 @@
   
   import { TemplateObject } from "types/types";
   
-const bindData = (object: TemplateObject, element: string, row: Record<string, any>, dataBinding: string[]) => {
+const bindData = (object: TemplateObject, element: string, row: Record<string, any>) => {
     if (object[element]) {
         const node = object[element];
 

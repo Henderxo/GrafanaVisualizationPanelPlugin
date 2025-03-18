@@ -2,14 +2,14 @@ export interface DiagramElement {
     row: number;
     value: string;
     type: string;
-    bindData: BindData;
+    bindingData: BindingData;
     stylingData: StylingData[];
     data?: Record<string, any>;
     endRow?: number;
   }
   
-  export interface BindData {
-    bindData: string[];
+  export interface BindingData {
+    data?: Record<string, any>;
     priority: number;
   }
   
@@ -52,22 +52,21 @@ export interface DiagramElement {
     row: number;
     value: string;
     type: string;
-    bindData: BindData;
+    bindingData: BindingData;
     stylingData: StylingData[];
-    data?: Record<string, any>;
     endRow?: number;
   
     constructor(
       row: number = 0,
       value: string = "",
       type: string = "node",
-      bindData: BindData = { bindData: [], priority: -1 },
+      bindData: BindingData = { data: undefined, priority: -1 },
       stylingData: StylingData[] = [],  
     ) {
       this.row = row;
       this.value = value;
       this.type = type;
-      this.bindData = bindData;
+      this.bindingData = bindData;
       this.stylingData = stylingData;
     }
   }
