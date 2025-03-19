@@ -75,6 +75,41 @@ const parseMermaidToMap = (
   return { object, edges, classDefs, config };
 };
 
+const getClassBindings = (input: string)=> {
+    const classBindings = new Map<string, string[]>(); 
+    const lines = input
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line);
+  
+    lines.forEach((line) => {
+        console.log(line)
+      if (line.startsWith("class ")) {
+        const classMatch = line.match(/^class\s+([\w\d_-]+(?:,[\w\d_-]+)*)\s+([\w\d_-]+)/);
+        console.log(classMatch)
+        if (classMatch) {
+            const [, objectIds, className] = classMatch;
+    
+            // Split the objectIds if there are multiple
+            const ids = objectIds.split(',');
+    
+            ids.forEach((objectId) => {
+              // Ensure the classBindings Map has the objectId as key
+              if (!classBindings.has(objectId)) {
+                classBindings.set(objectId, []);
+              }
+    
+              // Add className to the list of classes for the objectId
+              classBindings.get(objectId)?.push(className);
+            });
+          }
+      }
+    });
+  
+    return classBindings;
+  };
+  
+
 const parseStyleString = (style: string): ClassStyle => {
   const styleObj: ClassStyle = {};
   const regex = /([a-zA-Z-]+)\s*[:=]\s*([^,;]+)/g;
@@ -86,4 +121,4 @@ const parseStyleString = (style: string): ClassStyle => {
   return styleObj;
 };
 
-export { parseMermaidToMap };
+export { parseMermaidToMap, getClassBindings};

@@ -5,7 +5,7 @@ import { PanelData } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
 import { ClassStyle, StylingData, YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, TemplateObject, BindingData, Element, Action } from 'types/types';
-import { parseMermaidToMap } from 'utils/MermaidUtils';
+import { parseMermaidToMap, getClassBindings } from 'utils/MermaidUtils';
 import { extractTableData } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData } from 'utils/DataBindingUtils';
@@ -16,6 +16,7 @@ interface OtherViewPanelProps {
   options: SimpleOptions;
   data: PanelData;
 }
+
 
 export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data }) => {
   const { yamlConfig, template } = options;
@@ -39,12 +40,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   const bindingRules: YamlBindRule[] = parsedYaml.bindingRules || [];
   const stylingRules: YamlStylingRule[] = parsedYaml.stylingRules || [];
   const functions: YamlFunctions[] = parsedYaml.functions || []
-  const classBindings = new Map<string, string[]>();
+
   const table = extractTableData(data)
   if (!table) return <div>No Data Available</div>;
   const rows = mapDataToRows(data)
   console.log('Extracted rows Data:', rows);
   let templateMap = parseMermaidToMap(template)
+  const classBindings = getClassBindings(template)
   console.log('Initial Parsed Tree:', templateMap);
 
   const bindClasses = (element: string, classData: StylingData[], classBindings: Map<string, string[]>) => {
