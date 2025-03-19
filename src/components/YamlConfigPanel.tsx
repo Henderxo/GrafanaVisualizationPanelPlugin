@@ -37,6 +37,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   }
 
+
+
+
   const bindingRules: YamlBindRule[] = parsedYaml.bindingRules || [];
   const stylingRules: YamlStylingRule[] = parsedYaml.stylingRules || [];
   const functions: YamlFunctions[] = parsedYaml.functions || []
@@ -48,6 +51,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   let templateMap = parseMermaidToMap(template)
   const classBindings = getClassBindings(template)
   console.log('Initial Parsed Tree:', templateMap);
+
 
   const bindClasses = (element: string, classData: StylingData[], classBindings: Map<string, string[]>) => {
     classData.sort((a,b) => a.priority - b.priority)
@@ -120,6 +124,8 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         let elementList: string[] = getElements(rule, templateMap)
         elementList.forEach(element => {
           actionDataList.forEach(action=>{
+            console.log(action)
+            console.log(rule)
             addActions(action.action, templateMap[element], rule, row)
           })
         });
@@ -138,9 +144,12 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         switch (action) {
           case "bindData":
             const tempPriority = rule.priority ? rule.priority : -1
-            if (Element.bindingData && Element.bindingData.priority <= tempPriority) {
+            if (Element.bindingData.data && Element.bindingData.priority <= tempPriority) {
               Element.bindingData.priority = tempPriority;
               if (row) {
+                console.log('i died')
+                console.log(row)
+                console.log(Element)
                 Object.keys(row).forEach((key) => {
                   if (key in Element.bindingData.data) {
                     Element.bindingData.data[key] = row[key];
@@ -179,14 +188,14 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   const getElements = (rule: YamlBindRule | YamlStylingRule, templateMap: TemplateObject):string[]=>{
     let elementList: string[] = []
-    let specialElements = ''
+    let specialElements: string | string[] = ''
     if(rule.elements){
       if(rule.elements.some(element =>{
         switch (element){
           case 'all':
             specialElements = 'all'
           case 'nodes':
-            specialElements = 'node'
+            specialElements = ['unknown', 'square', 'circle', 'diamond', 'round']
             break
           case 'subgraphs':
             specialElements = 'subgraph'
@@ -197,7 +206,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         return specialElements !== ''
         })){
         Object.keys(templateMap).forEach(objectName =>{
-          if(specialElements === 'all' || templateMap[objectName].type == specialElements){
+          if(specialElements === 'all' || specialElements.includes(templateMap[objectName].type)){
             elementList.push(objectName)
           }
         })
@@ -277,8 +286,24 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
     Object.keys(object).forEach((key) => {
         const node = object[key];
-        if (node.type === 'node' && !node.endRow && !addedNodes.has(key)) {
-            output += `${key}(${node.value})\n`;
+        if (node.type !== 'subgraph' && !node.endRow && !addedNodes.has(key)) {
+          switch(node.type){
+            case 'square':
+              output+= `${key}[${node.value}]\n`;
+              break;  // Square node format [Node]
+            case 'round':
+              output+= `${key}(${node.value})\n`;
+              break;
+            case 'circle':
+              output+= `${key}((${node.value}))\n`;
+              break;  // Circle node format (Node)
+            case 'diamond':
+              output+= `${key}{${node.value}}\n`;
+              break;  // Diamond node format {Node}
+            default:
+              output+= `${key}\n`;
+              break;
+          }
             addedNodes.add(key); 
         }
     });
