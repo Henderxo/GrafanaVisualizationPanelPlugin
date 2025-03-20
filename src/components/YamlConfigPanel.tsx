@@ -9,6 +9,7 @@ import { parseMermaidToMap, getClassBindings } from 'utils/MermaidUtils';
 import { extractTableData } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData } from 'utils/DataBindingUtils';
+
 import { Console } from 'console';
 import { ElementSelectionContext } from '@grafana/ui';
 
@@ -16,7 +17,6 @@ interface OtherViewPanelProps {
   options: SimpleOptions;
   data: PanelData;
 }
-
 
 export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data }) => {
   const { yamlConfig, template } = options;
@@ -37,9 +37,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   }
 
-
-
-
   const bindingRules: YamlBindRule[] = parsedYaml.bindingRules || [];
   const stylingRules: YamlStylingRule[] = parsedYaml.stylingRules || [];
   const functions: YamlFunctions[] = parsedYaml.functions || []
@@ -51,6 +48,26 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   let templateMap = parseMermaidToMap(template)
   const classBindings = getClassBindings(template)
   console.log('Initial Parsed Tree:', templateMap);
+
+
+  const getDiagram = async (template: string) => {
+    const rez = await mermaid.mermaidAPI.getDiagramFromText(template)
+    console.log('Diagram')
+    console.log(rez)
+    
+
+    // rez.db.addSubGraph('sdasdasd', '')
+    console.log(rez.db.getData())
+    console.log(rez.db.getVertices());
+    console.log(rez.db.getClasses())
+    console.log(rez.db.getEdges())
+    console.log(rez.db.getSubGraphs())
+    console.log(rez.db.indexNodes())
+    return rez;
+
+  };
+
+
 
 
   const bindClasses = (element: string, classData: StylingData[], classBindings: Map<string, string[]>) => {
@@ -144,14 +161,11 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         switch (action) {
           case "bindData":
             const tempPriority = rule.priority ? rule.priority : -1
-            if (Element.bindingData.data && Element.bindingData.priority <= tempPriority) {
+            if (Element.bindingData.priority <= tempPriority) {
               Element.bindingData.priority = tempPriority;
               if (row) {
-                console.log('i died')
-                console.log(row)
-                console.log(Element)
                 Object.keys(row).forEach((key) => {
-                  if (key in Element.bindingData.data) {
+                  if(Element.bindingData.data && key in Element.bindingData.data) {
                     Element.bindingData.data[key] = row[key];
                   } else {
                     Element.bindingData.data[key] = row[key];
@@ -337,25 +351,27 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   console.log('Generated Mermaid Chart:', generatedChart2);
 
   useEffect(() => {
-    if (chartRef.current) {
-      mermaid.initialize({ startOnLoad: true });
-  
-      mermaid.render('graphDiv', generatedChart2).then(({ svg }) => {
-        if (chartRef.current) {
-          chartRef.current.innerHTML = svg;
-  
-          const svgElement = chartRef.current.querySelector('svg');
-          if (svgElement) {
-            createPanZoom(svgElement, {
-              zoomDoubleClickSpeed: 1,
-              maxZoom: 4,
-              minZoom: 0.5,
-            });
+    mermaid.initialize({})
+    getDiagram(template).then((rez)=>{
+      if (chartRef.current) {
+        mermaid.render('graphDiv', rez.text).then(({ svg }) => {
+          if (chartRef.current) {
+            chartRef.current.innerHTML = svg;
+    
+            const svgElement = chartRef.current.querySelector('svg');
+            if (svgElement) {
+              createPanZoom(svgElement, {
+                zoomDoubleClickSpeed: 1,
+                maxZoom: 4,
+                minZoom: 0.5,
+              });
+            }
           }
-        }
-      });
-    }
-  }, [generatedChart2]);
+        });
+      }
+    })
+    
+  }, );
 
   return <div ref={chartRef} />;
 };

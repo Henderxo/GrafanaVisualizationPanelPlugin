@@ -59,7 +59,7 @@ export interface DiagramElement {
       row: number = 0,
       value: string = "",
       type: string = "node",
-      bindData: BindingData = { data: [], priority: -1 },
+      bindData: BindingData = { data: undefined, priority: -1 },
       stylingData: StylingData[] = [],  
     ) {
       this.row = row;
