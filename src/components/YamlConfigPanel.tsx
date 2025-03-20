@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import { PanelData } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
-import { ClassStyle, StylingData, YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, TemplateObject, BindingData, Element, Action } from 'types/types';
+import { ClassStyle, StylingData, YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, TemplateObject, BindingData, Element, Action, FlowVertex, FlowEdge, FlowClass, FlowSubGraph, fullMermaidMap } from 'types/types';
 import { parseMermaidToMap, getClassBindings } from 'utils/MermaidUtils';
 import { extractTableData } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
@@ -45,30 +45,62 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   if (!table) return <div>No Data Available</div>;
   const rows = mapDataToRows(data)
   console.log('Extracted rows Data:', rows);
-  let templateMap = parseMermaidToMap(template)
+  //let templateMap = parseMermaidToMap(template)
   const classBindings = getClassBindings(template)
   console.log('Initial Parsed Tree:', templateMap);
 
+  let nodes: Map<string, FlowVertex>
+  let edges: FlowEdge[]
+  let classes: Map<string, FlowClass>
+  let subGraphs: Map<string, FlowSubGraph>
+
+  let fullMap: fullMermaidMap
 
   const getDiagram = async (template: string) => {
     const rez = await mermaid.mermaidAPI.getDiagramFromText(template)
-    console.log('Diagram')
     console.log(rez)
-    
-
-    // rez.db.addSubGraph('sdasdasd', '')
-    console.log(rez.db.getData())
-    console.log(rez.db.getVertices());
-    console.log(rez.db.getClasses())
-    console.log(rez.db.getEdges())
-    console.log(rez.db.getSubGraphs())
-    console.log(rez.db.indexNodes())
+    nodes = rez.db.getVertices()
+    classes = rez.db.getClasses()
+    edges = rez.db.getEdges()
+    let subgGraphArray: FlowSubGraph[] = rez.db.getSubGraphs()
+    subGraphs = new Map(subgGraphArray.map(item => [item.id, item]))
+    console.log('nodes\n')
+    console.log(nodes)
+    console.log('classes\n')
+    console.log(classes)
+    console.log('edges\n')
+    console.log(edges)
+    console.log('subGraphs\n')
+    console.log(subGraphs)
+    fullMap = {nodes,edges,classes,subGraphs}
+    bindingRules.forEach(rule => {
+      if(rule.function){
+        findAndApplyBindings(fullMap, rule, rows, functions)
+      }else if(rule.bindData){
+        getElements(rule, fullMap).forEach(element=>{
+          if(fullMap.nodes.has(element)){
+            addActions({bindData: rule.bindData},fullMap.nodes.get(element),rule)
+          }else if(fullMap.subGraphs.has(element)){
+            addActions({bindData: rule.bindData},fullMap.subGraphs.get(element),rule)
+          }
+        })
+      }
+    });
+    stylingRules.forEach(rule => {
+      if(rule.function){
+        findAndApplyStyling(templateMap.object, rule, functions)
+      }
+    });
+    Object.keys(templateMap.object).forEach(ObjectName => {
+      if(templateMap.object[ObjectName].bindingData.data){
+        bindData(templateMap.object, ObjectName, templateMap.object[ObjectName].bindingData.data);
+      }
+      if(templateMap.object[ObjectName].stylingData){
+        bindClasses(ObjectName, templateMap.object[ObjectName].stylingData, classBindings)
+      }
+    });
     return rez;
-
   };
-
-
-
 
   const bindClasses = (element: string, classData: StylingData[], classBindings: Map<string, string[]>) => {
     classData.sort((a,b) => a.priority - b.priority)
@@ -134,15 +166,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     return matchedAction.length > 0 ? matchedAction : null;
   };
 
-  const findAndApplyBindings = (templateMap: TemplateObject, rule: YamlBindRule, rows: Record<string, any>[], functions: YamlFunctions[]) => {
+  const findAndApplyBindings = (map: fullMermaidMap, rule: YamlBindRule, rows: Record<string, any>[], functions: YamlFunctions[]) => {
     rows.some((row) => {
       const actionDataList = determineAction(rule, row, functions);
       if (actionDataList) {
-        let elementList: string[] = getElements(rule, templateMap)
+        let elementList: string[] = getElements(rule, map)
         elementList.forEach(element => {
           actionDataList.forEach(action=>{
-            console.log(action)
-            console.log(rule)
             addActions(action.action, templateMap[element], rule, row)
           })
         });
@@ -200,7 +230,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       });
   };
 
-  const getElements = (rule: YamlBindRule | YamlStylingRule, templateMap: TemplateObject):string[]=>{
+  const getElements = (rule: YamlBindRule | YamlStylingRule, map: fullMermaidMap):string[]=>{
     let elementList: string[] = []
     let specialElements: string | string[] = ''
     if(rule.elements){
@@ -209,7 +239,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           case 'all':
             specialElements = 'all'
           case 'nodes':
-            specialElements = ['unknown', 'square', 'circle', 'diamond', 'round']
+            specialElements = 'nodes'
             break
           case 'subgraphs':
             specialElements = 'subgraph'
@@ -219,11 +249,17 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         }
         return specialElements !== ''
         })){
-        Object.keys(templateMap).forEach(objectName =>{
-          if(specialElements === 'all' || specialElements.includes(templateMap[objectName].type)){
-            elementList.push(objectName)
-          }
-        })
+          map.nodes.forEach((node)=>{
+            console.log(node)
+          })
+          map.subGraphs.forEach((subGraph)=>{
+            console.log(subGraph)
+          })
+        // Object.keys(templateMap).forEach(objectName =>{
+        //   if(specialElements === 'all' || ){
+        //     elementList.push(objectName)
+        //   }
+        // })
       }else{
         elementList = rule.elements
       }
@@ -249,28 +285,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   console.log(bindingRules)
   console.log(stylingRules)
-  bindingRules.forEach(rule => {
-    if(rule.function){
-      findAndApplyBindings(templateMap.object, rule, rows, functions)
-    }else if(rule.bindData){
-      getElements(rule, templateMap.object).forEach(element=>{
-        addActions({bindData: rule.bindData},templateMap.object[element],rule)
-      })
-    }
-  });
-  stylingRules.forEach(rule => {
-    if(rule.function){
-      findAndApplyStyling(templateMap.object, rule, functions)
-    }
-  });
-  Object.keys(templateMap.object).forEach(ObjectName => {
-    if(templateMap.object[ObjectName].bindingData.data){
-      bindData(templateMap.object, ObjectName, templateMap.object[ObjectName].bindingData.data);
-    }
-    if(templateMap.object[ObjectName].stylingData){
-      bindClasses(ObjectName, templateMap.object[ObjectName].stylingData, classBindings)
-    }
-  });
+  
 
 
   const rebuildMermaid = (object: TemplateObject, edges: [string, string, string, string][], classBindings: Map<string, string[]>, classDefs: Map<string, ClassStyle>, config: string): string => {
@@ -354,10 +369,10 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     mermaid.initialize({})
     getDiagram(template).then((rez)=>{
       if (chartRef.current) {
-        mermaid.render('graphDiv', rez.text).then(({ svg }) => {
+        mermaid.render('graphDiv', template).then(({ svg }) => {
           if (chartRef.current) {
             chartRef.current.innerHTML = svg;
-    
+            
             const svgElement = chartRef.current.querySelector('svg');
             if (svgElement) {
               createPanZoom(svgElement, {
