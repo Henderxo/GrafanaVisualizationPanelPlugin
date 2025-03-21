@@ -1,3 +1,6 @@
+import { Diagram } from "mermaid/dist/Diagram";
+import { DiagramDB } from "mermaid/dist/diagram-api/types";
+
   export interface BindingData {
     data: Record<string, any> | undefined;
     priority: number;
@@ -174,10 +177,48 @@
     type: 'text';
   }
 
-
   export interface fullMermaidMap{
     nodes: Map<string, FlowVertex>, 
     edges: FlowEdge[], 
     classes:  Map<string, FlowClass>, 
     subGraphs: Map<string, FlowSubGraph>
   }
+
+  export interface DiagramDBResponse extends DiagramDB{
+    getVertices: () => Map<string, FlowVertex>
+    getClasses: () => Map<string, FlowClass>
+    getEdges: () => FlowEdge[];
+    getSubGraphs: () => FlowSubGraph[];
+    addClass(ids: string[], style: string): void;
+    addLink(_start: string, _end: string, type: string): void;
+    addSubGraph(_id: string, list: string[], _title: string): void;
+    addVertex(id: string, textObj: object, type: string, style: string, classes2: string[], dir: string, props: object, shapeData: object): void;
+    defaultConfig(): void;
+    defaultStyle(): void;
+    destructLink(_str: string, _startStr: string): void;
+    exists(allSgs: object, _id: string): boolean;
+    getAccDescription(): string;
+    getAccTitle(): string;
+    getData(): object;
+    getDepthFirstPos(pos: number): number;
+    getDiagramTitle(): string;
+    getDirection(): string;
+    getTooltip(id: string): string;
+    indexNodes(): void;
+    lex: { firstGraph: Function };
+    lookUpDomId(id: string): string;
+    makeUniq(sg: object, allSubgraphs: object): string;
+    setAccDescription(txt: string): void;
+    setClass(ids: string[], className: string): void;
+    setClickEvent(ids: string[], functionName: string, functionArgs: string[]): void;
+    setDirection(dir: string): void;
+    setGen(ver: string): void;
+    setLink(ids: string[], linkStr: string, target: string): void;
+    setTooltip(ids: string[], tooltip: string): void;
+    updateLink(positions: any[], style: string): void;
+    updateLinkInterpolate(positions: any[], interpolate: string): void;
+  }
+
+  
+
+  

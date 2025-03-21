@@ -1,5 +1,6 @@
 import { PanelData } from "@grafana/data";
-import { BaseObject, fullMermaidMap } from "types/types";
+import { Diagram } from "mermaid/dist/Diagram";
+import { BaseObject, DiagramDBResponse, FlowClass, FlowEdge, FlowSubGraph, FlowVertex, fullMermaidMap } from "types/types";
 
 function extractTableData(data: PanelData): Record<string, any[]>{
     return data.series[0]?.fields.reduce((acc, field) => {
@@ -16,6 +17,34 @@ function mapDataToRows(data: PanelData): Record<string, any>[]{
       return acc;
     }, {} as Record<string, any>))
 }
+
+function reformatDataFromResponse(rez: Diagram): {
+    nodes: Map<string, FlowVertex>,
+    edges: FlowEdge[],
+    classes: Map<string, FlowClass>,
+    subGraphs: Map<string, FlowSubGraph>
+  } {
+    let data: {
+      nodes: Map<string, FlowVertex>,
+      edges: FlowEdge[],
+      classes: Map<string, FlowClass>,
+      subGraphs: Map<string, FlowSubGraph>
+    } = {
+      nodes: new Map(),
+      edges: [],
+      classes: new Map(),
+      subGraphs: new Map()
+    };
+  
+    data.nodes = (rez.db as DiagramDBResponse).getVertices();
+    data.classes = (rez.db as DiagramDBResponse).getClasses();
+    data.edges = (rez.db as DiagramDBResponse).getEdges();
+
+    let subGraphArray: FlowSubGraph[] = (rez.db as DiagramDBResponse).getSubGraphs();
+    data.subGraphs = new Map(subGraphArray.map(item => [item.id, item]));
+  
+    return data;
+  }
 
 function findElementInMaps(element: string, map: fullMermaidMap) : BaseObject | null{
     if (map.nodes.has(element)) {
@@ -39,4 +68,4 @@ function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgra
     return elements;
 };
 
-export{extractTableData, mapDataToRows, findElementInMaps, findAllElementsInMaps}
+export{extractTableData, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse}

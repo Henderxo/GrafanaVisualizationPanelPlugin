@@ -1,18 +1,14 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import yaml from 'js-yaml';
 import { PanelData } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
-import { ClassStyle, StylingData, YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, TemplateObject, BindingData, Element, Action, FlowVertex, FlowEdge, FlowClass, FlowSubGraph, fullMermaidMap, ActionData, BaseObject } from 'types/types';
-import { parseMermaidToMap, getClassBindings, generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
-import { extractTableData, findAllElementsInMaps, findElementInMaps } from 'utils/TransformationUtils';
+import { YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject } from 'types/types';
+import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
+import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData } from 'utils/DataBindingUtils';
-
-import { Console } from 'console';
-import { ElementSelectionContext } from '@grafana/ui';
-
 interface OtherViewPanelProps {
   options: SimpleOptions;
   data: PanelData;
@@ -20,6 +16,7 @@ interface OtherViewPanelProps {
 
 export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data }) => {
   const { yamlConfig, template } = options;
+  const [isLoading, setIsLoading] = useState(true); 
   const chartRef = useRef<HTMLDivElement>(null);
   console.log(template)
 
@@ -47,23 +44,22 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   const rows = mapDataToRows(data)
   console.log('Extracted rows Data:', rows);
 
-  let nodes: Map<string, FlowVertex>
-  let edges: FlowEdge[]
-  let classes: Map<string, FlowClass>
-  let subGraphs: Map<string, FlowSubGraph>
-
   let fullMap: fullMermaidMap
 
   const getDiagram = async (template: string) => {
-    const rez = await mermaid.mermaidAPI.getDiagramFromText(template)
-    console.log(rez)
-    nodes = rez.db.getVertices()
-    classes = rez.db.getClasses()
-    edges = rez.db.getEdges()
-    let subgGraphArray: FlowSubGraph[] = rez.db.getSubGraphs()
-    subGraphs = new Map(subgGraphArray.map(item => [item.id, item]))
-    fullMap = {nodes,edges,classes,subGraphs}
+    const res = await mermaid.mermaidAPI.getDiagramFromText(template)
+    console.log(res)
+    fullMap = reformatDataFromResponse(res)
     updateMapValuesWithDefault(fullMap)
+    applyAllRules(bindingRules, fullMap, rows, functions)
+    bindData(fullMap)
+    bindClasses(fullMap)
+    console.log(fullMap)
+    console.log(generateDynamicMermaidFlowchart(fullMap))
+    return res;
+  };
+
+  const applyAllRules = ((bindingRules: YamlBindRule[], fullMap: fullMermaidMap, rows: Record<string, any>[], functions: YamlFunctions[])=>{
     bindingRules.forEach(rule => {
       if(rule.function){
         findAndApplyBindings(fullMap, rule, rows, functions)
@@ -81,19 +77,14 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         findAndApplyStyling(fullMap, rule)
       }
     });
-    bindData(fullMap)
-    bindClasses(fullMap)
-    console.log(fullMap)
-    console.log(generateDynamicMermaidFlowchart(fullMap))
-    return rez;
-  };
+  })
 
   const updateMapValuesWithDefault = (fullMap: fullMermaidMap) =>{
-    fullMap.nodes.forEach((node, index)=>{
+    fullMap.nodes.forEach((node)=>{
       node.bindingData={priority: -1, data: {}}
       node.stylingData=[]
     })
-    fullMap.subGraphs.forEach((subGraph, index)=>{
+    fullMap.subGraphs.forEach((subGraph)=>{
       subGraph.bindingData={priority: -1, data: {}}
       subGraph.stylingData=[]
     })
@@ -113,7 +104,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           mapElement.classes = [...new Set(mapElement?.classes)];
         }
       })
-    
     };
   }
 
@@ -183,7 +173,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       return actionDataList!==null
     });
   };
-  
+
   const bindDataAction = (Action: Action,
     Element: BaseObject,
     rule: YamlBindRule | YamlStylingRule,
@@ -280,7 +270,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     mermaid.initialize({})
     getDiagram(template).then((rez)=>{
       if (chartRef.current) {
-        mermaid.render('graphDiv', template).then(({ svg }) => {
+        mermaid.render('graphDiv', rez.text).then(({ svg }) => {
           if (chartRef.current) {
             chartRef.current.innerHTML = svg;
             
@@ -297,7 +287,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       }
     })
     
-  }, );
+  }, [template]);
 
   return <div ref={chartRef} />;
 };
