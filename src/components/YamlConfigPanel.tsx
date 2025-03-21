@@ -87,6 +87,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     })
     fullMap.subGraphs.forEach((subGraph)=>{
       subGraph.data={}
+      subGraph.styles=[]
     })
   }
 
@@ -150,7 +151,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           let elementInMap = findElementInMaps(element, map)
           if(elementInMap){
             actionDataList.forEach(action=>{
-              addActions(action.action, elementInMap, rule, row)
+              addActions(action.action, elementInMap, row)
             })
           }
         });
@@ -190,8 +191,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       });
     }
   }
+  
 
-  const applyStyleAction = (Action: Action, Element: FlowVertex)=>{
+  const applyStyleAction = (Action: Action, Element: BaseObject)=>{
     if(Action.applyStyle){
       Action.applyStyle.forEach((styleName: string) => {
         const [property] = styleName.split(':');
@@ -204,11 +206,18 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       });
     }
   }
+  // Need to get type check somehow 
+  const applyShapeAction = (Action: Action, Element: BaseObject)=>{
+    if(Action.applyText && (Element as FlowVertex).type !== undefined){
+      Action.applyText.forEach((text: string) => {
+        //(Element as FlowVertex).type
+      });
+    }
+  }
 
   const addActions = (
     Action: Action,
     Element: BaseObject,
-    rule: YamlBindRule | YamlStylingRule,
     row?: any
   ) => {
     Object.keys(Action).forEach(action => {
@@ -221,12 +230,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           applyClassAction(Action, Element)
           break;
         case "applyStyle":
-          applyStyleAction(Action, Element as FlowVertex)
+          applyStyleAction(Action, Element)
           break;
         case "applyText":
           break;
         case "applyShape":
-          //applyShapeAction(Action, Element, rule)
+          //How do i limit shape to only nodes????
+          applyShapeAction(Action, Element)
           break;
         case "applyLink":
           break;
@@ -255,6 +265,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   }
 
   //TYPE PROBLEM and if there is no data it still should apply it. Global styles with no conditions add them too lul
+  //and styles apply to subgraphs by making them nodes
   const findAndApplyStyling = (fullMap: fullMermaidMap, rule: YamlStylingRule) =>{
     let elementList: string[] = getElements(rule, fullMap)
     elementList.forEach(object =>{

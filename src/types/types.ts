@@ -76,6 +76,7 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
   export interface BaseObject{
     id?: string
     classes: string[]
+    styles: string[]
     data: Record<string, any> | undefined
   }
 
