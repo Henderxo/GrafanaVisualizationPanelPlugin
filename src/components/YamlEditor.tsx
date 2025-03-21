@@ -372,7 +372,7 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
           editorRef.current = null;
         }
       };
-  }, [isModalOpen]); // Run only when modal opens/closes
+  }, [isModalOpen]); 
 
   const handleSave = () => {
     onChange(localYaml);
