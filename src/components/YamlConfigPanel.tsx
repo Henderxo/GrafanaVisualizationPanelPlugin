@@ -6,7 +6,7 @@ import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
 import { YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject } from 'types/types';
 import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
-import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse } from 'utils/TransformationUtils';
+import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData } from 'utils/DataBindingUtils';
 interface OtherViewPanelProps {
@@ -51,17 +51,17 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     console.log(res)
     fullMap = reformatDataFromResponse(res)
     updateMapValuesWithDefault(fullMap)
-    applyAllRules(bindingRules, fullMap, rows, functions)
-    bindData(fullMap)
-    bindClasses(fullMap)
-    bindStyles(fullMap)
+    applyAllRules(bindingRules, stylingRules,fullMap, rows, functions)
     console.log(fullMap)
     console.log(generateDynamicMermaidFlowchart(fullMap))
     return generateDynamicMermaidFlowchart(fullMap);
   };
 
-  const applyAllRules = ((bindingRules: YamlBindRule[], fullMap: fullMermaidMap, rows: Record<string, any>[], functions: YamlFunctions[])=>{
-    bindingRules.forEach(rule => {
+  const applyAllRules = ((bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], fullMap: fullMermaidMap, rows: Record<string, any>[], functions: YamlFunctions[])=>{
+    const sortedBindingRules = sortByPriority(bindingRules)
+    const sortedStylingRules = sortByPriority(stylingRules)
+
+    sortedBindingRules.forEach(rule => {
       if(rule.function){
         findAndApplyBindings(fullMap, rule, rows, functions)
       }else if(rule.bindData){
@@ -73,7 +73,8 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         })
       }
     });
-    stylingRules.forEach(rule => {
+    bindData(fullMap)
+    sortedStylingRules.forEach(rule => {
       if(rule.function){
         findAndApplyStyling(fullMap, rule)
       }
@@ -82,48 +83,14 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   const updateMapValuesWithDefault = (fullMap: fullMermaidMap) =>{
     fullMap.nodes.forEach((node)=>{
-      node.bindingData={priority: -1, data: {}}
-      node.stylingData = {styleData: [], classData: []}
+      node.data= {}
     })
     fullMap.subGraphs.forEach((subGraph)=>{
-      subGraph.bindingData={priority: -1, data: {}}
-      subGraph.stylingData = {styleData: [], classData: []}
+      subGraph.data={}
     })
   }
 
-  const bindClasses = (fullMap: fullMermaidMap) => {
-    const elementsFromMap = findAllElementsInMaps(fullMap);
-    if(elementsFromMap){
-      elementsFromMap.forEach((element)=>{
-        let mapElement = findElementInMaps(element, fullMap)
-        let elementData = mapElement?.stylingData.classData??null
-        if(elementData && mapElement && Object.keys(elementData).length > 0){
-          elementData.sort((a,b) => a.priority - b.priority)
-          elementData.forEach(data => {
-              mapElement.classes.push(data.class)
-          });
-          mapElement.classes = [...new Set(mapElement?.classes)];
-        }
-      })
-    };
-  }
 
-  const bindStyles = (fullMap: fullMermaidMap) => {
-    const elementsFromMap = findAllElementsInMaps(fullMap, 'nodes');
-    if(elementsFromMap){
-      elementsFromMap.forEach((element)=>{
-        let mapElement = findElementInMaps(element, fullMap) as FlowVertex
-        let elementData = mapElement?.stylingData.styleData??null
-        if(elementData && mapElement && Object.keys(elementData).length > 0){
-          elementData.sort((a,b) => a.priority - b.priority)
-          elementData.forEach(data => {
-              mapElement.styles.push(data.style)
-          });
-          mapElement.styles = [...new Set(mapElement?.styles)];
-        }
-      })
-    };
-  }
 
   const evaluateCondition = (condition: string, row: Record<string, any> | undefined): boolean => {
     try {
@@ -194,60 +161,50 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   const bindDataAction = (Action: Action,
     Element: BaseObject,
-    rule: YamlBindRule | YamlStylingRule,
     row?: any)=>{
-    const tempPriority = rule.priority ? rule.priority : -1
-    if (Element.bindingData.priority && Element.bindingData.priority <= tempPriority) {
-      Element.bindingData.priority = tempPriority;
-      if(row) {
-        Object.keys(row).forEach((key) => {
-          if(Element.bindingData.data) {
-            Element.bindingData.data = row;
-          }
-        });
-      } 
-      Action.bindData?.forEach((actionX) => {
-        const [key, value] = actionX.split('=');
-        
-        Element.bindingData.data = {
-          ...Element.bindingData.data,
-          [key]: value  
-        };
+    if(row) {
+      Object.keys(row).forEach((key) => {
+        if(Element.data) {
+          Element.data = row;
+        }
       });
-    }
+    } 
+    Action.bindData?.forEach((actionX) => {
+      const [key, value] = actionX.split('=');
+      
+      Element.data = {
+        ...Element.data,
+        [key]: value  
+      };
+    });
   }
 
-  const applyClassAction = (Action: Action, Element: BaseObject, rule: YamlBindRule | YamlStylingRule)=>{
+  const applyClassAction = (Action: Action, Element: BaseObject)=>{
     if(Action.applyClass){
       Action.applyClass.forEach((className: string) => {
-        Element.stylingData.classData.push({
-          class: className,
-          priority: rule.priority ? rule.priority : -1,
-        });
+        const classIndex = Element.classes.indexOf(className);
+        if (classIndex !== -1) {
+          Element.classes.splice(classIndex, 1);
+        }
+        Element.classes.push(className);
       });
     }
   }
 
-  const applyStyleAction = (Action: Action, Element: BaseObject, rule: YamlBindRule | YamlStylingRule)=>{
+  const applyStyleAction = (Action: Action, Element: FlowVertex)=>{
     if(Action.applyStyle){
       Action.applyStyle.forEach((styleName: string) => {
-        Element.stylingData.styleData.push({
-          style: styleName,
-          priority: rule.priority ? rule.priority : -1,
-        });
+        const [property] = styleName.split(':');
+        const existingStyleIndex = Element.styles.findIndex(style => style.startsWith(property + ':'))
+        if (existingStyleIndex !== -1) {
+          Element.styles.splice(existingStyleIndex, 1, styleName);
+        } else {
+          Element.styles.push(styleName);
+        }
       });
     }
   }
 
-  const applyShapeAction = (Action: Action, Element: BaseObject, rule: YamlBindRule | YamlStylingRule)=>{
-    if(Action.applyShape){
-      Element.stylingData.shape ={
-        shape: Action.applyShape,
-        priority: rule.priority ? rule.priority : -1,
-      };
-    }
-  }
-  
   const addActions = (
     Action: Action,
     Element: BaseObject,
@@ -258,18 +215,18 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       console.log(Action)
       switch (action) {
         case "bindData":
-          bindDataAction(Action, Element, rule, row)
+          bindDataAction(Action, Element, row)
           break;
         case "applyClass":
-          applyClassAction(Action, Element, rule)
+          applyClassAction(Action, Element)
           break;
         case "applyStyle":
-          applyStyleAction(Action, Element, rule)
+          applyStyleAction(Action, Element as FlowVertex)
           break;
         case "applyText":
           break;
         case "applyShape":
-          applyShape(Action, Element, rule)
+          //applyShapeAction(Action, Element, rule)
           break;
         case "applyLink":
           break;
@@ -297,12 +254,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     return elementList
   }
 
+  //TYPE PROBLEM and if there is no data it still should apply it. Global styles with no conditions add them too lul
   const findAndApplyStyling = (fullMap: fullMermaidMap, rule: YamlStylingRule) =>{
     let elementList: string[] = getElements(rule, fullMap)
     elementList.forEach(object =>{
       let mapElement = findElementInMaps(object, fullMap)
-      if(mapElement && mapElement.bindingData.data &&  Object.keys(mapElement.bindingData.data).length > 0){
-        const actionDataList = determineAction(rule, mapElement.bindingData.data, functions);
+      if(mapElement && mapElement.data &&  Object.keys(mapElement.data).length > 0){
+        const actionDataList = determineAction(rule, mapElement.data, functions);
         if(actionDataList){
           actionDataList.forEach(action=>{
             addActions(action.action, mapElement as FlowVertex, rule)

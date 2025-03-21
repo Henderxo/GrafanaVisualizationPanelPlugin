@@ -56,6 +56,15 @@ function findElementInMaps(element: string, map: fullMermaidMap) : BaseObject | 
     return null;
 };
 
+function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
+    return arr.sort((a, b) => {
+      const priorityA = a.priority ?? -1; 
+      const priorityB = b.priority ?? -1;
+  
+      return priorityB - priorityA;
+    });
+  }
+
 function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgraphs' | 'all'): string[] {
     let elements: string[] = [];
     if (!options || options === 'all') {
@@ -68,4 +77,4 @@ function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgra
     return elements;
 };
 
-export{extractTableData, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse}
+export{extractTableData, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse, sortByPriority}

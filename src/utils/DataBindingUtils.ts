@@ -7,7 +7,7 @@ const bindData = (fullMap: fullMermaidMap) => {
     if(elementsFromMap){
       elementsFromMap.forEach((element)=>{
         let mapElement = findElementInMaps(element, fullMap) as FlowSubGraph | FlowVertex
-        let elementData = mapElement.bindingData.data??null
+        let elementData = mapElement.data??null
         if(elementData && Object.keys(elementData).length > 0){
             if ('title' in mapElement) {
                 if (mapElement.title) {

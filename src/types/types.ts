@@ -1,29 +1,7 @@
-import { Diagram } from "mermaid/dist/Diagram";
 import { DiagramDB } from "mermaid/dist/diagram-api/types";
 
   export interface BindingData {
     data: Record<string, any> | undefined;
-    priority: number;
-  }
-  
-  export interface StylingData {
-    classData: ClassData[]
-    styleData: StyleData[]
-    shape: Shape
-  }
-
-  export interface ClassData{
-    class: string;
-    priority: number;
-  }
-
-  export interface Shape{
-    shape: string
-    priority: number
-  }
-
-  export interface StyleData{
-    style: string;
     priority: number;
   }
   
@@ -95,14 +73,10 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     animate?: boolean;
   }
 
-  export interface ActionData{
-    bindingData: BindingData
-    stylingData: StylingData;
-  }
-
-  export interface BaseObject extends ActionData{
+  export interface BaseObject{
     id?: string
     classes: string[]
+    data: Record<string, any> | undefined
   }
 
   export interface FlowClass {
