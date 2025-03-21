@@ -16,7 +16,7 @@ interface OtherViewPanelProps {
 
 export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data }) => {
   const { yamlConfig, template } = options;
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true)
   const chartRef = useRef<HTMLDivElement>(null);
   console.log(template)
 
@@ -267,27 +267,44 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
 
   useEffect(() => {
-    mermaid.initialize({})
-    getDiagram(template).then((rez)=>{
-      if (chartRef.current) {
-        mermaid.render('graphDiv', rez.text).then(({ svg }) => {
-          if (chartRef.current) {
-            chartRef.current.innerHTML = svg;
-            
-            const svgElement = chartRef.current.querySelector('svg');
-            if (svgElement) {
-              createPanZoom(svgElement, {
-                zoomDoubleClickSpeed: 1,
-                maxZoom: 4,
-                minZoom: 0.5,
-              });
-            }
-          }
-        });
-      }
-    })
+    setIsLoading(true);
     
-  }, [template]);
+    mermaid.initialize({});
+    getDiagram(template)
+      .then((rez) => {
+        if (chartRef.current) {
+          mermaid.render('graphDiv', rez.text)
+            .then(({ svg }) => {
+              if (chartRef.current) {
+                chartRef.current.innerHTML = svg;
+                
+                const svgElement = chartRef.current.querySelector('svg');
+                if (svgElement) {
+                  createPanZoom(svgElement, {
+                    zoomDoubleClickSpeed: 1,
+                    maxZoom: 4,
+                    minZoom: 0.5,
+                  });
+                }
+                setIsLoading(false);
+              }
+            })
+            .catch((error) => {
+              console.error('Error rendering diagram:', error);
+              setIsLoading(false);
+            });
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching diagram data:', error);
+        setIsLoading(false);
+      });
+  }, [template, getDiagram, createPanZoom]);
 
-  return <div ref={chartRef} />;
+  return (
+    <div>
+      {isLoading && <div className="loading-indicator">Loading diagram...</div>}
+      <div ref={chartRef} className={isLoading ? "hidden" : ""} />
+    </div>
+  );
 };
