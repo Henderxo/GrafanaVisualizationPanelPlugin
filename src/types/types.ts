@@ -7,7 +7,17 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
   }
   
   export interface StylingData {
+    classData: ClassData[]
+    styleData: StyleData[]
+  }
+
+  export interface ClassData{
     class: string;
+    priority: number;
+  }
+
+  export interface StyleData{
+    style: string;
     priority: number;
   }
   
@@ -79,7 +89,7 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
 
   export interface ActionData{
     bindingData: BindingData
-    stylingData: StylingData[];
+    stylingData: StylingData;
   }
 
   export interface BaseObject extends ActionData{

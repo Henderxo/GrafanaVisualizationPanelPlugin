@@ -82,11 +82,11 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   const updateMapValuesWithDefault = (fullMap: fullMermaidMap) =>{
     fullMap.nodes.forEach((node)=>{
       node.bindingData={priority: -1, data: {}}
-      node.stylingData=[]
+      node.stylingData = {styleData: [], classData: []}
     })
     fullMap.subGraphs.forEach((subGraph)=>{
       subGraph.bindingData={priority: -1, data: {}}
-      subGraph.stylingData=[]
+      subGraph.stylingData = {styleData: [], classData: []}
     })
   }
 
@@ -95,7 +95,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     if(elementsFromMap){
       elementsFromMap.forEach((element)=>{
         let mapElement = findElementInMaps(element, fullMap)
-        let elementData = mapElement?.stylingData??null
+        let elementData = mapElement?.stylingData.classData??null
         if(elementData && mapElement && Object.keys(elementData).length > 0){
           elementData.sort((a,b) => a.priority - b.priority)
           elementData.forEach(data => {
@@ -202,7 +202,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   const applyClassAction = (Action: Action, Element: BaseObject, rule: YamlBindRule | YamlStylingRule)=>{
     if(Action.applyClass){
       Action.applyClass.forEach((className: string) => {
-        Element.stylingData.push({
+        Element.stylingData.classData.push({
           class: className,
           priority: rule.priority ? rule.priority : -1,
         });
@@ -223,6 +223,14 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           break;
         case "applyClass":
           applyClassAction(Action, Element, rule)
+          break;
+        case "applyStyle":
+          break;
+        case "applyText":
+          break;
+        case "applyShape":
+          break;
+        case "applyLink":
           break;
         default:
           console.warn(`Unknown action type: ${action}`);
