@@ -46,7 +46,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   let fullMap: fullMermaidMap
 
-  const getDiagram = async (template: string) => {
+  const getDiagram = async (template: string) : Promise<string> => {
     const res = await mermaid.mermaidAPI.getDiagramFromText(template)
     console.log(res)
     fullMap = reformatDataFromResponse(res)
@@ -56,7 +56,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     bindClasses(fullMap)
     console.log(fullMap)
     console.log(generateDynamicMermaidFlowchart(fullMap))
-    return res;
+    return generateDynamicMermaidFlowchart(fullMap);
   };
 
   const applyAllRules = ((bindingRules: YamlBindRule[], fullMap: fullMermaidMap, rows: Record<string, any>[], functions: YamlFunctions[])=>{
@@ -273,7 +273,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     getDiagram(template)
       .then((rez) => {
         if (chartRef.current) {
-          mermaid.render('graphDiv', rez.text)
+          mermaid.render('graphDiv', rez)
             .then(({ svg }) => {
               if (chartRef.current) {
                 chartRef.current.innerHTML = svg;
