@@ -9,11 +9,17 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
   export interface StylingData {
     classData: ClassData[]
     styleData: StyleData[]
+    shape: Shape
   }
 
   export interface ClassData{
     class: string;
     priority: number;
+  }
+
+  export interface Shape{
+    shape: string
+    priority: number
   }
 
   export interface StyleData{
@@ -60,6 +66,8 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     bindData?: string[];
     applyClass?: string[];
     applyText?: string[];
+    applyStyle?: string[];
+    applyShape?: string;
   }
   
   export interface ClassStyle {

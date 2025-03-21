@@ -54,6 +54,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     applyAllRules(bindingRules, fullMap, rows, functions)
     bindData(fullMap)
     bindClasses(fullMap)
+    bindStyles(fullMap)
     console.log(fullMap)
     console.log(generateDynamicMermaidFlowchart(fullMap))
     return generateDynamicMermaidFlowchart(fullMap);
@@ -102,6 +103,23 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
               mapElement.classes.push(data.class)
           });
           mapElement.classes = [...new Set(mapElement?.classes)];
+        }
+      })
+    };
+  }
+
+  const bindStyles = (fullMap: fullMermaidMap) => {
+    const elementsFromMap = findAllElementsInMaps(fullMap, 'nodes');
+    if(elementsFromMap){
+      elementsFromMap.forEach((element)=>{
+        let mapElement = findElementInMaps(element, fullMap) as FlowVertex
+        let elementData = mapElement?.stylingData.styleData??null
+        if(elementData && mapElement && Object.keys(elementData).length > 0){
+          elementData.sort((a,b) => a.priority - b.priority)
+          elementData.forEach(data => {
+              mapElement.styles.push(data.style)
+          });
+          mapElement.styles = [...new Set(mapElement?.styles)];
         }
       })
     };
@@ -209,6 +227,26 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       });
     }
   }
+
+  const applyStyleAction = (Action: Action, Element: BaseObject, rule: YamlBindRule | YamlStylingRule)=>{
+    if(Action.applyStyle){
+      Action.applyStyle.forEach((styleName: string) => {
+        Element.stylingData.styleData.push({
+          style: styleName,
+          priority: rule.priority ? rule.priority : -1,
+        });
+      });
+    }
+  }
+
+  const applyShapeAction = (Action: Action, Element: BaseObject, rule: YamlBindRule | YamlStylingRule)=>{
+    if(Action.applyShape){
+      Element.stylingData.shape ={
+        shape: Action.applyShape,
+        priority: rule.priority ? rule.priority : -1,
+      };
+    }
+  }
   
   const addActions = (
     Action: Action,
@@ -217,6 +255,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     row?: any
   ) => {
     Object.keys(Action).forEach(action => {
+      console.log(Action)
       switch (action) {
         case "bindData":
           bindDataAction(Action, Element, rule, row)
@@ -225,10 +264,12 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           applyClassAction(Action, Element, rule)
           break;
         case "applyStyle":
+          applyStyleAction(Action, Element, rule)
           break;
         case "applyText":
           break;
         case "applyShape":
+          applyShape(Action, Element, rule)
           break;
         case "applyLink":
           break;
