@@ -61,7 +61,7 @@ function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
       const priorityA = a.priority ?? -1; 
       const priorityB = b.priority ?? -1;
   
-      return priorityB - priorityA;
+      return priorityA - priorityB;
     });
   }
 

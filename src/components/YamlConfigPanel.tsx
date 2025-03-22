@@ -4,11 +4,12 @@ import yaml from 'js-yaml';
 import { PanelData } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
-import { YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject } from 'types/types';
+import { YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject, FlowVertexTypeParam, FlowSubGraph } from 'types/types';
 import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
 import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData } from 'utils/DataBindingUtils';
+import { Console } from 'console';
 interface OtherViewPanelProps {
   options: SimpleOptions;
   data: PanelData;
@@ -18,7 +19,24 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   const { yamlConfig, template } = options;
   const [isLoading, setIsLoading] = useState(true)
   const chartRef = useRef<HTMLDivElement>(null);
-  console.log(template)
+  const validShapes = new Set<FlowVertexTypeParam>([
+    'square',
+    'doublecircle',
+    'circle',
+    'ellipse',
+    'stadium',
+    'subroutine',
+    'rect',
+    'cylinder',
+    'round',
+    'diamond',
+    'hexagon',
+    'odd',
+    'trapezoid',
+    'inv_trapezoid',
+    'lean_right',
+    'lean_left',
+  ]);
 
   if (!yamlConfig || !template) {
     return <div>Please provide both YAML rules and a Mermaid template.</div>;
@@ -48,7 +66,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
 
   const getDiagram = async (template: string) : Promise<string> => {
     const res = await mermaid.mermaidAPI.getDiagramFromText(template)
-    console.log(res)
     fullMap = reformatDataFromResponse(res)
     updateMapValuesWithDefault(fullMap)
     applyAllRules(bindingRules, stylingRules,fullMap, rows, functions)
@@ -68,7 +85,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         getElements(rule, fullMap).forEach(element=>{
           let mapElement = findElementInMaps(element, fullMap)
           if(mapElement){
-            addActions({bindData: rule.bindData}, mapElement, rule)
+            addActions({bindData: rule.bindData}, mapElement)
           }
         })
       }
@@ -172,7 +189,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     } 
     Action.bindData?.forEach((actionX) => {
       const [key, value] = actionX.split('=');
-      
       Element.data = {
         ...Element.data,
         [key]: value  
@@ -192,7 +208,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   }
   
-
   const applyStyleAction = (Action: Action, Element: BaseObject)=>{
     if(Action.applyStyle){
       Action.applyStyle.forEach((styleName: string) => {
@@ -206,12 +221,23 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       });
     }
   }
-  // Need to get type check somehow 
+
+  const applyTextAction = (Action: Action, Element: BaseObject)=>{
+    if(Action.applyText){
+      if ('title' in Element) {
+        Element.title = Action.applyText
+      } else if ('text' in Element) {
+        Element.text = Action.applyText
+      }
+    }
+  }
+  
+  const isValidShape = (shape: any): shape is FlowVertexTypeParam => validShapes.has(shape);
   const applyShapeAction = (Action: Action, Element: BaseObject)=>{
-    if(Action.applyText && (Element as FlowVertex).type !== undefined){
-      Action.applyText.forEach((text: string) => {
-        //(Element as FlowVertex).type
-      });
+    if(Action.applyShape){
+      if (isValidShape(Action.applyShape)){
+        (Element as FlowVertex).type = Action.applyShape
+      }
     }
   }
 
@@ -221,7 +247,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     row?: any
   ) => {
     Object.keys(Action).forEach(action => {
-      console.log(Action)
       switch (action) {
         case "bindData":
           bindDataAction(Action, Element, row)
@@ -233,9 +258,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           applyStyleAction(Action, Element)
           break;
         case "applyText":
+          applyTextAction(Action, Element )
           break;
         case "applyShape":
-          //How do i limit shape to only nodes????
           applyShapeAction(Action, Element)
           break;
         case "applyLink":

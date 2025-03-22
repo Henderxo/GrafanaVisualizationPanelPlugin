@@ -92,11 +92,19 @@ export function generateDynamicMermaidFlowchart(data: {
     
     // Apply classes to nodes
     const nodeClasses = new Map<string, string[]>();
-    
+    const subgraphClasses = new Map<string, string[]>();
+
     // Collect classes from nodes
     for (const [nodeId, node] of data.nodes) {
       if (node.classes && node.classes.length > 0) {
         nodeClasses.set(nodeId, node.classes);
+      }
+    }
+
+     // Collect classes from subgraphs
+    for (const [subgraphId, subgraph] of data.subGraphs) {
+      if (subgraph.classes && subgraph.classes.length > 0) {
+        subgraphClasses.set(subgraphId, subgraph.classes);
       }
     }
     
@@ -107,6 +115,39 @@ export function generateDynamicMermaidFlowchart(data: {
         classes.forEach(className => {
           mermaidString += `  class ${nodeId} ${className};\n`;
         });
+      });
+    }
+
+    if (subgraphClasses.size > 0) {
+      mermaidString += "  %%%% Apply classes to subgraphs\n";
+      subgraphClasses.forEach((classes, subgraphId) => {
+        classes.forEach(className => {
+          mermaidString += `  class ${subgraphId} ${className};\n`;
+        });
+      });
+    }
+
+    const nodesWithStyles = Array.from(data.nodes.entries())
+    .filter(([_, node]) => node.styles && node.styles.length > 0);
+  
+    if (nodesWithStyles.length > 0) {
+    mermaidString += "  %%%% Apply direct styles to nodes\n";
+     nodesWithStyles.forEach(([nodeId, node]) => {
+        if (node.styles && node.styles.length > 0) {
+          mermaidString += `  style ${nodeId} ${node.styles.join(',')};\n`;
+        }
+      }) ;
+    }
+
+    const subgraphsWithStyles = Array.from(data.subGraphs.entries())
+    .filter(([_, subgraph]) => subgraph.styles && subgraph.styles.length > 0);
+
+    if (subgraphsWithStyles.length > 0) {
+      mermaidString += "  %%%% Apply direct styles to subgraphs\n";
+      subgraphsWithStyles.forEach(([subgraphId, subgraph]) => {
+        if (subgraph.styles && subgraph.styles.length > 0) {
+          mermaidString += `  style ${subgraphId} ${subgraph.styles.join(',')};\n`;
+        }
       });
     }
     
@@ -128,7 +169,7 @@ export function generateDynamicMermaidFlowchart(data: {
           nodeShape = '(((default)))';
           break;
         case 'square': 
-        nodeShape = '[default]';
+          nodeShape = '[default]';
           break;
         case 'rect':
           nodeShape = '[/default\\]';
@@ -148,6 +189,27 @@ export function generateDynamicMermaidFlowchart(data: {
         case 'round':
           nodeShape = '(default)';
           break;
+        case 'ellipse':
+          nodeShape = '((default))';
+          break;
+        case 'subroutine':
+          nodeShape = '[[default]]';
+          break;
+        case 'odd':
+          nodeShape = '>default]';
+          break;
+        case 'trapezoid':
+          nodeShape = '[/default/]';
+          break;
+        case 'inv_trapezoid':
+          nodeShape = '[\\default\\]';
+          break;
+        case 'lean_right':
+          nodeShape = '[/default/]';
+          break;
+        case 'lean_left':
+          nodeShape = '[\\default]';
+          break;
         default:
           nodeShape = '(default)';
       }
@@ -162,6 +224,34 @@ export function generateDynamicMermaidFlowchart(data: {
     // Return the formatted node representation
     return `${nodeId}${nodeShape.replace('default', nodeContent)}`;
   }
+
+
+  // function formatNodeText(nodeId: string, node: FlowVertex): string {
+  //   let nodeContent = node.text || nodeId;
+    
+  //   // Using the new tag syntax
+  //   let tagAttributes = [];
+    
+  //   // Add shape attribute if node type is specified
+  //   if (node.type) {
+  //     tagAttributes.push(`shape: ${node.type}`);
+  //   } else {
+  //     // Default shape if none specified
+  //     tagAttributes.push('shape: round');
+  //   }
+    
+  //   // Add label attribute for the text (escape any quotes in the content)
+  //   const escapedContent = nodeContent.replace(/"/g, '\\"');
+  //   tagAttributes.push(`label: "${escapedContent}"`);
+    
+  //   // If there are direct styles, add them as a style attribute
+  //   if (node.styles && node.styles.length > 0) {
+  //     tagAttributes.push(`style: "${node.styles.join(',')}"`);
+  //   }
+    
+  //   // Format using the new @{} tag syntax
+  //   return `${nodeId}@{${tagAttributes.join(', ')}}`;
+  // }
   
   /**
    * Groups edges by connection type for better organization in the chart
@@ -170,8 +260,10 @@ export function generateDynamicMermaidFlowchart(data: {
     // Group edges by some property
     const groups: Record<string, FlowEdge[]> = {
       'Standard Connections': [],
-      'Dotted Connections': [],
-      'Other Connections': []
+    'Dotted Connections': [],
+    'Thick Connections': [],
+    'Invisible Connections': [],
+    'Other Connections': []
     };
     
     edges.forEach(edge => {
@@ -179,6 +271,10 @@ export function generateDynamicMermaidFlowchart(data: {
         groups['Dotted Connections'].push(edge);
       } else if (edge.stroke === 'normal') {
         groups['Standard Connections'].push(edge);
+      } else if (edge.stroke === 'thick') {
+        groups['Thick Connections'].push(edge);
+      } else if (edge.stroke === 'invisible') {
+        groups['Invisible Connections'].push(edge);
       } else {
         groups['Other Connections'].push(edge);
       }

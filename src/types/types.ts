@@ -43,7 +43,7 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
   export interface Action {
     bindData?: string[];
     applyClass?: string[];
-    applyText?: string[];
+    applyText?: string;
     applyStyle?: string[];
     applyShape?: string;
   }
