@@ -168,7 +168,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
           let elementInMap = findElementInMaps(element, map)
           if(elementInMap){
             actionDataList.forEach(action=>{
-              addActions(action.action, elementInMap, row)
+              if(action.action.bindData){
+                addActions({bindData: action.action.bindData}, elementInMap, row)
+              }
             })
           }
         });
@@ -299,6 +301,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         const actionDataList = determineAction(rule, mapElement.data, functions);
         if(actionDataList){
           actionDataList.forEach(action=>{
+            if(action.action.bindData){
+              delete action.action.bindData
+            }
             addActions(action.action, mapElement as FlowVertex, rule)
           })
         }

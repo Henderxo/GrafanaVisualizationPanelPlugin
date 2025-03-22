@@ -21,7 +21,7 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     type: string
     elements?: string[]
     priority: number
-    function: FunctionElement[]
+    function: (string | FunctionElement)[]
   }
   
   export interface YamlFunctions {
