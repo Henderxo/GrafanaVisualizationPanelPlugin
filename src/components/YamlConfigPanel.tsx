@@ -9,16 +9,21 @@ import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
 import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData } from 'utils/DataBindingUtils';
-import { Console } from 'console';
+import { ElementConfigModal } from './EditElementModal';
+
 interface OtherViewPanelProps {
   options: SimpleOptions;
   data: PanelData;
+  onOptionsChange: (options: SimpleOptions) => void;
 }
 
-export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data }) => {
+export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, onOptionsChange }) => {
   const { yamlConfig, template } = options;
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedElement, setSelectedElement] = useState<BaseObject | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
+  const fullMapRef = useRef<fullMermaidMap | null>(null);
   const validShapes = new Set<FlowVertexTypeParam>([
     'square',
     'doublecircle',
@@ -62,13 +67,12 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
   const rows = mapDataToRows(data)
   console.log('Extracted rows Data:', rows);
 
-  let fullMap: fullMermaidMap
-
   const getDiagram = async (template: string) : Promise<string> => {
     const res = await mermaid.mermaidAPI.getDiagramFromText(template)
-    fullMap = reformatDataFromResponse(res)
+    const fullMap = reformatDataFromResponse(res)
+    fullMapRef.current = fullMap;
     updateMapValuesWithDefault(fullMap)
-    applyAllRules(bindingRules, stylingRules,fullMap, rows, functions)
+    applyAllRules(bindingRules, stylingRules, fullMap, rows, functions)
     console.log(fullMap)
     console.log(generateDynamicMermaidFlowchart(fullMap))
     return generateDynamicMermaidFlowchart(fullMap);
@@ -107,8 +111,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       subGraph.styles=[]
     })
   }
-
-
 
   const evaluateCondition = (condition: string, row: Record<string, any> | undefined): boolean => {
     try {
@@ -291,8 +293,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     return elementList
   }
 
-  //TYPE PROBLEM and if there is no data it still should apply it. Global styles with no conditions add them too lul
-  //and styles apply to subgraphs by making them nodes
   const findAndApplyStyling = (fullMap: fullMermaidMap, rule: YamlStylingRule) =>{
     let elementList: string[] = getElements(rule, fullMap)
     elementList.forEach(object =>{
@@ -310,9 +310,34 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
       }
     })
   }
-  console.log(bindingRules)
-  console.log(stylingRules)
 
+  // Handler for double-clicking on Mermaid elements
+  const handleElementDoubleClick = (event: MouseEvent) => {
+    if (!fullMapRef.current) return;
+    
+    const target = event.target as HTMLElement;
+    const nodeId = target.closest('[id^="flowchart-"]')?.id?.replace('flowchart-', '').replace(/[-_]\d+$/, '');
+
+    if (!nodeId) return;
+    
+    // Find the element in either nodes or subgraphs
+    let element: BaseObject | null = null;
+    
+    element = findElementInMaps(nodeId, fullMapRef.current)
+    
+    if (element) {
+      setSelectedElement(element);
+      setIsModalOpen(true);
+    }
+  };
+
+  // Handle YAML config changes from the modal
+  const handleYamlConfigChange = (newYamlConfig: string) => {
+    onOptionsChange({
+      ...options,
+      yamlConfig: newYamlConfig
+    });
+  };
 
   useEffect(() => {
     setIsLoading(true);
@@ -328,10 +353,18 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
                 
                 const svgElement = chartRef.current.querySelector('svg');
                 if (svgElement) {
+                  // Initialize pan-zoom
                   createPanZoom(svgElement, {
                     zoomDoubleClickSpeed: 1,
                     maxZoom: 4,
                     minZoom: 0.5,
+                  });
+                  
+                  // Add event listeners for double-click on nodes and subgraphs
+                  const nodeElements = chartRef.current.querySelectorAll('[id^="flowchart-"]');
+                  nodeElements.forEach(node => {
+                    // Using dblclick instead of doubleclick
+                    node.addEventListener('dblclick', handleElementDoubleClick);
                   });
                 }
                 setIsLoading(false);
@@ -347,12 +380,30 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
         console.error('Error fetching diagram data:', error);
         setIsLoading(false);
       });
-  }, [template, getDiagram, createPanZoom]);
+      
+    return () => {
+      if (chartRef.current) {
+        const nodeElements = chartRef.current.querySelectorAll('[id^="flowchart-"]');
+        nodeElements.forEach(node => {
+          node.removeEventListener('dblclick', handleElementDoubleClick);
+        });
+      }
+    };
+  }, [template, yamlConfig]);
 
   return (
     <div>
       {isLoading && <div className="loading-indicator">Loading diagram...</div>}
       <div ref={chartRef} className={isLoading ? "hidden" : ""} />
+      
+      {/* Configuration Modal */}
+      <ElementConfigModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        element={selectedElement}
+        yamlConfig={yamlConfig}
+        onYamlConfigChange={handleYamlConfigChange}
+      />
     </div>
   );
 };
