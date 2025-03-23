@@ -8,40 +8,64 @@ interface StringListProps {
 
 const StringList: React.FC<StringListProps> = ({ label, content }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [visibleStrings, setVisibleStrings] = useState<string[]>([]); // Holds visible strings
-  const [remainingCount, setRemainingCount] = useState<number>(0); // Number of strings not fitting
-
-  // Calculate how many strings fit inside the container
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const containerWidth = containerRef.current.offsetWidth; // Get the container's width
-    let totalWidth = 0;
-    let visible: string[] = [];
-    let remaining = 0;
-
-    content.forEach((str, index) => {
-      const strWidth = getTextWidth(str); // Function to get text width
-      totalWidth += strWidth;
-      if (totalWidth < containerWidth - 100) {
-        visible.push(str);
-      } else {
-        remaining += 1;
-      }
-    });
-
-    setVisibleStrings(visible);
-    setRemainingCount(remaining);
-  }, [content]);
+  const [visibleStrings, setVisibleStrings] = useState<string[]>([]); 
+  const [remainingCount, setRemainingCount] = useState<number>(0);
 
   // Helper function to calculate text width
   const getTextWidth = (text: string): number => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     if (!context) return 0;
-    context.font = '14px Arial'; // Use the same font as in Grafana UI
+    context.font = '14px Arial';
     return context.measureText(text).width + 20; // Add padding for divs
   };
+
+  // Function to calculate visible strings based on container width
+  const calculateVisibleStrings = () => {
+    if (!containerRef.current) return;
+
+    const containerWidth = containerRef.current.offsetWidth;
+    let totalWidth = 0;
+    let visible: string[] = [];
+    let remaining = 0;
+
+    // Account for the "+X more" element's width
+    const moreItemWidth = 80; // Approximate width for "+X more" element
+    const availableWidth = containerWidth - moreItemWidth;
+
+    for (let i = 0; i < content.length; i++) {
+      const str = content[i];
+      const strWidth = getTextWidth(str);
+      
+      // Check if this string would fit
+      if (totalWidth + strWidth <= availableWidth) {
+        visible.push(str);
+        totalWidth += strWidth + 5; // Add gap width (5px)
+      } else {
+        remaining = content.length - i;
+        break;
+      }
+    }
+
+    setVisibleStrings(visible);
+    setRemainingCount(remaining);
+  };
+
+  // Initial calculation
+  useEffect(() => {
+    calculateVisibleStrings();
+    // Add resize listener
+    const handleResize = () => {
+      calculateVisibleStrings();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [content]);
 
   const theme = useTheme2();
   const bgColor = theme.colors.success.main;
@@ -49,16 +73,17 @@ const StringList: React.FC<StringListProps> = ({ label, content }) => {
 
   return (
     <MenuGroup>
-        <div style={{marginBottom: '1px'}}>
-            <strong>{label} </strong>
-        </div>
+      <div style={{marginBottom: '8px'}}>
+        <strong>{label}</strong>
+      </div>
       <div
         ref={containerRef}
         style={{
           display: 'flex',
-          flexWrap: 'wrap',
+          flexWrap: 'nowrap', // Prevent wrapping to next line
           gap: '5px',
           width: '100%',
+          overflowX: 'hidden', // Hide horizontal overflow
         }}
       >
         {visibleStrings.map((str, index) => (
@@ -67,9 +92,10 @@ const StringList: React.FC<StringListProps> = ({ label, content }) => {
             style={{
               backgroundColor: bgColor,
               color: 'black',
-              padding: '5px',
+              padding: '5px 8px',
               borderRadius: '5px',
-              boxShadow: shadowStyle
+              boxShadow: shadowStyle,
+              whiteSpace: 'nowrap',
             }}
           >
             <Text>{str}</Text>
@@ -81,10 +107,11 @@ const StringList: React.FC<StringListProps> = ({ label, content }) => {
             style={{
               backgroundColor: bgColor,
               color: 'black',
-              padding: '5px',
+              padding: '5px 8px',
               borderRadius: '5px',
               fontWeight: 'bold',
-              boxShadow: shadowStyle
+              boxShadow: shadowStyle,
+              whiteSpace: 'nowrap',
             }}
           >
             <Text>+{remainingCount} more</Text>
