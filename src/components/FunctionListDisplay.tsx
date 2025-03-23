@@ -20,7 +20,7 @@ const ActionDisplay: React.FC<{ action: Action }> = ({ action }) => {
   const theme = useTheme2();
   
   return (
-    <Box paddingLeft={2} marginTop={1}>
+    <Box >
       {action.bindData && (
         <Box marginBottom={1}>
           <Text variant="bodySmall"><strong>Bind Data:</strong></Text>
@@ -78,8 +78,8 @@ const ConditionDisplay: React.FC<{
   index?: number;
 }> = ({ condition, type, index }) => {
   const theme = useTheme2();
-  const [isOpen, setIsOpen] = useState(type === 'if'); // Only 'if' is expanded by default
-  
+  const [isOpen, setIsOpen] = useState(false); // Only 'if' is expanded by default
+  console.log('Why i am not dysplayed idkxd')
   let label = '';
   switch(type) {
     case 'if':
@@ -95,30 +95,25 @@ const ConditionDisplay: React.FC<{
   
   return (
     <Box 
-      marginBottom={1}
-      padding={1}
     >
-      <div 
+      {/* <div 
         style={{ 
           display: 'flex', 
           alignItems: 'center', 
           cursor: 'pointer',
-          padding: '6px 8px',
           backgroundColor: theme.colors.background.secondary,
           borderRadius: '2px'
         }}
         onClick={() => setIsOpen(!isOpen)}
       >
         <Icon name={isOpen ? 'angle-down' : 'angle-right'} />
-        <Box marginLeft={1}>
+        <Box>
           <Text variant="body">{label}: {condition.condition || 'No condition'}</Text>
         </Box>
-      </div>
-      
-      <Collapse isOpen={isOpen} label="">
-        <Box padding={1}>
+      </div> */}
+      <p>Dof</p>
+      <Collapse onToggle={()=>{setIsOpen(!isOpen)}} isOpen={isOpen} label={`${label}: ${condition.condition || 'No condition'}`}>
           <ActionDisplay action={condition.action} />
-        </Box>
       </Collapse>
     </Box>
   );
@@ -160,7 +155,7 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ functions, lab
   };
   
   return (
-    <Box marginTop={2}>
+    <Box >
       <Text variant="bodySmall"><strong>{label}</strong></Text>
       <Box >
         {functions && functions.length > 0 ? (
