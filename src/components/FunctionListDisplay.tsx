@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   useTheme2, 
   Collapse, 
@@ -6,56 +6,61 @@ import {
   Box,
   Text, 
   Badge,
-  Stack
+  Stack,
+  Divider
 } from '@grafana/ui';
-import { FunctionElement, ConditionElement, Action } from 'types/types';
+import { FunctionElement, ConditionElement, Action, YamlBindRule, YamlStylingRule, customHtmlBase } from 'types/types';
 
-interface FunctionDisplayProps {
-  functions: (string | FunctionElement)[];
+interface FunctionDisplayProps extends customHtmlBase{
+  rule: YamlBindRule | YamlStylingRule
+  func: FunctionElement | null;
   label: string;
 }
 
-// Component to display action details (bindData, applyClass, applyText, etc.)
-const ActionDisplay: React.FC<{ action: Action }> = ({ action }) => {
-  const theme = useTheme2();
-  
+const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p' }> = ({ action, textSize }) => {
+
   return (
+    
     <Box >
       {action.bindData && (
         <Box marginBottom={1}>
-          <Text variant="bodySmall"><strong>Bind Data:</strong></Text>
-          <Stack direction="row" wrap="wrap" gap={1}>
-            {action.bindData.map((item, i) => (
-              <Badge key={i} color="blue" text={item} />
-            ))}
-          </Stack>
-        </Box>
+        <Text>Bind Data: </Text>
+          {action.bindData.length > 0 ? (
+            action.bindData.map((item, i) => (
+              <Text key={i} element={textSize}>
+                <Badge color="blue" text={`${item}`} /> 
+              </Text>
+            ))
+          ) : (
+            <Text element={textSize}>
+              <Badge color="blue" text="Any" />
+            </Text>
+          )}
+      </Box>
       )}
       
       {action.applyClass && (
         <Box marginBottom={1}>
-          <Text variant="bodySmall"><strong>Apply Class:</strong></Text>
-          <Stack direction="row" wrap="wrap" gap={1}>
+          <Text >Apply Class: </Text>
             {action.applyClass.map((item, i) => (
-              <Badge key={i} color="green" text={item} />
+              <Badge key={i} color="red" text={`${item}`} />
             ))}
-          </Stack>
         </Box>
       )}
       
       {action.applyText && (
         <Box marginBottom={1}>
-          <Text variant="bodySmall"><strong>Apply Text:</strong></Text>
-          <Text variant="bodySmall">{action.applyText}</Text>
+          <Text >Apply Text: </Text>
+          <Badge color="green" text={`${action.applyText} `} />
         </Box>
       )}
       
       {action.applyStyle && (
         <Box marginBottom={1}>
-          <Text variant="bodySmall"><strong>Apply Style:</strong></Text>
+          <Text >Apply Style: </Text>
           <Stack direction="row" wrap="wrap" gap={1}>
             {action.applyStyle.map((item, i) => (
-              <Badge key={i} color="purple" text={item} />
+              <Badge key={i} color="purple" text={`${item}`} />
             ))}
           </Stack>
         </Box>
@@ -63,8 +68,8 @@ const ActionDisplay: React.FC<{ action: Action }> = ({ action }) => {
       
       {action.applyShape && (
         <Box marginBottom={1}>
-          <Text variant="bodySmall"><strong>Apply Shape:</strong></Text>
-          <Badge color="orange" text={action.applyShape} />
+          <Text element={textSize} >Apply Shape: </Text>
+          <Text element={textSize}><Badge color="orange" text={action.applyShape} /></Text>
         </Box>
       )}
     </Box>
@@ -76,12 +81,15 @@ const ConditionDisplay: React.FC<{
   condition: ConditionElement; 
   type: 'if' | 'else_if' | 'else';
   index?: number;
-}> = ({ condition, type, index }) => {
-  const theme = useTheme2();
-  const [isOpen, setIsOpen] = useState(false); // Only 'if' is expanded by default
-  console.log('Why i am not dysplayed idkxd')
+  textSize: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p'
+}> = ({ condition, type, index, textSize }) => {
+  const [isOpen, setIsOpen] = useState(false); // Initially closed
+  useEffect(() => {
+    setIsOpen(false); // Reset state when condition changes
+  }, [condition]);
+
   let label = '';
-  switch(type) {
+  switch (type) {
     case 'if':
       label = 'If';
       break;
@@ -92,38 +100,25 @@ const ConditionDisplay: React.FC<{
       label = 'Else';
       break;
   }
-  
+
   return (
-    <Box 
-    >
-      {/* <div 
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          cursor: 'pointer',
-          backgroundColor: theme.colors.background.secondary,
-          borderRadius: '2px'
-        }}
-        onClick={() => setIsOpen(!isOpen)}
+    <Box>
+      <Collapse
+        onToggle={() => setIsOpen(!isOpen)}
+        isOpen={isOpen}
+        label={`${label}: ${condition.condition || 'No condition'}`}
       >
-        <Icon name={isOpen ? 'angle-down' : 'angle-right'} />
-        <Box>
-          <Text variant="body">{label}: {condition.condition || 'No condition'}</Text>
-        </Box>
-      </div> */}
-      <p>Dof</p>
-      <Collapse onToggle={()=>{setIsOpen(!isOpen)}} isOpen={isOpen} label={`${label}: ${condition.condition || 'No condition'}`}>
-          <ActionDisplay action={condition.action} />
+        {/* Ensure ActionDisplay only renders if it's open */}
+        {isOpen && <ActionDisplay action={condition.action} textSize={textSize} />}
       </Collapse>
     </Box>
   );
 };
-
 // Main component to display function elements
-export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ functions, label }) => {
-  const theme = useTheme2();
-  
-  const renderFunction = (func: string | FunctionElement, index: number) => {
+export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ func, label, labelSize = 'span', textSize = 'span' }) => {
+
+
+  const renderFunction = (func: string | FunctionElement, index: string) => {
     if (typeof func === 'string') {
       return (
         <Box key={index} marginBottom={1}>
@@ -135,11 +130,12 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ functions, lab
     return (
       <Box key={index} marginBottom={2}>
         {func.if && (
-          <ConditionDisplay condition={func.if} type="if" />
+          <ConditionDisplay textSize={textSize} condition={func.if} type="if" />
         )}
         
         {func.else_if && func.else_if.map((elseIf, i) => (
           <ConditionDisplay 
+            textSize={textSize}
             key={`else_if_${i}`} 
             condition={elseIf} 
             type="else_if" 
@@ -148,7 +144,7 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ functions, lab
         ))}
         
         {func.else && (
-          <ConditionDisplay condition={func.else} type="else" />
+          <ConditionDisplay textSize={textSize} condition={func.else} type="else" />
         )}
       </Box>
     );
@@ -156,13 +152,9 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ functions, lab
   
   return (
     <Box >
-      <Text variant="bodySmall"><strong>{label}</strong></Text>
-      <Box >
-        {functions && functions.length > 0 ? (
-          functions.map((func, i) => renderFunction(func, i))
-        ) : (
-          <Text variant="bodySmall" color="secondary">No functions defined</Text>
-        )}
+      <Text element={labelSize}>{label}</Text>
+      <Box>
+        {func && renderFunction(func, 'cat')}
       </Box>
     </Box>
   );

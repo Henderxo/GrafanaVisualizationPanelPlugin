@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MenuGroup, Text, useTheme2 } from '@grafana/ui';
+import { customHtmlBase } from 'types/types';
 
-interface StringListProps {
+interface StringListProps extends customHtmlBase{
   label: string;
   content: string[];
 }
 
-const StringList: React.FC<StringListProps> = ({ label, content }) => {
+const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'span', textSize = 'span', bgColor = useTheme2().colors.success.main}, color = 'black') => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [visibleStrings, setVisibleStrings] = useState<string[]>([]); 
   const [remainingCount, setRemainingCount] = useState<number>(0);
@@ -32,20 +33,30 @@ const StringList: React.FC<StringListProps> = ({ label, content }) => {
     // Account for the "+X more" element's width
     const moreItemWidth = 80; // Approximate width for "+X more" element
     const availableWidth = containerWidth - moreItemWidth;
+    if(content.length === 0){
+      const str = 'All';
+      const strWidth = getTextWidth(str)
 
-    for (let i = 0; i < content.length; i++) {
-      const str = content[i];
-      const strWidth = getTextWidth(str);
-      
-      // Check if this string would fit
       if (totalWidth + strWidth <= availableWidth) {
         visible.push(str);
         totalWidth += strWidth + 5; // Add gap width (5px)
-      } else {
-        remaining = content.length - i;
-        break;
+      }
+    }else{
+      for (let i = 0; i < content.length; i++) {
+        const str = content[i];
+        const strWidth = getTextWidth(str);
+        
+        // Check if this string would fit
+        if (totalWidth + strWidth <= availableWidth) {
+          visible.push(str);
+          totalWidth += strWidth + 5; // Add gap width (5px)
+        } else {
+          remaining = content.length - i;
+          break;
+        }
       }
     }
+    
 
     setVisibleStrings(visible);
     setRemainingCount(remaining);
@@ -68,22 +79,21 @@ const StringList: React.FC<StringListProps> = ({ label, content }) => {
   }, [content]);
 
   const theme = useTheme2();
-  const bgColor = theme.colors.success.main;
   const shadowStyle = "0px 4px 6px rgba(0, 0, 0, 0.1)";
 
   return (
     <MenuGroup>
       <div style={{marginBottom: '8px'}}>
-        <strong>{label}</strong>
+        <Text  truncate={true} element={labelSize}>{label}</Text>
       </div>
       <div
         ref={containerRef}
         style={{
           display: 'flex',
-          flexWrap: 'nowrap', // Prevent wrapping to next line
+          flexWrap: 'nowrap',
           gap: '5px',
           width: '100%',
-          overflowX: 'hidden', // Hide horizontal overflow
+          overflowX: 'hidden', 
         }}
       >
         {visibleStrings.map((str, index) => (
@@ -91,14 +101,14 @@ const StringList: React.FC<StringListProps> = ({ label, content }) => {
             key={index}
             style={{
               backgroundColor: bgColor,
-              color: 'black',
+              color: color,
               padding: '5px 8px',
               borderRadius: '5px',
               boxShadow: shadowStyle,
               whiteSpace: 'nowrap',
             }}
           >
-            <Text>{str}</Text>
+            <Text element={textSize} >{str}</Text>
           </div>
         ))}
 
@@ -106,7 +116,7 @@ const StringList: React.FC<StringListProps> = ({ label, content }) => {
           <div
             style={{
               backgroundColor: bgColor,
-              color: 'black',
+              color: color,
               padding: '5px 8px',
               borderRadius: '5px',
               fontWeight: 'bold',
@@ -114,7 +124,7 @@ const StringList: React.FC<StringListProps> = ({ label, content }) => {
               whiteSpace: 'nowrap',
             }}
           >
-            <Text>+{remainingCount} more</Text>
+            <Text element={textSize}>+{remainingCount} more</Text>
           </div>
         )}
       </div>

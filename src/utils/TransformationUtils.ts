@@ -1,6 +1,6 @@
 import { PanelData } from "@grafana/data";
 import { Diagram } from "mermaid/dist/Diagram";
-import { BaseObject, DiagramDBResponse, FlowClass, FlowEdge, FlowSubGraph, FlowVertex, fullMermaidMap } from "types/types";
+import { BaseObject, DiagramDBResponse, FlowClass, FlowEdge, FlowSubGraph, FlowVertex, fullMermaidMap, YamlBindRule, YamlStylingRule } from "types/types";
 
 function extractTableData(data: PanelData): Record<string, any[]>{
     return data.series[0]?.fields.reduce((acc, field) => {
@@ -65,6 +65,71 @@ function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
     });
   }
 
+  function isFlowVertex(obj: any): obj is FlowVertex {
+    return (
+      obj &&
+      Array.isArray(obj.classes) &&
+      typeof obj.id === 'string' &&
+      typeof obj.domId === 'string' &&
+      obj.labelType === 'text' &&
+      Array.isArray(obj.styles)
+    );
+  }
+  
+  function isFlowSubGraph(obj: any): obj is FlowSubGraph {
+    return (
+      obj &&
+      Array.isArray(obj.classes) &&
+      typeof obj.id === 'string' &&
+      typeof obj.title === 'string' &&
+      Array.isArray(obj.nodes)
+    );
+  }
+
+  function getElementTypeInBaseObject(baseObject: BaseObject): 'node' | 'subgraph' | 'unknown'{
+    if (isFlowVertex(baseObject)) {
+      return 'node';
+    } else if (isFlowSubGraph(baseObject)) {
+      return 'subgraph';
+    } else {
+      return 'unknown';
+    }
+  }
+
+  function getElementRules(element: BaseObject, rules: [YamlBindRule[]?, YamlStylingRule[]?]){
+    const [bindRules, stylingRules] = rules;
+    let elementRules: {bindRules: YamlBindRule[], stylingRules: YamlStylingRule[]} = {bindRules: [], stylingRules: []}
+
+    const elementType = getElementTypeInBaseObject(element)
+    const elementId = element.id || '';
+
+    if (bindRules && element.id) {
+      elementRules.bindRules = bindRules.filter((rule) =>{
+        return !rule.elements || rule.elements?.includes('all')  
+        ||rule.elements?.includes('nodes') && elementType === 'node' 
+        || rule.elements?.includes('subgraphs') && elementType === 'subgraph'
+        || rule.elements?.includes(elementId)
+      })
+    }
+    if (stylingRules) {
+      elementRules.stylingRules = stylingRules.filter((rule) =>{
+        return !rule.elements || rule.elements?.includes('all')  
+        ||rule.elements?.includes('nodes') && elementType === 'node' 
+        || rule.elements?.includes('subgraphs') && elementType === 'subgraph'
+        || rule.elements?.includes(elementId)
+      })
+    }
+
+    return elementRules
+  }
+
+  function getRuleElements(rule: YamlBindRule | YamlStylingRule, elementList: BaseObject[]){
+    elementList.forEach(element => {
+      const elementType = getElementTypeInBaseObject(element)
+
+    });
+  }
+
 function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgraphs' | 'all'): string[] {
     let elements: string[] = [];
     if (!options || options === 'all') {
@@ -77,4 +142,4 @@ function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgra
     return elements;
 };
 
-export{extractTableData, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse, sortByPriority}
+export{extractTableData, getElementRules, getElementTypeInBaseObject, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse, sortByPriority}

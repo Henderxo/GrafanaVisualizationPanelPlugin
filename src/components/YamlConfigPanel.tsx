@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import { PanelData } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
-import { YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject, FlowVertexTypeParam, FlowSubGraph } from 'types/types';
+import { YamlBindRule, YamlFunction, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject, FlowVertexTypeParam, FlowSubGraph, FunctionElement } from 'types/types';
 import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
 import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
@@ -47,7 +47,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     return <div>Please provide both YAML rules and a Mermaid template.</div>;
   }
 
-  let parsedYaml: any;
+  let parsedYaml: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], functions: YamlFunction[]};
   try {
     parsedYaml = yaml.load(yamlConfig);
   } catch (e) {
@@ -60,7 +60,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
 
   const bindingRules: YamlBindRule[] = parsedYaml.bindingRules || [];
   const stylingRules: YamlStylingRule[] = parsedYaml.stylingRules || [];
-  const functions: YamlFunctions[] = parsedYaml.functions || []
+  const functions: YamlFunction[] = parsedYaml.functions || []
 
   const table = extractTableData(data)
   if (!table) return <div>No Data Available</div>;
@@ -78,7 +78,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     return generateDynamicMermaidFlowchart(fullMap);
   };
 
-  const applyAllRules = ((bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], fullMap: fullMermaidMap, rows: Record<string, any>[], functions: YamlFunctions[])=>{
+  const applyAllRules = ((bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], fullMap: fullMermaidMap, rows: Record<string, any>[], functions: YamlFunction[])=>{
     const sortedBindingRules = sortByPriority(bindingRules)
     const sortedStylingRules = sortByPriority(stylingRules)
 
@@ -127,41 +127,40 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     }
   };
 
-  const determineAction = (rule: YamlBindRule | YamlStylingRule, row: Record<string, any> | undefined, functions: YamlFunctions[]):  ConditionElement[] | null => {
+  const determineAction = (rule: YamlBindRule | YamlStylingRule, row: Record<string, any> | undefined, functions: YamlFunction[]):  ConditionElement[] | null => {
     let matchedAction: ConditionElement[] = []
-
-    for (let func of rule.function) {      
-      if (typeof func === 'string') {
-        const foundFunction = functions.find((functionn) => functionn.id === func)?.function;
-        if (!foundFunction) {
-          continue;
-        }
-        func = foundFunction; 
+    let func = rule.function
+   
+    if (typeof func === 'string') {
+      const foundFunction = functions.find((functionn) => functionn.id === func)?.function;
+      if (!foundFunction) {
+        return null
       }
-      let valueFound = false
-      if (func.if && evaluateCondition(func.if.condition, row)) {
-        matchedAction.push(func.if); 
-        valueFound = true
-      } 
-      else if (func.else_if) {
-        const elseIfArray = Array.isArray(func.else_if) ? func.else_if : [func.else_if];
-        for (const elseIf of elseIfArray) {
-          if (evaluateCondition(elseIf.condition, row)) {
-            matchedAction.push(elseIf);
-            valueFound = true
-            break
-          }
-        }
-      } 
-      if (func.else && !valueFound) {
-        matchedAction.push(func.else);
-      }
-
+      func = foundFunction; 
     }
+    let valueFound = false
+    if (func.if && evaluateCondition(func.if.condition, row)) {
+      matchedAction.push(func.if); 
+      valueFound = true
+    } 
+    else if (func.else_if) {
+      const elseIfArray = Array.isArray(func.else_if) ? func.else_if : [func.else_if];
+      for (const elseIf of elseIfArray) {
+        if (evaluateCondition(elseIf.condition, row)) {
+          matchedAction.push(elseIf);
+          valueFound = true
+          break
+        }
+      }
+    } 
+    if (func.else && !valueFound) {
+      matchedAction.push(func.else);
+    }
+
     return matchedAction.length > 0 ? matchedAction : null;
   };
 
-  const findAndApplyBindings = (map: fullMermaidMap, rule: YamlBindRule, rows: Record<string, any>[], functions: YamlFunctions[]) => {
+  const findAndApplyBindings = (map: fullMermaidMap, rule: YamlBindRule, rows: Record<string, any>[], functions: YamlFunction[]) => {
     rows.some((row) => {
       const actionDataList = determineAction(rule, row, functions);
       if (actionDataList) {
@@ -311,99 +310,156 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     })
   }
 
-  // Handler for double-clicking on Mermaid elements
-  const handleElementDoubleClick = (event: MouseEvent) => {
-    if (!fullMapRef.current) return;
-    
+// Handler for double-clicking on Mermaid elements
+const handleElementDoubleClick = (event: MouseEvent) => {
+  if (!fullMapRef.current) return;
+  
+  // Start with the target element
+  let currentElement = event.target as HTMLElement;
+  let nodeElement = null;
+  
+  // First check if the element itself is a flowchart element
+  if (currentElement.id && currentElement.id.startsWith('flowchart-')) {
+    nodeElement = currentElement;
+  } else {
+    // If not, walk up the DOM tree to find the nearest flowchart element
+    while (currentElement && !nodeElement) {
+      if (currentElement.id && currentElement.id.startsWith('flowchart-')) {
+        nodeElement = currentElement;
+        break;
+      }
+      
+      // Also check for g elements that contain flowchart elements
+      // This captures clicks on shape elements (rect, circle, etc.)
+      const flowchartChild = currentElement.querySelector('[id^="flowchart-"]');
+      if (flowchartChild) {
+        nodeElement = flowchartChild as HTMLElement;
+        break;
+      }
+      
+      // Stop if we reach the SVG container
+      if (currentElement.tagName === 'svg') break;
+      
+      currentElement = currentElement.parentElement as HTMLElement;
+      if (!currentElement) break;
+    }
+  }
+  
+  // If we still don't have a nodeElement, check if we're clicking on a shape
+  // that's part of a cluster but doesn't have a flowchart- id itself
+  if (!nodeElement && event.target) {
     const target = event.target as HTMLElement;
-    const nodeId = target.closest('[id^="flowchart-"]')?.id?.replace('flowchart-', '').replace(/[-_]\d+$/, '');
+    // Check if target is inside a g with class="cluster"
+    let clusterParent = target.closest('.cluster');
+    if (clusterParent) {
+      // Find the first flowchart element within this cluster
+      nodeElement = clusterParent.querySelector('[id^="flowchart-"]') as HTMLElement;
+    }
+  }
+  
+  if (!nodeElement) {
+    console.log("No flowchart element found for this click");
+    return;
+  }
+  
+  const nodeId = nodeElement.id.replace('flowchart-', '').replace(/[-_]\d+$/, '');
+  console.log('Node identified:', nodeId);
+  
+  // Find the element in either nodes or subgraphs
+  let element = findElementInMaps(nodeId, fullMapRef.current);
+  
+  if (element) {
+    console.log('Element found:', element);
+    setSelectedElement(element);
+    setIsModalOpen(true);
+  } else {
+    console.warn('Could not find element with ID:', nodeId);
+  }
+};
 
-    if (!nodeId) return;
+// Handle YAML config changes from the modal
+const handleYamlConfigChange = (newYamlConfig: string) => {
+  onOptionsChange({
+    ...options,
+    yamlConfig: newYamlConfig
+  });
+};
+
+// Add a debug function to log node-element relationships when diagram renders
+const debugNodeElementMapping = (svgElement: SVGElement) => {
+  const nodeElements = svgElement.querySelectorAll('[id^="flowchart-"]');
+  console.log('All flowchart elements:', nodeElements.length);
+  nodeElements.forEach(node => {
+    const nodeId = node.id.replace('flowchart-', '').replace(/[-_]\d+$/, '');
+    console.log(`Node mapping: ${node.id} -> ${nodeId}`);
+  });
+};
+
+useEffect(() => {
+  setIsLoading(true);
+  
+  mermaid.initialize({});
+  getDiagram(template)
+    .then((rez) => {
+      if (chartRef.current) {
+        mermaid.render('graphDiv', rez)
+          .then(({ svg }) => {
+            if (chartRef.current) {
+              chartRef.current.innerHTML = svg;
+              
+              const svgElement = chartRef.current.querySelector('svg');
+              if (svgElement) {
+                // Initialize pan-zoom
+                createPanZoom(svgElement, {
+                  zoomDoubleClickSpeed: 1,
+                  maxZoom: 4,
+                  minZoom: 0.5,
+                });
+                
+                // Debug node mappings to help troubleshoot
+                debugNodeElementMapping(svgElement as SVGElement);
+                
+                // Single event listener on the SVG container instead of multiple node listeners
+                svgElement.addEventListener('dblclick', handleElementDoubleClick);
+              }
+              setIsLoading(false);
+            }
+          })
+          .catch((error) => {
+            console.error('Error rendering diagram:', error);
+            setIsLoading(false);
+          });
+      }
+    })
+    .catch((error) => {
+      console.error('Error fetching diagram data:', error);
+      setIsLoading(false);
+    });
     
-    // Find the element in either nodes or subgraphs
-    let element: BaseObject | null = null;
-    
-    element = findElementInMaps(nodeId, fullMapRef.current)
-    
-    if (element) {
-      setSelectedElement(element);
-      setIsModalOpen(true);
+  return () => {
+    // Clean up event listener on component unmount
+    if (chartRef.current) {
+      const svgElement = chartRef.current.querySelector('svg');
+      if (svgElement) {
+        svgElement.removeEventListener('dblclick', handleElementDoubleClick);
+      }
     }
   };
+}, [template, yamlConfig]);
 
-  // Handle YAML config changes from the modal
-  const handleYamlConfigChange = (newYamlConfig: string) => {
-    onOptionsChange({
-      ...options,
-      yamlConfig: newYamlConfig
-    });
-  };
-
-  useEffect(() => {
-    setIsLoading(true);
+return (
+  <div>
+    {isLoading && <div className="loading-indicator">Loading diagram...</div>}
+    <div ref={chartRef} className={isLoading ? "hidden" : ""} />
     
-    mermaid.initialize({});
-    getDiagram(template)
-      .then((rez) => {
-        if (chartRef.current) {
-          mermaid.render('graphDiv', rez)
-            .then(({ svg }) => {
-              if (chartRef.current) {
-                chartRef.current.innerHTML = svg;
-                
-                const svgElement = chartRef.current.querySelector('svg');
-                if (svgElement) {
-                  // Initialize pan-zoom
-                  createPanZoom(svgElement, {
-                    zoomDoubleClickSpeed: 1,
-                    maxZoom: 4,
-                    minZoom: 0.5,
-                  });
-                  
-                  // Add event listeners for double-click on nodes and subgraphs
-                  const nodeElements = chartRef.current.querySelectorAll('[id^="flowchart-"]');
-                  nodeElements.forEach(node => {
-                    // Using dblclick instead of doubleclick
-                    node.addEventListener('dblclick', handleElementDoubleClick);
-                  });
-                }
-                setIsLoading(false);
-              }
-            })
-            .catch((error) => {
-              console.error('Error rendering diagram:', error);
-              setIsLoading(false);
-            });
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching diagram data:', error);
-        setIsLoading(false);
-      });
-      
-    return () => {
-      if (chartRef.current) {
-        const nodeElements = chartRef.current.querySelectorAll('[id^="flowchart-"]');
-        nodeElements.forEach(node => {
-          node.removeEventListener('dblclick', handleElementDoubleClick);
-        });
-      }
-    };
-  }, [template, yamlConfig]);
-
-  return (
-    <div>
-      {isLoading && <div className="loading-indicator">Loading diagram...</div>}
-      <div ref={chartRef} className={isLoading ? "hidden" : ""} />
-      
-      {/* Configuration Modal */}
-      <ElementConfigModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        element={selectedElement}
-        yamlConfig={yamlConfig}
-        onYamlConfigChange={handleYamlConfigChange}
-      />
-    </div>
-  );
+    {/* Configuration Modal */}
+    <ElementConfigModal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      element={selectedElement}
+      yamlConfig={parsedYaml}
+      onYamlConfigChange={handleYamlConfigChange}
+    />
+  </div>
+);
 };

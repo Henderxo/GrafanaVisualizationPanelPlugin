@@ -11,7 +11,7 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     type: string;
     elements: string[];
     priority: number;
-    function: (string | FunctionElement)[];
+    function: (string | FunctionElement);
     bindData?: string[]
   }
 
@@ -21,10 +21,10 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     type: string
     elements?: string[]
     priority: number
-    function: (string | FunctionElement)[]
+    function: (string | FunctionElement)
   }
   
-  export interface YamlFunctions {
+  export interface YamlFunction {
     id: string;
     function: FunctionElement;
   }
@@ -210,6 +210,14 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     setTooltip(ids: string[], tooltip: string): void;
     updateLink(positions: any[], style: string): void;
     updateLinkInterpolate(positions: any[], interpolate: string): void;
+  }
+
+  export interface customHtmlBase{
+    labelSize?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p'
+    textSize?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p';
+    bgColor?: string;
+    color?: string
+    hover?: boolean
   }
 
   
