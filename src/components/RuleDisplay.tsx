@@ -46,7 +46,6 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
         height: ${height};
         padding: 17px;
         background: ${isHovered ? bgHoverColor : bgColor};
-        border-radius: 10px;
         transition: background-color 0.3s ease;
         overflow-y: auto;
         display: flex;
@@ -73,6 +72,8 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
             content={rule.elements ? rule.elements : []} 
             textSize={textSize} 
             labelSize={labelSize}
+            bgColor={theme.colors.warning.text}
+            color='black'
           />
         </div>
         {rule.function && <div><Divider/>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MenuGroup, Text, useTheme2 } from '@grafana/ui';
+import { Badge, MenuGroup, Text, useTheme2 } from '@grafana/ui';
 import { customHtmlBase } from 'types/types';
+import { css } from '@emotion/css';
 
 interface StringListProps extends customHtmlBase{
   label: string;
@@ -79,7 +80,8 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
   }, [content]);
 
   const theme = useTheme2();
-  const shadowStyle = "0px 4px 6px rgba(0, 0, 0, 0.1)";
+
+  const shadowStyle = "0px 8px 16px rgba(0, 0, 0, 0.5)";
 
   return (
     <MenuGroup>
@@ -97,35 +99,11 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
         }}
       >
         {visibleStrings.map((str, index) => (
-          <div
-            key={index}
-            style={{
-              backgroundColor: bgColor,
-              color: color,
-              padding: '5px 8px',
-              borderRadius: '5px',
-              boxShadow: shadowStyle,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <Text element={textSize} >{str}</Text>
-          </div>
+          <Badge color="blue" text={<Text variant={'bodySmall'}>{str}</Text>}> </Badge>
         ))}
 
         {remainingCount > 0 && (
-          <div
-            style={{
-              backgroundColor: bgColor,
-              color: color,
-              padding: '5px 8px',
-              borderRadius: '5px',
-              fontWeight: 'bold',
-              boxShadow: shadowStyle,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <Text element={textSize}>+{remainingCount} more</Text>
-          </div>
+          <Badge  color="blue" text={<Text variant={'bodySmall'}>{`+${remainingCount} more`}</Text>}> </Badge>
         )}
       </div>
     </MenuGroup>
