@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme2, Grid, MenuGroup } from '@grafana/ui';
 import { YamlBindRule, YamlStylingRule } from 'types/types';
-import { RuleDisplay } from './RuleDisplay';
+import { RuleDisplay } from '../displays/RuleDisplay';
 
 interface RuleGridProps {
   rules: YamlBindRule[] | YamlStylingRule[]; // List of rule objects to display

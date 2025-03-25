@@ -7,21 +7,17 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
   
   export interface YamlBindRule {
     id: string;
-    scope: string;
-    type: string;
-    elements: string[];
-    priority: number;
-    function: (string | FunctionElement);
+    elements?: string[];
+    priority?: number;
+    function?: (string | FunctionElement);
     bindData?: string[]
   }
 
   export interface YamlStylingRule{
     id: string
-    scope: string
-    type: string
     elements?: string[]
-    priority: number
-    function: (string | FunctionElement)
+    priority?: number
+    function?: (string | FunctionElement)
   }
   
   export interface YamlFunction {
@@ -32,7 +28,7 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
   export interface FunctionElement {
     if?: ConditionElement;
     else_if?: ConditionElement[];
-    else?: ConditionElement;
+    else?: {action: Action};
   }
 
   export interface ConditionElement {

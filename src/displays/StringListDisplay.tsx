@@ -79,13 +79,10 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
     };
   }, [content]);
 
-  const theme = useTheme2();
-
-  const shadowStyle = "0px 8px 16px rgba(0, 0, 0, 0.5)";
 
   return (
     <MenuGroup>
-      <div style={{marginBottom: '8px'}}>
+      <div style={{marginBottom: '4px'}}>
         <Text  truncate={true} element={labelSize}>{label}</Text>
       </div>
       <div
@@ -99,11 +96,11 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
         }}
       >
         {visibleStrings.map((str, index) => (
-          <Badge color="blue" text={<Text variant={'bodySmall'}>{str}</Text>}> </Badge>
+          <Badge color="blue" text={<Text variant={'body'}>{str}</Text>}> </Badge>
         ))}
 
         {remainingCount > 0 && (
-          <Badge  color="blue" text={<Text variant={'bodySmall'}>{`+${remainingCount} more`}</Text>}> </Badge>
+          <Badge  color="blue" text={<Text variant={'body'}>{`+${remainingCount} more`}</Text>}> </Badge>
         )}
       </div>
     </MenuGroup>

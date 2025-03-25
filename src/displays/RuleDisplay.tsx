@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { customHtmlBase, FunctionElement, YamlBindRule, YamlFunction, YamlStylingRule } from "types/types";
 import StringList from "./StringListDisplay";
-import { useTheme2, Text, Divider, TabsBar, Tab } from '@grafana/ui';
+import { useTheme2, Text, Divider, TabsBar, Tab, PageToolbar, ToolbarButton } from '@grafana/ui';
 import FunctionList from "./FunctionListDisplay";
 import { css } from '@emotion/css';
+import { CreateRuleModal } from "modals/CreateRule";
 
 interface RuleDisplayProps extends customHtmlBase {
   rule: YamlBindRule | YamlStylingRule;
@@ -24,6 +25,8 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
   
   const bgHoverColor = theme.colors.border.medium;
   const bgColor = theme.colors.background.secondary;
+
+
 
   useEffect(() => {
 
@@ -54,19 +57,14 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       onMouseEnter={() => setIsHovered(hover)} 
       onMouseLeave={() => setIsHovered(false)} 
     >
-      <h3 className={css`
-        margin-bottom: 8px;
-        color: ${theme.colors.text.primary};
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-      `}>
-        <Text>{`${rule.id}`}</Text>
-      </h3>
+
+     <PageToolbar className={css`background: ${isHovered ? bgHoverColor : bgColor}; padding: 1px; padding-top: 3px; padding-bottom: 3px;`} title={`${rule.id}`} >
+      <ToolbarButton iconSize="lg" className={css`&:hover{ background-color: ${theme.colors.background.primary}}`} icon="edit">Edit</ToolbarButton>
+     </PageToolbar>
       <Divider/>
       <div className={css`flex: 1;`}>
         <Text truncate={true} element={textSize}>Priority: {rule?.priority ? rule?.priority : 'default'}</Text>
-        <div className={css`margin-top: 4px; margin-bottom: 4px;`}>
+        <div className={css`margin-top: 4px; margin-bottom: 8px;`}>
           <StringList 
             label="Elements:" 
             content={rule.elements ? rule.elements : []} 
@@ -76,14 +74,17 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
             color='black'
           />
         </div>
-        {rule.function && <div><Divider/>
-        <FunctionList 
-          label="Function:" 
-          textSize={textSize} 
-          labelSize={labelSize} 
-          rule={rule} 
-          func={rule.function as FunctionElement}
-        /></div>}
+        {rule.function && 
+        <div>
+          {/* <Divider/> */}
+          <FunctionList 
+            label="Function:" 
+            textSize={textSize} 
+            labelSize={labelSize} 
+            rule={rule} 
+            func={rule.function as FunctionElement}
+          />
+        </div>}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   Divider
 } from '@grafana/ui';
 import { FunctionElement, ConditionElement, Action, YamlBindRule, YamlStylingRule, customHtmlBase } from 'types/types';
+import { css } from '@emotion/css';
 
 interface FunctionDisplayProps extends customHtmlBase{
   rule: YamlBindRule | YamlStylingRule
@@ -23,53 +24,49 @@ const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | 'h3' | '
     
     <Box >
       {action.bindData && (
-        <Box marginBottom={1}>
+        <Box >
         <Text>Bind Data: </Text>
           {action.bindData.length > 0 ? (
             action.bindData.map((item, i) => (
-              <Text key={i} element={textSize}>
-                <Badge color="blue" text={`${item}`} /> 
-              </Text>
+              <Badge className={css`margin-right: 2px;`} color="blue" text={<Text variant='body'>{item}</Text>} /> 
             ))
           ) : (
-            <Text element={textSize}>
-              <Badge color="blue" text="Any" />
-            </Text>
+              <Badge className={css`margin-right: 2px;`} color="blue" text={<Text variant='body'>Any</Text>} />
           )}
       </Box>
       )}
       
       {action.applyClass && (
-        <Box marginBottom={1}>
+        <Box >
           <Text >Apply Class: </Text>
             {action.applyClass.map((item, i) => (
-              <Badge key={i} color="red" text={`${item}`} />
+              <Badge className={css`margin-right: 2px;`} key={i} color="red" text={<Text variant='body'>{item}</Text>} />
             ))}
         </Box>
       )}
       
       {action.applyText && (
-        <Box marginBottom={1}>
+        <Box >
           <Text >Apply Text: </Text>
-          <Badge color="green" text={`${action.applyText} `} />
+          <Badge className={css`margin-right: 2px;`} color="green" text={<Text variant='body'>{action.applyText}</Text>} />
         </Box>
       )}
       
       {action.applyStyle && (
-        <Box marginBottom={1}>
+        <Box >
           <Text >Apply Style: </Text>
           <Stack direction="row" wrap="wrap" gap={1}>
             {action.applyStyle.map((item, i) => (
-              <Badge key={i} color="purple" text={`${item}`} />
+              <Badge className={css`margin-right: 2px;`} key={i} color="purple" text={<Text variant='body'>{item}</Text>} />
             ))}
           </Stack>
         </Box>
       )}
       
       {action.applyShape && (
-        <Box marginBottom={1}>
+        <Box >
           <Text element={textSize} >Apply Shape: </Text>
-          <Text element={textSize}><Badge color="orange" text={action.applyShape} /></Text>
+          <Badge className={css`margin-right: 2px;`} color="orange" text={<Text variant='body'>{action.applyShape}</Text>} />
         </Box>
       )}
     </Box>

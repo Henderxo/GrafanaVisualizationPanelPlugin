@@ -9,7 +9,7 @@ import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
 import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData } from 'utils/DataBindingUtils';
-import { ElementConfigModal } from './EditElementModal';
+import { ElementConfigModal } from '../modals/EditElementModal';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;
@@ -22,6 +22,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedElement, setSelectedElement] = useState<BaseObject | null>(null);
+  const [allElements, setAllElements] = useState<string[]>([])
   const chartRef = useRef<HTMLDivElement>(null);
   const fullMapRef = useRef<fullMermaidMap | null>(null);
   const validShapes = new Set<FlowVertexTypeParam>([
@@ -71,6 +72,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     const res = await mermaid.mermaidAPI.getDiagramFromText(template)
     const fullMap = reformatDataFromResponse(res)
     fullMapRef.current = fullMap;
+    setAllElements(findAllElementsInMaps(fullMap))
     updateMapValuesWithDefault(fullMap)
     applyAllRules(bindingRules, stylingRules, fullMap, rows, functions)
     console.log(fullMap)
@@ -130,6 +132,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const determineAction = (rule: YamlBindRule | YamlStylingRule, row: Record<string, any> | undefined, functions: YamlFunction[]):  ConditionElement[] | null => {
     let matchedAction: ConditionElement[] = []
     let func = rule.function
+    if(!func){
+      return null
+    }
    
     if (typeof func === 'string') {
       const foundFunction = functions.find((functionn) => functionn.id === func)?.function;
@@ -154,7 +159,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
       }
     } 
     if (func.else && !valueFound) {
-      matchedAction.push(func.else);
+      matchedAction.push({action: func.else.action, condition: 'true'});
     }
 
     return matchedAction.length > 0 ? matchedAction : null;
@@ -457,6 +462,7 @@ return (
       isOpen={isModalOpen}
       onClose={() => setIsModalOpen(false)}
       element={selectedElement}
+      elements={allElements}
       yamlConfig={parsedYaml}
       onYamlConfigChange={handleYamlConfigChange}
     />
