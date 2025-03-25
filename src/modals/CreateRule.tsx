@@ -98,6 +98,15 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     }));
   };
 
+  const handleConditionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Type guard to ensure function is a FunctionElement
+    if (typeof newRuleRef.current.function !== 'string' && 
+        newRuleRef.current.function?.if) {
+        newRuleRef.current.function.if.condition = e.currentTarget.value;
+        forceUpdate();
+    }
+    };
+
 
   return (
     <Modal 
@@ -226,10 +235,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                                     <Input 
                                     placeholder="Condition" 
                                     value={(newRuleRef.current.function as FunctionElement).if?.condition} 
-                                    onChange={(e) => {
-                                        newRuleRef.current.function?.if.condition = e.currentTarget.value
-                                        forceUpdate();
-                                    }}
+                                    onChange={handleConditionChange}
                                     className="mb-2"
                                     />
                                 </div>
