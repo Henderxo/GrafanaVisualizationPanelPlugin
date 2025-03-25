@@ -12,12 +12,18 @@ import {
   IconButton,
   MultiSelect,
   Label,
-  Text
+  Text,
+  Box,
+  useTheme2,
+  TabsBar,
+  Tab
 } from '@grafana/ui';
 import { Action, SelectableValue } from '@grafana/data';
 import { FunctionElement, YamlBindRule, YamlStylingRule } from 'types/types';
 import { css } from '@emotion/css';
 import { parse } from 'path';
+import RuleInputWrapper from 'components/RuleInputWrapper';
+import { FunctionInput } from 'components/FunctionInput';
 
 
 interface CreateRuleModalProps {
@@ -46,6 +52,11 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const  [ElementList, setElementList] = useState<SelectableValue[]>([])
     const newRuleRef = useRef<YamlBindRule | YamlStylingRule>({id: ''});
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+    const theme = useTheme2();
+
+    const handleFunctionChange = (updatedFunction: string | FunctionElement) => {
+        newRuleRef.current.function = updatedFunction;
+      };
 
     useEffect(()=>{
         if(elements){
@@ -53,6 +64,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
             setElementList(mapToSelectableValues(elements, ['all', 'nodes', 'subgraphs']))
         }
     }, [elements])
+
 
   useEffect(()=>{
 
@@ -97,16 +109,6 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
       value: value
     }));
   };
-
-  const handleConditionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Type guard to ensure function is a FunctionElement
-    if (typeof newRuleRef.current.function !== 'string' && 
-        newRuleRef.current.function?.if) {
-        newRuleRef.current.function.if.condition = e.currentTarget.value;
-        forceUpdate();
-    }
-    };
-
 
   return (
     <Modal 
@@ -170,107 +172,65 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                 }
                 </div>
                 <div {...splitterProps}></div>
-                <div {...secondaryProps} className={css`display: flex; flex-direction: column; overflow-y: auto;`}>
-                
-                <div>
-                <Text>Rule ID:</Text>
-                <Input 
-                    placeholder="Rule ID" 
-                    value={newRuleRef.current.id} 
-                    onChange={(e) => {
-                        newRuleRef.current.id = e.currentTarget.value
-                        forceUpdate();
-                    }}
-                    className="mb-2"
-                />
-                </div>
+                <div {...secondaryProps} className={css`display: flex; padding: 10px; flex-direction: column; overflow-y: auto; background-color: ${theme.colors.background.secondary}`}>
+
+                <RuleInputWrapper>
+                    <Text>Rule ID:</Text>
+                    <Input
+                        placeholder="Rule ID" 
+                        value={newRuleRef.current.id} 
+                        onChange={(e) => {
+                            newRuleRef.current.id = e.currentTarget.value
+                            forceUpdate();
+                        }}
+                        className="mb-2"
+                    />
+                </RuleInputWrapper>
 
                 {priorityActionAdded && 
-                    <div>
-                    <Text>Priority:</Text>
-                    <Input 
-                    placeholder="Priority" 
-                    value={newRuleRef.current.priority} 
-                    type='number'
-                    onChange={(e) => {
-                        newRuleRef.current.priority = e.currentTarget.value
-                        forceUpdate();
-                    }}
-                    className="mb-2"/>
-                    </div>    
+                    <RuleInputWrapper>
+                        <Text>Priority:</Text>
+                        <Input 
+                        placeholder="Priority" 
+                        value={newRuleRef.current.priority} 
+                        type='number'
+                        onChange={(e) => {
+                            newRuleRef.current.priority = e.currentTarget.value
+                            forceUpdate();
+                        }}
+                        className="mb-2"/>
+                    </RuleInputWrapper>    
                 }
 
-                <div>{JSON.stringify(newRuleRef.current)}</div>
                 {elementsActionAdded &&
-                <div>
-                    <Text>Elements</Text>
-                    <MultiSelect 
-                    label='Elements'
-                    placeholder="Select Elements"
-                    value={newRuleRef.current.elements}
-                    options={ElementList}
-                    onChange={(selected) => {
-                        let tempList: string[]=[]
-                        selected.forEach(value =>
-                        { 
-                            tempList.push(value.value)
-                        })
-                        newRuleRef.current.elements = tempList
-                        forceUpdate();
-                    }}
-                    className="mb-2"
-                    />
-                </div>
+                    <RuleInputWrapper>
+                        <Text>Elements</Text>
+                        <MultiSelect 
+                        label='Elements'
+                        placeholder="Select Elements"
+                        value={newRuleRef.current.elements}
+                        options={ElementList}
+                        onChange={(selected) => {
+                            let tempList: string[]=[]
+                            selected.forEach(value =>
+                            { 
+                                tempList.push(value.value)
+                            })
+                            newRuleRef.current.elements = tempList
+                            forceUpdate();
+                        }}
+                        className="mb-2"
+                        />
+                    </RuleInputWrapper>
                 }
 
                 {functionActionAdded &&
-                <div>
-                    <Text>Function:</Text>
-                    {(ifActionAdded && functionActionAdded) ? (
-                        <div>
-                            <Text>If: </Text>
-                            <div>
-                                <Text>Condition:</Text>
-                                <div>
-                                    <Input 
-                                    placeholder="Condition" 
-                                    value={(newRuleRef.current.function as FunctionElement).if?.condition} 
-                                    onChange={handleConditionChange}
-                                    className="mb-2"
-                                    />
-                                </div>
-                                <Text>Action:</Text>
-                                <div>
 
-                                </div>
-                            </div>
-                        </div>)
-                    :(
-                        <div>
-                            <Select 
-                            placeholder="Function" 
-                            value={newRuleRef.current.function} 
-                            onChange={(e) => newRuleRef.current.function = e.currentTarget.value}
-                            className="mb-2"
-                            />
-                        </div>)
-                    }
-                    {(ifActionAdded && elseIfActionAdded) && <div>{(newRuleRef.current.function as FunctionElement).else_if?.map(conditionElement=>(
-                        <div>
-                            <Text>Else If: </Text>
-                            <div>
-                                
-                            </div>
-                        </div>
-                    ))}
-                    </div>}
-                    {(ifActionAdded && elseActionAdded) && <div>
-                        <Text>Else: </Text>
-                        <div>
-                            
-                        </div>
-                    </div>}
-                </div>
+                <FunctionInput 
+                functionData={newRuleRef.current.function}
+                onFunctionChange={handleFunctionChange}
+                forceUpdate={forceUpdate}
+                />
                 }
 
             </div>

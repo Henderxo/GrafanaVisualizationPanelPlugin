@@ -56,32 +56,32 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       defaultValue: `stylingRules:
   - id: "StyleRule1"
     function:
-      - if:
-          condition: "CPU < 50"
+      if:
+        condition: "CPU < 50"
+        action:
+          applyClass: ["alert"]
+      else_if:
+        - condition: "CPU > 50"
           action:
-            applyClass: ["alert"]
-        else_if:
-          - condition: "CPU > 50"
-            action:
-              applyClass: ["warning", "inactive"]
-        else:
-          action:
-            applyClass: ["active"]
+            applyClass: ["warning", "inactive"]
+      else:
+        action:
+          applyClass: ["active"]
   - id: "StyleRule2"
     elements: ["Switch_2"]
     function:
-      - if:
-          condition: "CPU > 50"
-          action:
-            applyClass: ["active"]
+      if:
+        condition: "CPU > 50"
+        action:
+          applyClass: ["active"]
   - id: "StyleRule3"
     elements: ["Switch_2"]
     priority: 5
     function:
-      - if:
-          condition: "CPU > 50"
-          action:
-            applyClass: ["inactive"]
+      if:
+        condition: "CPU > 50"
+        action:
+          applyClass: ["inactive"]
 
 bindingRules:
 
@@ -92,42 +92,42 @@ bindingRules:
   - id: "BindRule2"
     elements: ["Router_1", "Router_2"]
     function:
-      - if:
-          condition: "CPU < 50"
-          action:
-            bindData: ["BOOM='ItExploded'"]
+      if:
+        condition: "CPU < 50"
+        action:
+          bindData: ["BOOM='ItExploded'"]
   - id: "BindRule3"
     elements: ["Firewall_1"]
     function:
-      - if:
-          condition: "CPU > 50"
-          action:
-            bindData: []
+      if:
+        condition: "CPU > 50"
+        action:
+          bindData: []
 
   - id: "BindRule4"
     elements: ["Server_1", "Server_2"]
     function:
-      - if:
-          condition: "CPU == 70"
-          action:
-            bindData: []
+      if:
+        condition: "CPU == 70"
+        action:
+          bindData: []
 
   - id: "BindRule5"
     priority: 1
     elements: ["Switch_1", "Switch_2"]
     function:
-      - if:
-          condition: "CPU < 70"
-          action:
-            bindData: []
+      if:
+        condition: "CPU < 70"
+        action:
+          bindData: []
 
   - id: "BindRule6"
     elements: ["Switch_1"]
     function:
-      - if:
-          condition: "CPU == 50"
-          action:
-            bindData: ["CPU=7784"]
+      if:
+        condition: "CPU == 50"
+        action:
+          bindData: ["CPU=7784"]
       
       `,
       settings:{
