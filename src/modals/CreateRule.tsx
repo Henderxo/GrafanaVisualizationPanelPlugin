@@ -221,7 +221,22 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                         <div>
                             <Text>If: </Text>
                             <div>
+                                <Text>Condition:</Text>
+                                <div>
+                                    <Input 
+                                    placeholder="Condition" 
+                                    value={(newRuleRef.current.function as FunctionElement).if?.condition} 
+                                    onChange={(e) => {
+                                        newRuleRef.current.function?.if.condition = e.currentTarget.value
+                                        forceUpdate();
+                                    }}
+                                    className="mb-2"
+                                    />
+                                </div>
+                                <Text>Action:</Text>
+                                <div>
 
+                                </div>
                             </div>
                         </div>)
                     :(
