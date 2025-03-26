@@ -19,13 +19,15 @@ import {
   Tab,
   LoadingPlaceholder
 } from '@grafana/ui';
-import { Action, SelectableValue } from '@grafana/data';
-import { FunctionElement, RuleBase, YamlBindRule, YamlStylingRule } from 'types/types';
+import { SelectableValue } from '@grafana/data';
+import { Action, FunctionElement, RuleBase, YamlBindRule, YamlStylingRule } from 'types/types';
 import { css } from '@emotion/css';
 import { parse } from 'path';
 import RuleInputWrapper from 'components/RuleInputWrapper';
 import { FunctionInput } from 'components/FunctionInput';
 import ButtonWrapper from 'components/ButtonWrapper';
+import { ActionInput } from 'components/ActionInput';
+import { bindData } from 'utils/DataBindingUtils';
 
 
 interface CreateRuleModalProps {
@@ -50,6 +52,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const [ifActionAdded, setIfActionAdded] = useState<boolean>(false);
     const [elseIfActionAdded, setElseIfActionAdded] = useState<boolean>(false);
     const [elseActionAdded, setelseActionAdded] = useState<boolean>(false);
+    const [generalActionsAdded, setGeneralActionsAdded] = useState<boolean>(false);
     //Action
     const  [ElementList, setElementList] = useState<SelectableValue[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -68,6 +71,35 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
       label: 'Binding Rule', 
       value: 'binding'
     });
+
+    const getGeneralActions = (): Action => {
+      let tempAction: Action = {};
+      
+      if (ruleType.value === 'binding') {
+        let tempRule = { ...(newRuleRef.current as YamlBindRule) };
+        
+        if (tempRule.bindData !== undefined) {
+          tempAction.bindData = tempRule.bindData;
+        }
+      } else {
+        let tempRule = { ...(newRuleRef.current as YamlStylingRule) };
+    
+        if (tempRule.applyClass !== undefined) {
+          tempAction.applyClass = tempRule.applyClass;
+        }
+        if (tempRule.applyStyle !== undefined) {
+          tempAction.applyStyle = tempRule.applyStyle;
+        }
+        if (tempRule.applyShape !== undefined) {
+          tempAction.applyShape = tempRule.applyShape;
+        }
+        if (tempRule.applyText !== undefined) {
+          tempAction.applyText = tempRule.applyText;
+        }
+      }
+    
+      return tempAction;
+    };
 
     const handleRuleTypeChange = (selectedType: SelectableValue) => {
       setRuleType(selectedType);
@@ -98,6 +130,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
         setElseIfActionAdded(false)
         setelseActionAdded(false)
       }
+      console.log(newRuleRef.current)
     };
 
     const handleRuleInputDelete = (type: 'priority' | 'elements') =>{
@@ -122,13 +155,14 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     }
 
     const resetRule = (rule?: YamlBindRule | YamlStylingRule) =>{
+      console.log(rule)
       if(rule){
         newRuleRef.current = JSON.parse(JSON.stringify(rule));
 
         newRuleRef.current.priority && setPriorityActionAdded(true);
         newRuleRef.current.elements && setElementsActionAdded(true);
 
-        if(newRuleRef.current.function){
+        if(newRuleRef.current.function && newRuleRef.current.function){
             setFunctionActionAdded(true);
             if(typeof newRuleRef.current.function !== 'string'){
               setIfActionAdded(true);
@@ -140,6 +174,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               }
             }
           }
+        console.log(newRuleRef.current)
       }else{
         newRuleRef.current = new YamlBindRule({id: ''})
         setPriorityActionAdded(false)
@@ -148,7 +183,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
         setIfActionAdded(false)
         setelseActionAdded(false)
       }
-      
+      console.log(newRuleRef.current)
       forceUpdate()
       setIsLoading(false)
     }
@@ -163,9 +198,8 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
 
 
   useEffect(()=>{
-    if(rule){
-      resetRule()
-    }
+    console.log(rule)
+    resetRule(rule)
     setIsLoading(false)
   }, [])
 
@@ -206,7 +240,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                 <div  {...primaryProps} className={css`display: flex; flex-direction: column; width: 125px; overflow-y: auto;`}>
                 <div className={css`display: flex; flex-direction: column;`}>
                   <Text>Creation Actions:</Text>
-                  <ButtonWrapper onClick={()=>resetRule()}>
+                  <ButtonWrapper onClick={()=>resetRule(rule)}>
                       Reset
                   </ButtonWrapper>
                 </div>
@@ -347,8 +381,11 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                     </RuleInputWrapper>
                 }
 
-                {functionActionAdded &&
+                
+                  <ActionInput action={getGeneralActions()} onChange={()=>{}} type={ruleType.value}></ActionInput>
+                
 
+                {functionActionAdded &&
                 <FunctionInput 
                   type={ruleType.value} 
                   functionData={newRuleRef.current.function}
