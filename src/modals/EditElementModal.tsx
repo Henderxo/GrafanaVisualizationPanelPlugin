@@ -61,12 +61,12 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
   useEffect(() => {
     if (!element) return;
     setIsLoading(true)
-    const elementRules = getElementRules(element, [parsedYaml.bindingRules, parsedYaml.stylingRules])
+    const elementRuless = getElementRules(element, [parsedYaml.bindingRules, parsedYaml.stylingRules])
     setElementRules({
-      bindingRules: elementRules.bindRules.map(rule => new YamlBindRule(rule)),
-      stylingRules: elementRules.stylingRules.map(rule => new YamlStylingRule(rule))
+      bindingRules: elementRuless.bindRules.map(rule => new YamlBindRule(rule)),
+      stylingRules: elementRuless.stylingRules.map(rule => new YamlStylingRule(rule))
     });
-    setActiveRule(elementRules.bindRules[0]??null)
+    setActiveRule(elementRules.bindingRules[0]??null)
     setIsLoading(false)
   }, [element, parsedYaml]);
 

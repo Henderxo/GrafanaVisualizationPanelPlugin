@@ -17,6 +17,7 @@ interface FunctionInputProps {
   type: 'styling' | 'binding'
   onFunctionChange: (updatedFunction: string | FunctionElement | undefined, deletedTab?: string) => void;
   forceUpdate: () => void;
+  
 }
 
 export const FunctionInput: React.FC<FunctionInputProps> = ({ 

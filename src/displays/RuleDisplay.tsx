@@ -27,11 +27,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
   const bgHoverColor = theme.colors.border.medium;
   const bgColor = theme.colors.background.secondary;
 
-
-
   useEffect(() => {
-
-    
     if (rule.function) {
       if (typeof rule.function === 'string') {
         const foundFunction = functions.find((functionn) => functionn.id === rule.function)?.function;

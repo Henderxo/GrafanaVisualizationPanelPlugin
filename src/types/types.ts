@@ -5,7 +5,7 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     priority: number;
   }
 
-  export abstract class RuleBase {
+  export abstract class RuleBase<T extends RuleBase<T>> {
     id: string;
     elements?: string[];
     priority?: number;
@@ -24,9 +24,27 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     }
   
     abstract getRuleType(): 'binding' | 'styling';
-  }
-  
-  export class YamlBindRule extends RuleBase {
+
+    // Use generic method to ensure proper type return
+    clone(): T {
+      const baseCloneData = {
+        id: this.id,
+        elements: this.elements ? [...this.elements] : undefined,
+        priority: this.priority,
+        function: this.function 
+          ? (typeof this.function === 'string' 
+              ? this.function 
+              : JSON.parse(JSON.stringify(this.function))) 
+          : undefined
+      };
+      
+      return this instanceof YamlBindRule 
+        ? new YamlBindRule(baseCloneData) as T
+        : new YamlStylingRule(baseCloneData) as T;
+    }
+}
+
+export class YamlBindRule extends RuleBase<YamlBindRule> {
     bindData?: string[];
   
     constructor(data: {
@@ -43,9 +61,20 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     getRuleType(): 'binding' | 'styling' {
       return 'binding';
     }
-  }
+
+    // Override clone method to ensure correct typing
+    clone(): YamlBindRule {
+      const baseClone = super.clone();
+      console.log(this)
+      console.log(this.bindData)
+      return new YamlBindRule({
+        ...baseClone,
+        bindData: this.bindData? this.bindData : undefined
+      });
+    }
+}
   
-  export class YamlStylingRule extends RuleBase {
+export class YamlStylingRule extends RuleBase<YamlStylingRule> {
     applyClass?: string[];
     applyText?: string;
     applyStyle?: string[];
@@ -71,7 +100,19 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     getRuleType(): 'binding' | 'styling' {
       return 'styling';
     }
-  }
+
+    // Override clone method to ensure correct typing
+    clone(): YamlStylingRule {
+      const baseClone = super.clone();
+      return new YamlStylingRule({
+        ...baseClone,
+        applyClass: this.applyClass !== undefined ? [...this.applyClass] : undefined,
+        applyText: this.applyText,
+        applyStyle: this.applyStyle !== undefined ? [...this.applyStyle] : undefined,
+        applyShape: this.applyShape
+      });
+    }
+}
   
   export interface YamlFunction {
     id: string;

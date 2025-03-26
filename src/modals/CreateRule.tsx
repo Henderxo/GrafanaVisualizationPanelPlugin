@@ -28,6 +28,7 @@ import { FunctionInput } from 'components/FunctionInput';
 import ButtonWrapper from 'components/ButtonWrapper';
 import { ActionInput } from 'components/ActionInput';
 import { bindData } from 'utils/DataBindingUtils';
+import { RuleCreateActionBar } from 'components/RuleCreateActionBar';
 
 
 interface CreateRuleModalProps {
@@ -66,7 +67,12 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
 
     const saveStateToHistory = (state: YamlBindRule | YamlStylingRule) => {
       setStateHistory(prevHistory => {
-        const newHistory = [...prevHistory, JSON.parse(JSON.stringify(state))];
+        const clonedState = state.clone();
+    
+        console.log('Original Rule:', state);
+        console.log('Cloned Rule:', clonedState);
+    
+        const newHistory = [...prevHistory, clonedState];
         return newHistory.slice(-maxHistoryLength);
       });
     };
@@ -129,9 +135,30 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
         : new YamlStylingRule({...newRuleRef.current, id: newRuleRef.current.id});
       newRuleRef.current.function = undefined
       handleFunctionChange(newRuleRef.current.function)
-
       resetRule(newRuleRef.current)
     };
+
+    const handleGeneralRuleChange = (action: Action) => {
+      saveStateToHistory(newRuleRef.current);
+  
+      if (newRuleRef.current.getRuleType() === 'binding') {
+          const bindRule = newRuleRef.current as YamlBindRule;
+          
+              bindRule.bindData = action.bindData??undefined
+
+      } else if (newRuleRef.current.getRuleType() === 'styling') {
+          const stylingRule = newRuleRef.current as YamlStylingRule;
+          
+              stylingRule.applyClass = action.applyClass??undefined
+
+              stylingRule.applyText = action.applyText??undefined
+          
+              stylingRule.applyStyle = action.applyStyle??undefined
+          
+              stylingRule.applyShape = action.applyShape??undefined
+      }
+      forceUpdate()
+    }
 
     const handleFunctionChange = (updatedFunction: string | FunctionElement | undefined, deletedTab?: string) => {
       saveStateToHistory(newRuleRef.current);
@@ -151,7 +178,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
         setElseIfActionAdded(false)
         setelseActionAdded(false)
       }
-      console.log(newRuleRef.current)
+      forceUpdate()
     };
 
     const handleRuleInputDelete = (type: 'priority' | 'elements') =>{
@@ -177,14 +204,14 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     }
 
     const resetRule = (rule?: YamlBindRule | YamlStylingRule) =>{
-      console.log(rule)
       setPriorityActionAdded(false)
       setElementsActionAdded(false)
       setFunctionActionAdded(false)
       setIfActionAdded(false)
       setelseActionAdded(false)
+      setGeneralActionsAdded(false)
       if(rule){
-        newRuleRef.current = JSON.parse(JSON.stringify(rule));
+        newRuleRef.current = rule.clone()
         newRuleRef.current.priority && setPriorityActionAdded(true);
         newRuleRef.current.elements && setElementsActionAdded(true);
 
@@ -200,6 +227,14 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               }
             }
           }
+          if((newRuleRef.current as YamlBindRule).bindData !== undefined){
+            setGeneralActionsAdded(true)
+          }
+          let temp = (rule as YamlStylingRule)
+          if(temp.applyClass !== undefined || temp.applyShape !== undefined || temp.applyStyle !== undefined || temp.applyText !== undefined){
+            setGeneralActionsAdded(true)
+          }
+          
       }else{
         newRuleRef.current = new YamlBindRule({id: ''})
       }
@@ -227,6 +262,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     initialSize: 0.1,
     dragPosition: 'start',
   });
+
 
   const mapToSelectableValues = (values: string[], addOptions?: string[]): SelectableValue[] => {
     let valueCopy: string[] = JSON.parse(JSON.stringify(values))
@@ -285,143 +321,27 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               overflow-y: auto;
             `}
           >
-            <div
-              className={css`
-                display: flex;
-                flex-direction: column;
-              `}
-            >
-              <Text>Creation Actions:</Text>
-              <ButtonWrapper onClick={() => resetRule(rule)}>Reset</ButtonWrapper>
-              <ButtonWrapper onClick={()=> handleUndo()}>Undo</ButtonWrapper>
-            </div>
-  
-            {(!priorityActionAdded || !elementsActionAdded) && (
-              <div
-                className={css`
-                  display: flex;
-                  flex-direction: column;
-                `}
-              >
-                <Text>Scope Actions:</Text>
-                {!priorityActionAdded && (
-                  <ButtonWrapper
-                    onClick={() => {
-                      newRuleRef.current = new (newRuleRef.current.constructor as
-                        | typeof YamlBindRule
-                        | typeof YamlStylingRule)({
-                        ...newRuleRef.current,
-                        priority: -1,
-                      });
-                      forceUpdate();
-                      setPriorityActionAdded(true);
-                    }}
-                  >
-                    Add Priority
-                  </ButtonWrapper>
-                )}
-                {!elementsActionAdded && (
-                  <ButtonWrapper
-                    onClick={() => {
-                      newRuleRef.current = new (newRuleRef.current.constructor as
-                        | typeof YamlBindRule
-                        | typeof YamlStylingRule)({
-                        ...newRuleRef.current,
-                        elements: [],
-                      });
-                      forceUpdate();
-                      setElementsActionAdded(true);
-                    }}
-                  >
-                    Add Elements
-                  </ButtonWrapper>
-                )}
-              </div>
-            )}
-            <div>
-              <Text>Function Actions:</Text>
-            </div>
-            {!functionActionAdded && (
-              <div
-                className={css`
-                  display: flex;
-                  flex-direction: column;
-                `}
-              >
-                <ButtonWrapper
-                  onClick={() => {
-                    setFunctionActionAdded(true);
-                  }}
-                >
-                  Add Function
-                </ButtonWrapper>
-              </div>
-            )}
-            {functionActionAdded && (
-              <div
-                className={css`
-                  display: flex;
-                  flex-direction: column;
-                `}
-              >
-                {!ifActionAdded && functionActionAdded && (
-                  <ButtonWrapper
-                    onClick={() => {
-                      newRuleRef.current = new (newRuleRef.current.constructor as
-                        | typeof YamlBindRule
-                        | typeof YamlStylingRule)({
-                        ...newRuleRef.current,
-                        function: { if: { action: {}, condition: "" } },
-                      });
-                      console.log(newRuleRef.current);
-                      forceUpdate();
-                      setIfActionAdded(true);
-                    }}
-                  >
-                    Add If
-                  </ButtonWrapper>
-                )}
-                {ifActionAdded && (
-                  <ButtonWrapper
-                    onClick={() => {
-                      if (
-                        !(newRuleRef.current.function as FunctionElement).else_if
-                      ) {
-                        newRuleRef.current.function = {
-                          ...(newRuleRef.current.function as FunctionElement),
-                          else_if: [{ action: {}, condition: "" }],
-                        };
-                      } else {
-                        (
-                          newRuleRef.current.function as FunctionElement
-                        ).else_if?.push({ action: {}, condition: "" });
-                      }
-                      forceUpdate();
-                      setElseIfActionAdded(true);
-                    }}
-                  >
-                    Add Else If
-                  </ButtonWrapper>
-                )}
-                {!elseActionAdded && ifActionAdded && (
-                  <ButtonWrapper
-                    onClick={() => {
-                      if (
-                        !(newRuleRef.current.function as FunctionElement).else
-                      ) {
-                        newRuleRef.current.function = {
-                          ...(newRuleRef.current.function as FunctionElement),
-                          else: { action: {} },
-                        };
-                      }
-                      setelseActionAdded(true);
-                    }}
-                  >
-                    Add Else
-                  </ButtonWrapper>
-                )}
-              </div>
-            )}
+            <RuleCreateActionBar 
+                forceUpdate={forceUpdate}
+                saveStateToHistory={saveStateToHistory}
+                newRuleRef={newRuleRef}
+                setPriorityActionAdded={setPriorityActionAdded}
+                setElementsActionAdded={setElementsActionAdded}
+                setFunctionActionAdded={setFunctionActionAdded}
+                setIfActionAdded={setIfActionAdded}
+                setElseIfActionAdded={setElseIfActionAdded}
+                setelseActionAdded={setelseActionAdded}
+                setGeneralActionsAdded={setGeneralActionsAdded}
+                resetRule={resetRule}
+                handleUndo={handleUndo}
+                rule={rule}
+                generalActionsAdded={generalActionsAdded}
+                elseActionAdded={elseActionAdded}
+                priorityActionAdded={priorityActionAdded}
+                elementsActionAdded={elementsActionAdded}
+                functionActionAdded={functionActionAdded}
+                ifActionAdded={ifActionAdded}
+            />
           </div>
           <div {...splitterProps}></div>
           <div
@@ -434,6 +354,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               background-color: ${theme.colors.background.secondary};
             `}
           >
+            {JSON.stringify(newRuleRef.current)}
             <RuleInputWrapper isIcon={false}>
               <Text>Rule Type:</Text>
               <Select
@@ -498,13 +419,13 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               </RuleInputWrapper>
             )}
   
-            <ActionInput
+            {generalActionsAdded && !functionActionAdded && <ActionInput
               action={getGeneralActions()}
-              onChange={() => {}}
+              onChange={handleGeneralRuleChange}
               type={ruleType.value}
-            ></ActionInput>
+            ></ActionInput>}
   
-            {functionActionAdded && (
+            {functionActionAdded && !generalActionsAdded && (
               <FunctionInput
                 type={ruleType.value}
                 functionData={newRuleRef.current.function}
