@@ -59,8 +59,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     }
   }
 
-  const bindingRules: YamlBindRule[] = parsedYaml.bindingRules || [];
-  const stylingRules: YamlStylingRule[] = parsedYaml.stylingRules || [];
+  const bindingRules: YamlBindRule[] = (parsedYaml.bindingRules || []).map(
+    rule => new YamlBindRule(rule)
+  );
+  
+  const stylingRules: YamlStylingRule[] = (parsedYaml.stylingRules || []).map(
+    rule => new YamlStylingRule(rule)
+  );
   const functions: YamlFunction[] = parsedYaml.functions || []
 
   const table = extractTableData(data)
