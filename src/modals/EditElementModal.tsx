@@ -117,7 +117,6 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
 
         </div>
         {isModalOpen && <CreateRuleModal 
-        rule={elementRules.bindingRules[1]}
         elements={elements}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

@@ -16,14 +16,16 @@ import {
   Box,
   useTheme2,
   TabsBar,
-  Tab
+  Tab,
+  LoadingPlaceholder
 } from '@grafana/ui';
 import { Action, SelectableValue } from '@grafana/data';
-import { FunctionElement, YamlBindRule, YamlStylingRule } from 'types/types';
+import { FunctionElement, RuleBase, YamlBindRule, YamlStylingRule } from 'types/types';
 import { css } from '@emotion/css';
 import { parse } from 'path';
 import RuleInputWrapper from 'components/RuleInputWrapper';
 import { FunctionInput } from 'components/FunctionInput';
+import ButtonWrapper from 'components/ButtonWrapper';
 
 
 interface CreateRuleModalProps {
@@ -50,25 +52,77 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const [elseActionAdded, setelseActionAdded] = useState<boolean>(false);
     //Action
     const  [ElementList, setElementList] = useState<SelectableValue[]>([])
-    const newRuleRef = useRef<YamlBindRule | YamlStylingRule>({id: ''});
+    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [areElementsLoading, setElementsAreLoading] = useState<boolean>(false)
+    const newRuleRef = useRef<YamlBindRule | YamlStylingRule>(new YamlBindRule({id: ''}));
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
     const theme = useTheme2();
 
-    const handleFunctionChange = (updatedFunction: string | FunctionElement) => {
+
+    const ruleTypeOptions: SelectableValue[] = [
+      { label: 'Binding Rule', value: 'binding' },
+      { label: 'Styling Rule', value: 'styling' }
+    ];
+    
+    const [ruleType, setRuleType] = useState<SelectableValue>({
+      label: 'Binding Rule', 
+      value: 'binding'
+    });
+
+    const handleRuleTypeChange = (selectedType: SelectableValue) => {
+      setRuleType(selectedType);
+      
+      newRuleRef.current = selectedType.value === 'binding' 
+        ? new YamlBindRule({...newRuleRef.current, id: newRuleRef.current.id})
+        : new YamlStylingRule({...newRuleRef.current, id: newRuleRef.current.id});
+      newRuleRef.current.function = undefined
+      handleFunctionChange(newRuleRef.current.function)
+      console.log(newRuleRef.current)
+      resetRule(newRuleRef.current)
+    };
+
+    const handleFunctionChange = (updatedFunction: string | FunctionElement | undefined, deletedTab?: string) => {
+      if(updatedFunction){
         newRuleRef.current.function = updatedFunction;
-      };
-
-    useEffect(()=>{
-        if(elements){
-            console.log(elements)
-            setElementList(mapToSelectableValues(elements, ['all', 'nodes', 'subgraphs']))
+        if(deletedTab){
+          if(deletedTab === 'else_if'){
+            setElseIfActionAdded(false)
+          }else{
+            setelseActionAdded(false)
+          }
         }
-    }, [elements])
+      }else{
+        delete newRuleRef.current.function
+        setIfActionAdded(false)
+        setFunctionActionAdded(false)
+        setElseIfActionAdded(false)
+        setelseActionAdded(false)
+      }
+    };
 
+    const handleRuleInputDelete = (type: 'priority' | 'elements') =>{
+      if(newRuleRef.current){
+        switch(type){
+          case 'priority':
+            if(newRuleRef.current.priority){
+              delete newRuleRef.current.priority
+              setPriorityActionAdded(false)
+              forceUpdate()
+            }
+            break;
+          case 'elements':
+            if(newRuleRef.current.elements){
+              delete newRuleRef.current.elements
+              setElementsActionAdded(false)
+              forceUpdate()
+            }
+            break;
+        }
+      }
+    }
 
-  useEffect(()=>{
-
-    if(rule){
+    const resetRule = (rule?: YamlBindRule | YamlStylingRule) =>{
+      if(rule){
         newRuleRef.current = JSON.parse(JSON.stringify(rule));
 
         newRuleRef.current.priority && setPriorityActionAdded(true);
@@ -86,10 +140,34 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               }
             }
           }
-        forceUpdate()
+      }else{
+        newRuleRef.current = new YamlBindRule({id: ''})
+        setPriorityActionAdded(false)
+        setElementsActionAdded(false)
+        setFunctionActionAdded(false)
+        setIfActionAdded(false)
+        setelseActionAdded(false)
+      }
+      
+      forceUpdate()
+      setIsLoading(false)
     }
 
-  }, [rule])
+    useEffect(()=>{
+        if(elements){
+            setElementsAreLoading(true)
+            setElementList(mapToSelectableValues(elements, ['all', 'nodes', 'subgraphs']))
+            setElementsAreLoading(false)
+        }
+    }, [elements])
+
+
+  useEffect(()=>{
+    if(rule){
+      resetRule()
+    }
+    setIsLoading(false)
+  }, [])
 
   const { containerProps, primaryProps, secondaryProps, splitterProps } = useSplitter({
     direction: 'row',
@@ -117,64 +195,109 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
       title="Create New Rule"
       className={css`
                 width: 900px;
-                height: 700px;
+                height: 825px;
                 display: flex;
                 flex-direction: column;
               `}
         trapFocus={false}>
-            <div {...containerProps} className={css` display: flex; flex-direction: row; width: 100%; height: 500px;`}>
+            {isLoading ? (<div className={css`display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%;`}>
+              <LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder></div>): 
+              (<div {...containerProps} className={css` display: flex; flex-direction: row; width: 100%; height: 650px;`}>
                 <div  {...primaryProps} className={css`display: flex; flex-direction: column; width: 125px; overflow-y: auto;`}>
-                {!priorityActionAdded &&
-                <Button className={css`margin-top: 4px; margin-bottom: 4px;`} onClick={()=>{setPriorityActionAdded(true)}}>Add Priority</Button>
-                }
-                {!elementsActionAdded &&
-                <Button className={css`margin-top: 4px; margin-bottom: 4px;`} onClick={()=>{setElementsActionAdded(true)}}>Add Elements</Button>
-                }
-                {!functionActionAdded &&
-                <Button className={css`margin-top: 4px; margin-bottom: 4px;`} onClick={()=>{setFunctionActionAdded(true)}}>Add Function</Button>
-                }
-                {(!ifActionAdded && functionActionAdded) &&
-                <Button className={css`margin-top: 4px; margin-bottom: 4px;`} onClick={()=>
-                    {
-                        newRuleRef.current = {
-                            ...newRuleRef.current,
-                            function: {if: {action: {}, condition: ''}} // Ensure else_if exists before pushing
-                        };
-                        forceUpdate()
-                        setIfActionAdded(true)
-                    }}>Add If</Button>
-                }
-                {(functionActionAdded && ifActionAdded) &&
-                <Button className={css`margin-top: 4px; margin-bottom: 4px;`} onClick={()=>{
-                    if(!(newRuleRef.current.function as FunctionElement).else_if){
-                        newRuleRef.current.function = {
-                            ...newRuleRef.current.function as FunctionElement,
-                            else_if: [{action: {}, condition: ''}] 
-                          };
-                    }else{
-                        (newRuleRef.current.function as FunctionElement).else_if?.push({action: {}, condition: ''})
-                    }
+                <div className={css`display: flex; flex-direction: column;`}>
+                  <Text>Creation Actions:</Text>
+                  <ButtonWrapper onClick={()=>resetRule()}>
+                      Reset
+                  </ButtonWrapper>
+                </div>
+              
+                {(!priorityActionAdded || !elementsActionAdded) &&<div className={css`display: flex; flex-direction: column;`}>
+                  <Text>Scope Actions:</Text>
+                  {!priorityActionAdded &&
+                  <ButtonWrapper onClick={()=>{
+                    newRuleRef.current = new (newRuleRef.current.constructor as 
+                      typeof YamlBindRule | typeof YamlStylingRule)({
+                      ...newRuleRef.current,
+                      priority: -1
+                    });
                     forceUpdate()
-                    setElseIfActionAdded(true)
-                }}>Add Else If</Button>
-                }
-                {(!elseActionAdded && functionActionAdded && ifActionAdded) &&
-                <Button className={css`margin-top: 4px; margin-bottom: 4px;`} onClick={()=>
-                    {
-                        if(!(newRuleRef.current.function as FunctionElement).else){
+                    setPriorityActionAdded(true)
+                  }}>Add Priority</ButtonWrapper>
+                  }
+                  {!elementsActionAdded &&
+                  <ButtonWrapper onClick={()=>{
+                    newRuleRef.current = new (newRuleRef.current.constructor as 
+                      typeof YamlBindRule | typeof YamlStylingRule)({
+                      ...newRuleRef.current,
+                      elements: [] 
+                    });
+                    forceUpdate()
+                    setElementsActionAdded(true)
+                  }}>Add Elements</ButtonWrapper>
+                  }
+                </div>}
+                <div >
+                  <Text>Function Actions:</Text>
+                </div>
+                {!functionActionAdded && <div className={css`display: flex; flex-direction: column;`}>
+                  <ButtonWrapper  onClick={()=>{setFunctionActionAdded(true)}}>Add Function</ButtonWrapper>
+                </div>}
+                {functionActionAdded && <div className={css`display: flex; flex-direction: column;`}>
+                    {(!ifActionAdded && functionActionAdded) &&
+                      <ButtonWrapper onClick={()=>
+                      {
+                          newRuleRef.current = new (newRuleRef.current.constructor as 
+                          typeof YamlBindRule | typeof YamlStylingRule)({
+                              ...newRuleRef.current,
+                              function: {if: {action: {}, condition: ''}} 
+                          });
+                          forceUpdate()
+                          setIfActionAdded(true)
+                      }}>Add If</ButtonWrapper>
+                    }
+                    {(ifActionAdded) &&
+                    <ButtonWrapper  onClick={()=>{
+                        if(!(newRuleRef.current.function as FunctionElement).else_if){
                             newRuleRef.current.function = {
                                 ...newRuleRef.current.function as FunctionElement,
-                                else: {action: {}}
+                                else_if: [{action: {}, condition: ''}] 
                               };
+                        }else{
+                            (newRuleRef.current.function as FunctionElement).else_if?.push({action: {}, condition: ''})
                         }
-                        setelseActionAdded(true)
-                    }}>Add Else</Button>
-                }
+                        forceUpdate()
+                        setElseIfActionAdded(true)
+                    }}>Add Else If</ButtonWrapper>
+                    }
+                    {(!elseActionAdded && ifActionAdded) &&
+                    <ButtonWrapper onClick={()=>
+                        {
+                            if(!(newRuleRef.current.function as FunctionElement).else){
+                                newRuleRef.current.function = {
+                                    ...newRuleRef.current.function as FunctionElement,
+                                    else: {action: {}}
+                                  };
+                            }
+                            setelseActionAdded(true)
+                        }}>Add Else</ButtonWrapper>
+                    }
+                </div>}
+                
                 </div>
                 <div {...splitterProps}></div>
                 <div {...secondaryProps} className={css`display: flex; padding: 10px; flex-direction: column; overflow-y: auto; background-color: ${theme.colors.background.secondary}`}>
+                    
+                <RuleInputWrapper isIcon={false}>
+                    <Text>Rule Type:</Text>
+                    <Select
+                        options={ruleTypeOptions}
+                        value={ruleType}
+                        onChange={handleRuleTypeChange}
+                        className="mb-2"
+                    />
+                </RuleInputWrapper>
 
-                <RuleInputWrapper>
+                <RuleInputWrapper isIcon={false}>
                     <Text>Rule ID:</Text>
                     <Input
                         placeholder="Rule ID" 
@@ -188,7 +311,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                 </RuleInputWrapper>
 
                 {priorityActionAdded && 
-                    <RuleInputWrapper>
+                    <RuleInputWrapper onDelete={()=>handleRuleInputDelete('priority')}>
                         <Text>Priority:</Text>
                         <Input 
                         placeholder="Priority" 
@@ -202,8 +325,8 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                     </RuleInputWrapper>    
                 }
 
-                {elementsActionAdded &&
-                    <RuleInputWrapper>
+                {elementsActionAdded && !areElementsLoading &&
+                    <RuleInputWrapper onDelete={()=>handleRuleInputDelete('elements')}>
                         <Text>Elements</Text>
                         <MultiSelect 
                         label='Elements'
@@ -227,15 +350,20 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                 {functionActionAdded &&
 
                 <FunctionInput 
-                functionData={newRuleRef.current.function}
-                onFunctionChange={handleFunctionChange}
-                forceUpdate={forceUpdate}
+                  type={ruleType.value} 
+                  functionData={newRuleRef.current.function}
+                  onFunctionChange={handleFunctionChange}
+                  forceUpdate={forceUpdate}
                 />
                 }
 
             </div>
-        </div>
-     
+        </div>)}
+      <Modal.ButtonRow>
+        <Button variant={'secondary'}>Cancel</Button>
+        {rule ? (<Button  variant={'primary'}>Update</Button>):
+         (<Button variant={'primary'}>Create</Button>)}
+      </Modal.ButtonRow>
     </Modal>
   );
 };

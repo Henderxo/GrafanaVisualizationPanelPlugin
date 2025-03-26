@@ -4,20 +4,73 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     data: Record<string, any> | undefined;
     priority: number;
   }
-  
-  export interface YamlBindRule {
+
+  export abstract class RuleBase {
     id: string;
     elements?: string[];
     priority?: number;
     function?: (string | FunctionElement);
-    bindData?: string[]
+  
+    constructor(data: {
+      id: string;
+      elements?: string[];
+      priority?: number;
+      function?: (string | FunctionElement);
+    }) {
+      this.id = data.id;
+      this.elements = data.elements;
+      this.priority = data.priority;
+      this.function = data.function;
+    }
+  
+    abstract getRuleType(): 'binding' | 'styling';
   }
-
-  export interface YamlStylingRule{
-    id: string
-    elements?: string[]
-    priority?: number
-    function?: (string | FunctionElement)
+  
+  export class YamlBindRule extends RuleBase {
+    bindData?: string[];
+  
+    constructor(data: {
+      id: string;
+      elements?: string[];
+      priority?: number;
+      function?: (string | FunctionElement);
+      bindData?: string[];
+    }) {
+      super(data);
+      this.bindData = data.bindData;
+    }
+  
+    getRuleType(): 'binding' | 'styling' {
+      return 'binding';
+    }
+  }
+  
+  export class YamlStylingRule extends RuleBase {
+    applyClass?: string[];
+    applyText?: string;
+    applyStyle?: string[];
+    applyShape?: string;
+  
+    constructor(data: {
+      id: string;
+      elements?: string[];
+      priority?: number;
+      function?: (string | FunctionElement);
+      applyClass?: string[];
+      applyText?: string;
+      applyStyle?: string[];
+      applyShape?: string;
+    }) {
+      super(data);
+      this.applyClass = data.applyClass;
+      this.applyText = data.applyText;
+      this.applyStyle = data.applyStyle;
+      this.applyShape = data.applyShape;
+    }
+  
+    getRuleType(): 'binding' | 'styling' {
+      return 'styling';
+    }
   }
   
   export interface YamlFunction {

@@ -21,6 +21,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
   labelSize = 'span' 
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const theme = useTheme2();
   
   const bgHoverColor = theme.colors.border.medium;
@@ -57,9 +58,14 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       onMouseEnter={() => setIsHovered(hover)} 
       onMouseLeave={() => setIsHovered(false)} 
     >
-
+      {isModalOpen && <CreateRuleModal 
+      rule={rule}
+      elements={[]}
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      onSubmit={()=>{}}/>}
      <PageToolbar className={css`background: ${isHovered ? bgHoverColor : bgColor}; padding: 1px; padding-top: 3px; padding-bottom: 3px;`} title={`${rule.id}`} >
-      <ToolbarButton iconSize="lg" className={css`&:hover{ background-color: ${theme.colors.background.primary}}`} icon="edit">Edit</ToolbarButton>
+      <ToolbarButton onClick={()=>setIsModalOpen(true)} iconSize="lg" className={css`&:hover{ background-color: ${theme.colors.background.primary}}`} icon="edit">Edit</ToolbarButton>
      </PageToolbar>
       <Divider/>
       <div className={css`flex: 1;`}>
@@ -76,7 +82,6 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
         </div>
         {rule.function && 
         <div>
-          {/* <Divider/> */}
           <FunctionList 
             label="Function:" 
             textSize={textSize} 

@@ -36,17 +36,18 @@ const RuleInputWrapper: React.FC<RuleInputWrapperProps> = ({ children, onDelete,
             <div 
                 className={css`
                     display: flex;
-                    justify-items: center;
+                    justify-content: center;
+                    align-items: center;
                     opacity: ${isHovered && isIcon ? 1 : 0}; 
                     transition: opacity 0.3s ease-in-out;
                 `}
             >
-                <IconButton 
+                {isIcon &&<IconButton 
                     size='xl' 
                     name={icon??'trash-alt'} 
                     aria-label={icon??'trash-alt'} 
                     onClick={onDelete}
-                />
+                />}
             </div>
         </div>
     );

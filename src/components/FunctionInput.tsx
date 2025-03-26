@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Input, 
   Text, 
@@ -14,14 +14,16 @@ import { ActionInput } from './ActionInput';
 
 interface FunctionInputProps {
   functionData: string | FunctionElement | undefined;
-  onFunctionChange: (updatedFunction: string | FunctionElement) => void;
+  type: 'styling' | 'binding'
+  onFunctionChange: (updatedFunction: string | FunctionElement | undefined, deletedTab?: string) => void;
   forceUpdate: () => void;
 }
 
 export const FunctionInput: React.FC<FunctionInputProps> = ({ 
   functionData, 
   onFunctionChange, 
-  forceUpdate 
+  forceUpdate,
+  type
 }) => {
   const [activeTab, setActiveTab] = useState('if');
   const theme = useTheme2()
@@ -29,7 +31,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   const handleConditionChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'if' | 'else_if' = 'if', index?: number) => {
     if (functionData && typeof functionData !== 'string') {
       const updatedFunction = { ...functionData };
-      
+
       if (type === 'if') {
         if (updatedFunction.if) {
           updatedFunction.if.condition = e.currentTarget.value;
@@ -45,10 +47,14 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
     }
   };
 
+  useEffect(() => {
+    setActiveTab('if'); 
+  }, []);
+
   const handleActionChange = (action: any, type: 'if' | 'else_if' | 'else', index?: number) => {
     if (functionData && typeof functionData !== 'string') {
       const updatedFunction = { ...functionData };
-      
+
       if (type === 'if' && updatedFunction.if) {
         updatedFunction.if.action = action;
       } else if (type === 'else_if' && updatedFunction.else_if && index !== undefined) {
@@ -62,9 +68,45 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
     }
   };
 
+  const handleActionDelete = (index: number) =>{
+    if (functionData && typeof functionData !== 'string'){
+      const updatedFunction = { ...functionData };
+      if (updatedFunction.else_if){
+        delete updatedFunction.else_if[index]
+      }
+      onFunctionChange(updatedFunction);
+      forceUpdate();
+    }
+  }
+
+  const handleStringFunctionDelete = () =>{
+    onFunctionChange(undefined)
+    forceUpdate()
+  }
+
+  const handleConditionDelete = () =>{
+      if(activeTab !== 'if'){
+        if (functionData && typeof functionData !== 'string'){
+          const updatedFunction = { ...functionData };
+        
+        if (activeTab === 'else_if' && updatedFunction.else_if) {
+          delete updatedFunction.else_if
+        } else if (activeTab === 'else' && updatedFunction.else) {
+          delete updatedFunction.else
+        }
+        onFunctionChange(updatedFunction, activeTab)
+        console.log('deleted')
+        setActiveTab('if')
+      }
+    }else{
+      onFunctionChange(undefined)
+    }
+    forceUpdate()
+  }
+
   if (!functionData || typeof functionData === 'string') {
     return (
-      <RuleInputWrapper>
+      <RuleInputWrapper onDelete={()=>handleStringFunctionDelete()}>
         <Text>Function:</Text>
         <Select 
           placeholder="Function" 
@@ -77,46 +119,53 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   }
 
   return (
-    <RuleInputWrapper>
+    <RuleInputWrapper  onDelete={()=>{handleConditionDelete()}}>
       <TabsBar>
         <Tab 
           label="If" 
           active={activeTab === 'if'} 
-          onChangeTab={() => setActiveTab('if')}
+          onChangeTab={() => {setActiveTab('if') 
+          }}
         />
         {functionData.else_if && (
           <Tab 
             label="Else If" 
             active={activeTab === 'else_if'} 
-            onChangeTab={() => setActiveTab('else_if')}
+            onChangeTab={() => {setActiveTab('else_if')
+            }}
           />
         )}
         {functionData.else && (
           <Tab 
             label="Else" 
             active={activeTab === 'else'} 
-            onChangeTab={() => setActiveTab('else')}
+            onChangeTab={() => {setActiveTab('else')
+            }}
           />
         )}
       </TabsBar>
 
-      {activeTab === 'if' && functionData.if && (
-        <div>
-            <div style={{marginTop: '5px', marginBottom: '10px'}}>
-                <Text>Condition:</Text>
-                <Input 
-                    placeholder="Condition" 
-                    value={functionData.if.condition || ''} 
-                    onChange={(e) => handleConditionChange(e)}
-                    className="mb-2"
-                />
-            </div>
-            <div style={{marginTop: '5px', marginBottom: '5px'}}>
-                <ActionInput 
-                    action={functionData.if.action} 
-                    onChange={(action) => handleActionChange(action, 'if')}
-                />
-            </div>
+      {activeTab === 'if'  && functionData.if && (
+        <div style={{marginTop: '5px', marginBottom: '10px', width: '100%'}}>
+          <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
+              <div style={{marginTop: '5px', marginBottom: '10px'}}>
+                  <Text>Condition:</Text>
+                  <Input 
+                      placeholder="Condition" 
+                      value={functionData.if.condition || ''} 
+                      onChange={(e) => handleConditionChange(e)}
+                      className="mb-2"
+                  />
+              </div>
+              <div style={{marginTop: '5px', marginBottom: '5px'}}>
+                  <ActionInput 
+                      type={type}
+                      actionBackgroundColor={theme.colors.background.primary}
+                      action={functionData.if.action} 
+                      onChange={(action) => handleActionChange(action, 'if')}
+                  />
+              </div>
+          </RuleInputWrapper>
         </div>
       )}
 
@@ -124,7 +173,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
         <div>
           {functionData.else_if.map((elseIfCondition, index) => (
             <div key={index} style={{marginTop: '5px', marginBottom: '5px'}}>
-                <RuleInputWrapper backgroundColor={theme.colors.background.secondary} icon={'x'} isIcon={functionData.else_if && functionData.else_if?.length>1}>
+                <RuleInputWrapper onDelete={()=>handleActionDelete(index)} backgroundColor={theme.colors.background.secondary} icon={'x'} isIcon={functionData.else_if && functionData.else_if?.length>1}>
                     <div style={{ marginBottom: '10px'}}>
                         <Text>Condition:</Text>
                         <Input 
@@ -136,7 +185,8 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                     </div>
                     <div style={{ marginTop: '5px'}}>                     
                         <ActionInput 
-                            actionBackgroundColor={theme.colors.background.secondary}
+                            type={type}
+                            actionBackgroundColor={theme.colors.background.primary}
                             action={elseIfCondition.action} 
                             onChange={(action) => handleActionChange(action, 'else_if', index)}
                         />
@@ -149,10 +199,14 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
 
       {activeTab === 'else' && functionData.else && (
         <div style={{marginTop: '5px', marginBottom: '10px'}}>
-          <ActionInput 
-            action={functionData.else.action} 
-            onChange={(action) => handleActionChange(action, 'else')}
-          />
+          <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
+            <ActionInput 
+              type={type}
+              actionBackgroundColor={theme.colors.background.primary}
+              action={functionData.else.action} 
+              onChange={(action) => handleActionChange(action, 'else')}
+            />
+          </RuleInputWrapper>
         </div>
       )}
     </RuleInputWrapper>
