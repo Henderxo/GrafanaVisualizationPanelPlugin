@@ -364,10 +364,8 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   };
 
 const handleYamlConfigChange = (newYamlConfig: string) => {
-  onOptionsChange({
-    ...options,
-    yamlConfig: newYamlConfig
-  });
+  console.log(newYamlConfig)
+  options.yamlConfig = newYamlConfig
 };
 
 const debugNodeElementMapping = (svgElement: SVGElement) => {

@@ -31,9 +31,36 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
   const CreateRule = () => {
     setIsModalOpen(true);
   };
+
+  
   const handleRuleSubmit = (rule: YamlBindRule | YamlStylingRule) => {
-    setIsModalOpen(false);
+    const updatedYamlConfig = { ...yamlConfig };
+
+    if (rule instanceof YamlBindRule) {
+      updatedYamlConfig.bindingRules.push(rule);
+      setElementRules(prev => ({
+        ...prev,
+        bindingRules: [...prev.bindingRules, rule]
+      }));
+      
+      setActiveTab('bindingRules');
+      setActiveRule(rule);
+    } else if (rule instanceof YamlStylingRule) {
+      updatedYamlConfig.stylingRules.push(rule);
+      setElementRules(prev => ({
+        ...prev,
+        stylingRules: [...prev.stylingRules, rule]
+      }));
+    
+      setActiveTab('stylingRules');
+      setActiveRule(rule);
+    }
+
+    const newYamlConfigString = JSON.stringify(updatedYamlConfig, null, 2);
+
+    onYamlConfigChange(newYamlConfigString);
   };
+
   const [elementRules, setElementRules] = useState<{ bindingRules: YamlBindRule[]; stylingRules: YamlStylingRule[] }>({
     bindingRules: [],
     stylingRules: [],

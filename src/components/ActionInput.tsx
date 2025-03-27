@@ -7,7 +7,8 @@ import {
   IconButton,
   Badge,
   useTheme2,
-  Box
+  Box,
+  Field
 } from '@grafana/ui';
 import { Action } from 'types/types';
 import RuleInputWrapper from '../components/RuleInputWrapper';
@@ -119,24 +120,28 @@ export const ActionInput: React.FC<ActionInputProps> = ({
         return (
           <>
             <Text>{actionType}</Text>
-            <Input
-              label={actionType}
-              placeholder={`Enter ${actionType}`}
-              value={action.applyText || ''}
-              onChange={(e) => onChange({...action, applyText: e.currentTarget.value})}
-            />
+            <Field className={css`margin: 0px;`}>
+              <Input
+                label={actionType}
+                placeholder={`Enter ${actionType}`}
+                value={action.applyText || ''}
+                onChange={(e) => onChange({...action, applyText: e.currentTarget.value})}
+              />
+            </Field>
           </>
         );
       case 'applyShape':
         return (
           <>
             <Text>{actionType}</Text>
-            <Input
-              label={actionType}
-              placeholder={`Enter ${actionType}`}
-              value={action.applyShape || ''}
-              onChange={(e) => onChange({...action, applyShape: e.currentTarget.value})}
-            />
+            <Field className={css`margin: 0px;`}>
+              <Input
+                label={actionType}
+                placeholder={`Enter ${actionType}`}
+                value={action.applyShape || ''}
+                onChange={(e) => onChange({...action, applyShape: e.currentTarget.value})}
+              />
+            </Field>
           </>
         );
       default:

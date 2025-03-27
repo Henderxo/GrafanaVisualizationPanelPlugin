@@ -8,7 +8,9 @@ import {
   MultiSelect,
   Text,
   useTheme2,
-  LoadingPlaceholder
+  LoadingPlaceholder,
+  Field,
+  FieldValidationMessage
 } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { Action, FunctionElement, YamlBindRule, YamlStylingRule } from 'types/types';
@@ -303,19 +305,43 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
         }
     }
 
-    useEffect(()=>{
-        if(elements){
-            setElementsAreLoading(true)
-            setElementList(mapToSelectableValues(elements, ['all', 'nodes', 'subgraphs']))
-            setElementsAreLoading(false)
-        }
-    }, [elements])
+  useEffect(()=>{
+      if(elements){
+          setElementsAreLoading(true)
+          setElementList(mapToSelectableValues(elements, ['all', 'nodes', 'subgraphs']))
+          setElementsAreLoading(false)
+      }
+  }, [elements])
 
 
   useEffect(()=>{
     resetRule(rule)
     setIsLoading(false)
   }, [])
+
+  const handleSubmit = () => {
+    const newCreatedRule = newRuleRef.current.clone();
+
+    if (!newCreatedRule.id) {
+      return;
+    }
+
+    if (newCreatedRule.getRuleType() === 'binding') {
+      if (!(newCreatedRule as YamlBindRule).bindData && !newCreatedRule.function && !newCreatedRule.elements) {
+        return;
+      }
+    } else if (newCreatedRule.getRuleType() === 'styling') {
+      const stylingRule = newCreatedRule as YamlStylingRule;
+      if (!stylingRule.applyClass && !stylingRule.applyStyle && 
+          !stylingRule.applyShape && !stylingRule.applyText && 
+          !stylingRule.function) {
+        return;
+      }
+    }
+
+    onSubmit(newCreatedRule);
+    onClose();
+  };
 
   const { containerProps, primaryProps, secondaryProps, splitterProps } = useSplitter({
     direction: 'row',
@@ -419,17 +445,20 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
           >
             <RuleInputWrapper isIcon={false}>
               <Text>Rule Type:</Text>
-              <Select
+              <Field className={css`margin: 0px;`}>
+                <Select
                 options={ruleTypeOptions}
                 value={ruleType}
                 onChange={handleRuleTypeChange}
                 className="mb-2"
-              />
+                />
+              </Field>
             </RuleInputWrapper>
   
             <RuleInputWrapper isIcon={false}>
               <Text>Rule ID:</Text>
-              <Input
+              <Field className={css`margin: 0px;`}>
+                <Input 
                 placeholder="Rule ID"
                 value={newRuleRef.current.id}
                 onChange={(e) => {
@@ -437,7 +466,8 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                   forceUpdate();
                 }}
                 className="mb-2"
-              />
+                />
+              </Field>
             </RuleInputWrapper>
   
             {priorityActionAdded && (
@@ -445,16 +475,18 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                 onDelete={() => handleRuleInputDelete("priority")}
               >
                 <Text>Priority:</Text>
-                <Input
-                  placeholder="Priority"
-                  value={newRuleRef.current.priority}
-                  type="number"
-                  onChange={(e) => {
-                    newRuleRef.current.priority = e.currentTarget.value;
-                    forceUpdate();
-                  }}
-                  className="mb-2"
-                />
+                <Field className={css`margin: 0px;`}>
+                  <Input
+                    placeholder="Priority"
+                    value={newRuleRef.current.priority}
+                    type="number"
+                    onChange={(e) => {
+                      newRuleRef.current.priority = e.currentTarget.value;
+                      forceUpdate();
+                    }}
+                    className="mb-2"
+                  />
+                </Field>
               </RuleInputWrapper>
             )}
   
@@ -463,21 +495,23 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                 onDelete={() => handleRuleInputDelete("elements")}
               >
                 <Text>Elements</Text>
-                <MultiSelect
-                  label="Elements"
-                  placeholder="Select Elements"
-                  value={newRuleRef.current.elements}
-                  options={ElementList}
-                  onChange={(selected) => {
-                    let tempList: string[] = [];
-                    selected.forEach((value) => {
-                      tempList.push(value.value);
-                    });
-                    newRuleRef.current.elements = tempList;
-                    forceUpdate();
-                  }}
-                  className="mb-2"
-                />
+                <Field className={css`margin: 0px;`}>
+                  <MultiSelect
+                    label="Elements"
+                    placeholder="Select Elements"
+                    value={newRuleRef.current.elements}
+                    options={ElementList}
+                    onChange={(selected) => {
+                      let tempList: string[] = [];
+                      selected.forEach((value) => {
+                        tempList.push(value.value);
+                      });
+                      newRuleRef.current.elements = tempList;
+                      forceUpdate();
+                    }}
+                    className="mb-2"
+                  />
+                </Field>
               </RuleInputWrapper>
             )}
   
@@ -507,9 +541,9 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
       <Modal.ButtonRow>
         <Button variant={"secondary"} onClick={onClose}>Cancel</Button>
         {rule ? (
-          <Button variant={"primary"}>Update</Button>
+          <Button onClick={handleSubmit} variant={"primary"}>Update</Button>
         ) : (
-          <Button variant={"primary"}>Create</Button>
+          <Button onClick={handleSubmit} variant={"primary"}>Create</Button>
         )}
       </Modal.ButtonRow>
     </Modal>
