@@ -20,6 +20,7 @@ interface FunctionInputProps {
   forceUpdate: () => void;
   activeTab: 'if' | 'else_if' | 'else';
   onActiveTabChange: (tab: 'if' | 'else_if' | 'else') => void;
+  onLoaded: (state: boolean) => void 
 }
 
 export const FunctionInput: React.FC<FunctionInputProps> = ({ 
@@ -28,7 +29,8 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   forceUpdate,
   type,
   activeTab,
-  onActiveTabChange
+  onActiveTabChange,
+  onLoaded
 }) => {
   const theme = useTheme2()
   const [isLoaded, setisLoaded] = useState<boolean>(false)
@@ -176,7 +178,10 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                       actionBackgroundColor={theme.colors.background.primary}
                       action={functionData.if.action} 
                       onChange={(action) => handleActionChange(action, 'if')}
-                      onLoaded={(status)=>{setisLoaded(status)}}
+                      onLoaded={(status)=>{
+                        setisLoaded(status)
+                        onLoaded(status)
+                      }}
                   />
               </div>
           </RuleInputWrapper>
@@ -203,7 +208,10 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                             actionBackgroundColor={theme.colors.background.primary}
                             action={elseIfCondition.action} 
                             onChange={(action) => handleActionChange(action, 'else_if', index)}
-                            onLoaded={(status)=>{setisLoaded(status)}}
+                            onLoaded={(status)=>{
+                              setisLoaded(status)
+                              onLoaded(status)
+                            }}
                         />
                     </div>
                 </RuleInputWrapper>
@@ -220,7 +228,10 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
               actionBackgroundColor={theme.colors.background.primary}
               action={functionData.else.action} 
               onChange={(action) => handleActionChange(action, 'else')}
-              onLoaded={(status)=>{setisLoaded(status)}}
+              onLoaded={(status)=>{
+                setisLoaded(status)
+                onLoaded(status)
+              }}
             />
             {!isLoaded && <LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>}
           </RuleInputWrapper>

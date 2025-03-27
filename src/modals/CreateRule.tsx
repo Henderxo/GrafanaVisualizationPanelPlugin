@@ -62,6 +62,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const [elseActionAdded, setelseActionAdded] = useState<boolean>(false);
     const [generalActionsAdded, setGeneralActionsAdded] = useState<boolean>(false);
     //General
+    const [isFunctionLoaded, setIsFunctionLoaded] = useState<boolean>(false)
     const [activeTab, setActiveTab] = useState<'if' | 'else_if' | 'else'>('if');
     const  [ElementList, setElementList] = useState<SelectableValue[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -318,7 +319,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
 
   const { containerProps, primaryProps, secondaryProps, splitterProps } = useSplitter({
     direction: 'row',
-    initialSize: 0.1,
+    initialSize: 0.2,
     dragPosition: 'start',
   });
 
@@ -375,8 +376,8 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
             {...primaryProps}
             className={css`
               display: flex;
+              wdith: 200px;
               flex-direction: column;
-              width: 125px;
               overflow-y: auto;
             `}
           >
@@ -410,7 +411,10 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               padding: 10px;
               flex-direction: column;
               overflow-y: auto;
+              width: 450px;
               background-color: ${theme.colors.background.secondary};
+              flex-grow: 1;  // Allow this div to grow and fill available space
+              min-width: 0;  // Prevent children from expanding the div's width
             `}
           >
             <RuleInputWrapper isIcon={false}>
@@ -488,6 +492,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
   
             {functionActionAdded && !generalActionsAdded && (
               <FunctionInput
+                onLoaded={setIsFunctionLoaded}
                 activeTab={activeTab}
                 onActiveTabChange={setActiveTab}
                 type={ruleType.value}

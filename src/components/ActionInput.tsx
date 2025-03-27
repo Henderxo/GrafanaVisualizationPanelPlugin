@@ -150,8 +150,8 @@ export const ActionInput: React.FC<ActionInputProps> = ({
           className={css`
             display: flex; 
             gap: 2px; 
+            flex-wrap: nowrap;
             margin-bottom: 16px; 
-            flex-wrap: wrap;
             align-items: center;
             width: 100%;
           `}
