@@ -70,12 +70,10 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
     setIsLoading(false)
   }, [element, parsedYaml]);
 
-  // Reset element rules when the modal is closed
   const handleClose = () => {
-    //setElementRules({ bindingRules: [], stylingRules: [] }); // Clear the rules
     setActiveTab('bindingRules')
     setActiveRule(null)
-    onClose(); // Call the passed onClose prop to close the modal
+    onClose(); 
   };
 
   if (!isOpen) return null;

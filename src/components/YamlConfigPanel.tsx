@@ -320,72 +320,33 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     })
   }
 
-// Handler for double-clicking on Mermaid elements
-const handleElementDoubleClick = (event: MouseEvent) => {
-  if (!fullMapRef.current) return;
-  
-  // Start with the target element
-  let currentElement = event.target as HTMLElement;
-  let nodeElement = null;
-  
-  // First check if the element itself is a flowchart element
-  if (currentElement.id && currentElement.id.startsWith('flowchart-')) {
-    nodeElement = currentElement;
-  } else {
-    // If not, walk up the DOM tree to find the nearest flowchart element
-    while (currentElement && !nodeElement) {
-      if (currentElement.id && currentElement.id.startsWith('flowchart-')) {
-        nodeElement = currentElement;
-        break;
-      }
-      
-      // Also check for g elements that contain flowchart elements
-      // This captures clicks on shape elements (rect, circle, etc.)
-      const flowchartChild = currentElement.querySelector('[id^="flowchart-"]');
-      if (flowchartChild) {
-        nodeElement = flowchartChild as HTMLElement;
-        break;
-      }
-      
-      // Stop if we reach the SVG container
-      if (currentElement.tagName === 'svg') break;
-      
-      currentElement = currentElement.parentElement as HTMLElement;
-      if (!currentElement) break;
+  const handleElementDoubleClick = (event: MouseEvent) => {
+    if (!fullMapRef.current) return;
+    
+    const currentElement = event.target as HTMLElement;
+    
+    // Only proceed if the click is directly on a flowchart element
+    const nodeElement = currentElement.closest('[id^="flowchart-"]') as HTMLElement | null;
+    
+    if (!nodeElement) {
+      // If no direct node found, do nothing
+      return;
     }
-  }
-  
-  // If we still don't have a nodeElement, check if we're clicking on a shape
-  // that's part of a cluster but doesn't have a flowchart- id itself
-  if (!nodeElement && event.target) {
-    const target = event.target as HTMLElement;
-    // Check if target is inside a g with class="cluster"
-    let clusterParent = target.closest('.cluster');
-    if (clusterParent) {
-      // Find the first flowchart element within this cluster
-      nodeElement = clusterParent.querySelector('[id^="flowchart-"]') as HTMLElement;
+    
+    const nodeId = nodeElement.id.replace('flowchart-', '').replace(/[-_]\d+$/, '');
+    console.log('Node identified:', nodeId);
+    
+    // Find the element in either nodes or subgraphs
+    const element = findElementInMaps(nodeId, fullMapRef.current);
+    
+    if (element) {
+      console.log('Element found:', element);
+      setSelectedElement(element);
+      setIsModalOpen(true);
+    } else {
+      console.warn('Could not find element with ID:', nodeId);
     }
-  }
-  
-  if (!nodeElement) {
-    console.log("No flowchart element found for this click");
-    return;
-  }
-  
-  const nodeId = nodeElement.id.replace('flowchart-', '').replace(/[-_]\d+$/, '');
-  console.log('Node identified:', nodeId);
-  
-  // Find the element in either nodes or subgraphs
-  let element = findElementInMaps(nodeId, fullMapRef.current);
-  
-  if (element) {
-    console.log('Element found:', element);
-    setSelectedElement(element);
-    setIsModalOpen(true);
-  } else {
-    console.warn('Could not find element with ID:', nodeId);
-  }
-};
+  };
 
 // Handle YAML config changes from the modal
 const handleYamlConfigChange = (newYamlConfig: string) => {
@@ -426,10 +387,8 @@ useEffect(() => {
                   minZoom: 0.5,
                 });
                 
-                // Debug node mappings to help troubleshoot
                 debugNodeElementMapping(svgElement as SVGElement);
                 
-                // Single event listener on the SVG container instead of multiple node listeners
                 svgElement.addEventListener('dblclick', handleElementDoubleClick);
               }
               setIsLoading(false);
@@ -447,7 +406,6 @@ useEffect(() => {
     });
     
   return () => {
-    // Clean up event listener on component unmount
     if (chartRef.current) {
       const svgElement = chartRef.current.querySelector('svg');
       if (svgElement) {
