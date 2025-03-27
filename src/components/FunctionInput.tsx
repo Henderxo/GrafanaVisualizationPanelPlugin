@@ -17,16 +17,18 @@ interface FunctionInputProps {
   type: 'styling' | 'binding'
   onFunctionChange: (updatedFunction: string | FunctionElement | undefined, deletedTab?: string) => void;
   forceUpdate: () => void;
-  
+  activeTab: 'if' | 'else_if' | 'else';
+  onActiveTabChange: (tab: 'if' | 'else_if' | 'else') => void;
 }
 
 export const FunctionInput: React.FC<FunctionInputProps> = ({ 
   functionData, 
   onFunctionChange, 
   forceUpdate,
-  type
+  type,
+  activeTab,
+  onActiveTabChange
 }) => {
-  const [activeTab, setActiveTab] = useState('if');
   const theme = useTheme2()
 
   const handleConditionChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'if' | 'else_if' = 'if', index?: number) => {
@@ -49,12 +51,12 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   };
 
   useEffect(() => {
-    setActiveTab('if'); 
+    onActiveTabChange('if'); 
   }, []);
 
   const handleActionChange = (action: any, type: 'if' | 'else_if' | 'else', index?: number) => {
     if (functionData && typeof functionData !== 'string') {
-      const updatedFunction = { ...functionData };
+      const updatedFunction = JSON.parse(JSON.stringify(functionData));
 
       if (type === 'if' && updatedFunction.if) {
         updatedFunction.if.action = action;
@@ -96,8 +98,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
           delete updatedFunction.else
         }
         onFunctionChange(updatedFunction, activeTab)
-        console.log('deleted')
-        setActiveTab('if')
+        onActiveTabChange('if')
       }
     }else{
       onFunctionChange(undefined)
@@ -125,14 +126,14 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
         <Tab 
           label="If" 
           active={activeTab === 'if'} 
-          onChangeTab={() => {setActiveTab('if') 
+          onChangeTab={() => {onActiveTabChange('if') 
           }}
         />
         {functionData.else_if && (
           <Tab 
             label="Else If" 
             active={activeTab === 'else_if'} 
-            onChangeTab={() => {setActiveTab('else_if')
+            onChangeTab={() => {onActiveTabChange('else_if')
             }}
           />
         )}
@@ -140,7 +141,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
           <Tab 
             label="Else" 
             active={activeTab === 'else'} 
-            onChangeTab={() => {setActiveTab('else')
+            onChangeTab={() => {onActiveTabChange('else')
             }}
           />
         )}

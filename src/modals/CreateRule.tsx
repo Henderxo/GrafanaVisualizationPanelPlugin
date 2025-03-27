@@ -39,6 +39,17 @@ interface CreateRuleModalProps {
   rule?: YamlBindRule | YamlStylingRule
 }
 
+interface RuleUIState {
+  priorityActionAdded: boolean;
+  elementsActionAdded: boolean;
+  functionActionAdded: boolean;
+  ifActionAdded: boolean;
+  elseIfActionAdded: boolean;
+  elseActionAdded: boolean;
+  generalActionsAdded: boolean;
+  ruleType: SelectableValue
+}
+
 export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({ 
   isOpen, 
   onClose, 
@@ -47,7 +58,10 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
   rule
 }) => {
     //History
-    const [stateHistory, setStateHistory] = useState<(YamlBindRule | YamlStylingRule)[]>([]);
+    const [stateHistory, setStateHistory] = useState<{
+      rule: YamlBindRule | YamlStylingRule,
+      uiState: RuleUIState
+    }[]>([]);
     const maxHistoryLength = 10;
     //Actions
     const [priorityActionAdded, setPriorityActionAdded] = useState<boolean>(false);
@@ -58,6 +72,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const [elseActionAdded, setelseActionAdded] = useState<boolean>(false);
     const [generalActionsAdded, setGeneralActionsAdded] = useState<boolean>(false);
     //Action
+    const [activeTab, setActiveTab] = useState<'if' | 'else_if' | 'else'>('if');
     const  [ElementList, setElementList] = useState<SelectableValue[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [areElementsLoading, setElementsAreLoading] = useState<boolean>(false)
@@ -65,24 +80,45 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
     const theme = useTheme2();
 
-    const saveStateToHistory = (state: YamlBindRule | YamlStylingRule) => {
+    const saveStateToHistory = (state?: YamlBindRule | YamlStylingRule) => {
       setStateHistory(prevHistory => {
-        const clonedState = state.clone();
-    
-        console.log('Original Rule:', state);
-        console.log('Cloned Rule:', clonedState);
-    
-        const newHistory = [...prevHistory, clonedState];
+        const clonedState = state?state.clone():newRuleRef.current.clone()
+        const currentUIState: RuleUIState = {
+          priorityActionAdded,
+          elementsActionAdded,
+          functionActionAdded,
+          ifActionAdded,
+          elseIfActionAdded,
+          elseActionAdded,
+          generalActionsAdded,
+          ruleType
+        };
+  
+        const newHistory = [
+          ...prevHistory, 
+          { 
+            rule: clonedState, 
+            uiState: currentUIState 
+          }
+        ];
         return newHistory.slice(-maxHistoryLength);
       });
     };
 
     const handleUndo = () => {
-      console.log(stateHistory)
       if (stateHistory.length > 0) {
         const previousState = stateHistory[stateHistory.length - 1];
+        setRuleType(previousState.uiState.ruleType)
+        resetRule(previousState.rule);
         
-        resetRule(previousState);
+        setPriorityActionAdded(previousState.uiState.priorityActionAdded);
+        setElementsActionAdded(previousState.uiState.elementsActionAdded);
+        setFunctionActionAdded(previousState.uiState.functionActionAdded);
+        setIfActionAdded(previousState.uiState.ifActionAdded);
+        setElseIfActionAdded(previousState.uiState.elseIfActionAdded);
+        setelseActionAdded(previousState.uiState.elseActionAdded);
+        setGeneralActionsAdded(previousState.uiState.generalActionsAdded);
+  
         setStateHistory(prevHistory => prevHistory.slice(0, -1));
       }
     };
@@ -127,48 +163,50 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     };
 
     const handleRuleTypeChange = (selectedType: SelectableValue) => {
-      saveStateToHistory(newRuleRef.current);
+      handleFunctionChange(undefined)
+
       setRuleType(selectedType);
-    
       newRuleRef.current = selectedType.value === 'binding' 
         ? new YamlBindRule({...newRuleRef.current, id: newRuleRef.current.id})
         : new YamlStylingRule({...newRuleRef.current, id: newRuleRef.current.id});
-      newRuleRef.current.function = undefined
-      handleFunctionChange(newRuleRef.current.function)
+
       resetRule(newRuleRef.current)
     };
 
     const handleGeneralRuleChange = (action: Action) => {
       saveStateToHistory(newRuleRef.current);
-  
-      if (newRuleRef.current.getRuleType() === 'binding') {
-          const bindRule = newRuleRef.current as YamlBindRule;
-          
-              bindRule.bindData = action.bindData??undefined
-
-      } else if (newRuleRef.current.getRuleType() === 'styling') {
-          const stylingRule = newRuleRef.current as YamlStylingRule;
-          
-              stylingRule.applyClass = action.applyClass??undefined
-
-              stylingRule.applyText = action.applyText??undefined
-          
-              stylingRule.applyStyle = action.applyStyle??undefined
-          
-              stylingRule.applyShape = action.applyShape??undefined
+      const currentRule = newRuleRef.current
+    
+      if (currentRule.getRuleType() === 'binding') {
+        const bindRule = currentRule as YamlBindRule;
+        bindRule.bindData = action.bindData ?? undefined;
+        
+        newRuleRef.current = bindRule;
+      } else if (currentRule.getRuleType() === 'styling') {
+        const stylingRule = currentRule as YamlStylingRule;
+        
+        stylingRule.applyClass = action.applyClass ?? undefined;
+        stylingRule.applyText = action.applyText ?? undefined;
+        stylingRule.applyStyle = action.applyStyle ?? undefined;
+        stylingRule.applyShape = action.applyShape ?? undefined;
+        
+        newRuleRef.current = stylingRule;
       }
-      forceUpdate()
+    
+      forceUpdate();
     }
 
     const handleFunctionChange = (updatedFunction: string | FunctionElement | undefined, deletedTab?: string) => {
-      saveStateToHistory(newRuleRef.current);
+      saveStateToHistory(newRuleRef.current.clone());
       if(updatedFunction){
         newRuleRef.current.function = updatedFunction;
         if(deletedTab){
           if(deletedTab === 'else_if'){
             setElseIfActionAdded(false)
+            setActiveTab('if');
           }else{
             setelseActionAdded(false)
+            setActiveTab('if');
           }
         }
       }else{
@@ -221,9 +259,15 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               setIfActionAdded(true);
               if(newRuleRef.current.function.else_if){
                 setElseIfActionAdded(true);
+              }else if(activeTab === 'else_if'){
+                setActiveTab('if')
               }
               if(newRuleRef.current.function.else){
                 setelseActionAdded(true);
+              }else if(activeTab === 'else'){
+                if(newRuleRef.current.function.else_if){
+                  setActiveTab('else_if')
+                }setActiveTab('if')
               }
             }
           }
@@ -252,7 +296,6 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
 
 
   useEffect(()=>{
-    console.log(rule)
     resetRule(rule)
     setIsLoading(false)
   }, [])
@@ -354,7 +397,6 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               background-color: ${theme.colors.background.secondary};
             `}
           >
-            {JSON.stringify(newRuleRef.current)}
             <RuleInputWrapper isIcon={false}>
               <Text>Rule Type:</Text>
               <Select
@@ -427,6 +469,8 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
   
             {functionActionAdded && !generalActionsAdded && (
               <FunctionInput
+                activeTab={activeTab}
+                onActiveTabChange={setActiveTab}
                 type={ruleType.value}
                 functionData={newRuleRef.current.function}
                 onFunctionChange={handleFunctionChange}

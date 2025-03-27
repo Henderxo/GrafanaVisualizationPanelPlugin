@@ -25,7 +25,6 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
   
     abstract getRuleType(): 'binding' | 'styling';
 
-    // Use generic method to ensure proper type return
     clone(): T {
       const baseCloneData = {
         id: this.id,
@@ -62,14 +61,12 @@ export class YamlBindRule extends RuleBase<YamlBindRule> {
       return 'binding';
     }
 
-    // Override clone method to ensure correct typing
+
     clone(): YamlBindRule {
       const baseClone = super.clone();
-      console.log(this)
-      console.log(this.bindData)
       return new YamlBindRule({
         ...baseClone,
-        bindData: this.bindData? this.bindData : undefined
+        bindData: this.bindData? [...this.bindData] : undefined
       });
     }
 }
@@ -101,7 +98,7 @@ export class YamlStylingRule extends RuleBase<YamlStylingRule> {
       return 'styling';
     }
 
-    // Override clone method to ensure correct typing
+
     clone(): YamlStylingRule {
       const baseClone = super.clone();
       return new YamlStylingRule({

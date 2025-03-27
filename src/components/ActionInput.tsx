@@ -39,7 +39,6 @@ export const ActionInput: React.FC<ActionInputProps> = ({
   const theme = useTheme2()
 
   useEffect(()=>{
-    console.log(type)
     const incomingActionKeys = Object.keys(action) as Array<keyof Action>;
     
     const filteredActionKeys = incomingActionKeys.filter(key => 
@@ -47,9 +46,9 @@ export const ActionInput: React.FC<ActionInputProps> = ({
     );
 
     const newActiveActions = [...new Set([
-      ...activeActions, 
       ...filteredActionKeys
     ])];
+
 
     setActiveActions(newActiveActions);
     onLoaded&&onLoaded(true)
@@ -85,7 +84,6 @@ export const ActionInput: React.FC<ActionInputProps> = ({
     const newActiveActions = activeActions.filter(a => a !== actionType);
     setActiveActions(newActiveActions);
     
-    // Remove the action from the action object
     const updatedAction = {...action};
     delete updatedAction[actionType];
     onChange(updatedAction);

@@ -52,7 +52,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
     generalActionsAdded
 }) => {
     const createElseInput = () => {
-        saveStateToHistory(newRuleRef.current)
+        saveStateToHistory(newRuleRef.current.clone())
         if (
             !(newRuleRef.current.function as FunctionElement).else
         ) {
@@ -102,7 +102,6 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
     }
 
     const createPriorityInput = () => {
-        console.log(newRuleRef.current)
         saveStateToHistory(newRuleRef.current)
         newRuleRef.current = new (newRuleRef.current.constructor as
             | typeof YamlBindRule
