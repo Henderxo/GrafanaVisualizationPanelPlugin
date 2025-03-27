@@ -98,7 +98,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const handleUndo = () => {
       if (stateHistory.length > 0) {
         const previousState = stateHistory[stateHistory.length - 1];
-        setRuleType(previousState.uiState.ruleType)
+
         resetRule(previousState.rule);
         
         setPriorityActionAdded(previousState.uiState.priorityActionAdded);
@@ -154,12 +154,9 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
 
     const handleRuleTypeChange = (selectedType: SelectableValue) => {
       handleFunctionChange(undefined)
-
-      setRuleType(selectedType);
       newRuleRef.current = selectedType.value === 'binding' 
         ? new YamlBindRule({...newRuleRef.current, id: newRuleRef.current.id})
         : new YamlStylingRule({...newRuleRef.current, id: newRuleRef.current.id});
-
       resetRule(newRuleRef.current)
     };
 
@@ -254,50 +251,52 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     }
 
     const resetRule = (rule?: YamlBindRule | YamlStylingRule) =>{
+      if(rule){
+        newRuleRef.current = rule.clone()
+        reconfigureEditor(rule)
+      }else{
+        newRuleRef.current = element?new YamlBindRule({id: '', elements: [element]}):new YamlBindRule({id: ''})
+        reconfigureEditor(newRuleRef.current)
+      }
+      forceUpdate()
+      setIsLoading(false)
+    }
+
+    const reconfigureEditor = (rule: YamlBindRule | YamlStylingRule) =>{
       setPriorityActionAdded(false)
       setElementsActionAdded(false)
       setFunctionActionAdded(false)
       setIfActionAdded(false)
       setelseActionAdded(false)
       setGeneralActionsAdded(false)
-      if(rule){
-        newRuleRef.current = rule.clone()
-        reconfigureEditor()
-      }else{
-        newRuleRef.current = element?new YamlBindRule({id: '', elements: [element]}):new YamlBindRule({id: ''})
-        console.log(newRuleRef)
-        reconfigureEditor()
-      }
-      forceUpdate()
-      setIsLoading(false)
-    }
 
-    const reconfigureEditor = () =>{
-      newRuleRef.current.priority && setPriorityActionAdded(true);
-      newRuleRef.current.elements && setElementsActionAdded(true);
+      setRuleType(ruleTypeOptions.find(obj => obj.value === rule.getRuleType())??{ label: 'Binding Rule', value: 'binding' })
 
-      if(newRuleRef.current.function){
+      rule.priority && setPriorityActionAdded(true);
+      rule.elements && setElementsActionAdded(true);
+
+      if(rule.function){
           setFunctionActionAdded(true);
-          if(typeof newRuleRef.current.function !== 'string'){
+          if(typeof rule.function !== 'string'){
             setIfActionAdded(true);
-            if(newRuleRef.current.function.else_if){
+            if(rule.function.else_if){
               setElseIfActionAdded(true);
             }else if(activeTab === 'else_if'){
               setActiveTab('if')
             }
-            if(newRuleRef.current.function.else){
+            if(rule.function.else){
               setelseActionAdded(true);
             }else if(activeTab === 'else'){
-              if(newRuleRef.current.function.else_if){
+              if(rule.function.else_if){
                 setActiveTab('else_if')
               }setActiveTab('if')
             }
           }
         }
-        if((newRuleRef.current as YamlBindRule).bindData !== undefined){
+        if((rule as YamlBindRule).bindData !== undefined){
           setGeneralActionsAdded(true)
         }
-        let temp = (newRuleRef.current as YamlStylingRule)
+        let temp = (rule as YamlStylingRule)
         if(temp.applyClass !== undefined || temp.applyShape !== undefined || temp.applyStyle !== undefined || temp.applyText !== undefined){
           setGeneralActionsAdded(true)
         }

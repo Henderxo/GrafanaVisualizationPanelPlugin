@@ -5,7 +5,8 @@ import {
   Select, 
   TabsBar, 
   Tab, 
-  useTheme2
+  useTheme2,
+  LoadingPlaceholder
 } from '@grafana/ui';
 import { FunctionElement } from 'types/types';
 import RuleInputWrapper from './RuleInputWrapper';
@@ -30,7 +31,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   onActiveTabChange
 }) => {
   const theme = useTheme2()
-
+  const [isLoaded, setisLoaded] = useState<boolean>(false)
   const handleConditionChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'if' | 'else_if' = 'if', index?: number) => {
     if (functionData && typeof functionData !== 'string') {
       const updatedFunction = { ...functionData };
@@ -130,14 +131,18 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
         <Tab 
           label="If" 
           active={activeTab === 'if'} 
-          onChangeTab={() => {onActiveTabChange('if') 
+          onChangeTab={() => {
+            onActiveTabChange('if') 
+            setisLoaded(false)
           }}
         />
         {functionData.else_if && (
           <Tab 
             label="Else If" 
             active={activeTab === 'else_if'} 
-            onChangeTab={() => {onActiveTabChange('else_if')
+            onChangeTab={() => {
+              onActiveTabChange('else_if')
+              setisLoaded(false)
             }}
           />
         )}
@@ -145,16 +150,18 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
           <Tab 
             label="Else" 
             active={activeTab === 'else'} 
-            onChangeTab={() => {onActiveTabChange('else')
+            onChangeTab={() => {
+              onActiveTabChange('else')
+              setisLoaded(false)
             }}
           />
         )}
       </TabsBar>
 
-      {activeTab === 'if'  && functionData.if && (
+      {activeTab === 'if'  && functionData.if  && (
         <div style={{marginTop: '5px', marginBottom: '10px', width: '100%'}}>
           <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
-              <div style={{marginTop: '5px', marginBottom: '10px'}}>
+              {isLoaded ? (<div style={{marginTop: '5px', marginBottom: '10px'}}>
                   <Text>Condition:</Text>
                   <Input 
                       placeholder="Condition" 
@@ -162,25 +169,26 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                       onChange={(e) => handleConditionChange(e)}
                       className="mb-2"
                   />
-              </div>
+              </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
               <div style={{marginTop: '5px', marginBottom: '5px'}}>
                   <ActionInput 
                       type={type}
                       actionBackgroundColor={theme.colors.background.primary}
                       action={functionData.if.action} 
                       onChange={(action) => handleActionChange(action, 'if')}
+                      onLoaded={(status)=>{setisLoaded(status)}}
                   />
               </div>
           </RuleInputWrapper>
         </div>
       )}
 
-      {activeTab === 'else_if' && functionData.else_if && (
+      {activeTab === 'else_if' && functionData.else_if  && (
         <div>
           {functionData.else_if.map((elseIfCondition, index) => (
             <div key={index} style={{marginTop: '5px', marginBottom: '5px'}}>
                 <RuleInputWrapper onDelete={()=>handleActionDelete(index)} backgroundColor={theme.colors.background.secondary} icon={'x'} isIcon={functionData.else_if && functionData.else_if?.length>1}>
-                    <div style={{ marginBottom: '10px'}}>
+                    {isLoaded ? (<div style={{ marginBottom: '10px'}}>
                         <Text>Condition:</Text>
                         <Input 
                             placeholder="Condition" 
@@ -188,13 +196,14 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                             onChange={(e) => handleConditionChange(e, 'else_if', index)}
                             className="mb-2"
                         />
-                    </div>
+                    </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
                     <div style={{ marginTop: '5px'}}>                     
                         <ActionInput 
                             type={type}
                             actionBackgroundColor={theme.colors.background.primary}
                             action={elseIfCondition.action} 
                             onChange={(action) => handleActionChange(action, 'else_if', index)}
+                            onLoaded={(status)=>{setisLoaded(status)}}
                         />
                     </div>
                 </RuleInputWrapper>
@@ -203,15 +212,17 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
         </div>
       )}
 
-      {activeTab === 'else' && functionData.else && (
+      {activeTab === 'else' && functionData.else &&  (
         <div style={{marginTop: '5px', marginBottom: '10px'}}>
           <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
-            <ActionInput 
+             <ActionInput 
               type={type}
               actionBackgroundColor={theme.colors.background.primary}
               action={functionData.else.action} 
               onChange={(action) => handleActionChange(action, 'else')}
+              onLoaded={(status)=>{setisLoaded(status)}}
             />
+            {!isLoaded && <LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>}
           </RuleInputWrapper>
         </div>
       )}

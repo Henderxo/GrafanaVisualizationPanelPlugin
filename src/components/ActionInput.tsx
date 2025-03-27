@@ -26,7 +26,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
   action = {}, 
   onChange,
   type,
-  label = 'Actions:',
+  label = 'Currently added actions:',
   actionBackgroundColor,
   onLoaded
 }) => {
@@ -36,9 +36,11 @@ export const ActionInput: React.FC<ActionInputProps> = ({
     : ['applyClass', 'applyText', 'applyStyle', 'applyShape'];
 
   const [activeActions, setActiveActions] = useState<Array<keyof Action>>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const theme = useTheme2()
 
   useEffect(()=>{
+    setIsLoading(true)
     const incomingActionKeys = Object.keys(action) as Array<keyof Action>;
     
     const filteredActionKeys = incomingActionKeys.filter(key => 
@@ -49,8 +51,8 @@ export const ActionInput: React.FC<ActionInputProps> = ({
       ...filteredActionKeys
     ])];
 
-
     setActiveActions(newActiveActions);
+    setIsLoading(false)
     onLoaded&&onLoaded(true)
   }, [action, type])
 
@@ -144,7 +146,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 
   return (
     <Box>
-      <div 
+      {!isLoading &&<div 
           className={css`
             display: flex; 
             gap: 2px; 
@@ -154,24 +156,25 @@ export const ActionInput: React.FC<ActionInputProps> = ({
             width: 100%;
           `}
       >
+      {JSON.stringify(actionTypes) !== JSON.stringify(activeActions) && <Text>Possible actions:</Text>}
       {actionTypes.map(actionType => (
-        !activeActions.includes(actionType) && (
-          <Badge 
-            key={actionType}
-            color="blue"
-            onClick={() => handleAddAction(actionType)}
-            className={css`
-              cursor: pointer;
-              &:hover {
-                opacity: 0.8;
-              }
-            `}
-            text={`Add ${actionType.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
-          >
-          </Badge>
+        !activeActions.includes(actionType)  && (
+            <Badge 
+              key={actionType}
+              color="blue"
+              onClick={() => handleAddAction(actionType)}
+              className={css`
+                cursor: pointer;
+                &:hover {
+                  opacity: 0.8;
+                }
+              `}
+              text={`Add ${actionType.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
+            >
+            </Badge>
         )
       ))}
-    </div>
+    </div>}
       {activeActions.length > 0 && <Text>{label}</Text>}
       {activeActions.map(actionType => (
         <div style={{width: '100%'}}>
