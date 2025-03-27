@@ -321,20 +321,42 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   }
 
   const handleElementDoubleClick = (event: MouseEvent) => {
+    console.log(event.target);
     if (!fullMapRef.current) return;
     
     const currentElement = event.target as HTMLElement;
     
-    // Only proceed if the click is directly on a flowchart element
-    const nodeElement = currentElement.closest('[id^="flowchart-"]') as HTMLElement | null;
+    // Check for flowchart nodes or clusters (subgraphs)
+    const nodeElement = currentElement.closest('[id^="flowchart-"], .cluster') as HTMLElement | null;
     
     if (!nodeElement) {
-      // If no direct node found, do nothing
+      // If no direct node or cluster found, do nothing
       return;
     }
     
-    const nodeId = nodeElement.id.replace('flowchart-', '').replace(/[-_]\d+$/, '');
-    console.log('Node identified:', nodeId);
+    let nodeId: string;
+    
+    if (nodeElement.classList.contains('cluster')) {
+      // For clusters, use the cluster's ID directly
+      const clusterId = nodeElement.id;
+      if (clusterId) {
+        nodeId = clusterId;
+      } else {
+        // Fallback: Look for a label within the cluster
+        const labelElement = nodeElement.querySelector('.nodeLabel') as HTMLElement | null;
+        if (labelElement) {
+          // Use the text content of the label
+          nodeId = labelElement.textContent?.trim() || '';
+        } else {
+          return;
+        }
+      }
+    } else {
+      // For direct flowchart nodes
+      nodeId = nodeElement.id.replace('flowchart-', '').replace(/[-_]\d+$/, '');
+    }
+    
+    console.log('Node/Subgraph identified:', nodeId);
     
     // Find the element in either nodes or subgraphs
     const element = findElementInMaps(nodeId, fullMapRef.current);
