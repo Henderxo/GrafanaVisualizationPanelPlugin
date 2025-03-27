@@ -1,33 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { 
-  Modal, 
-  ModalHeader,  
+  Modal,   
   Button, 
   Select, 
   Input, 
-  TextArea,
-  Checkbox,
-  RadioButtonGroup,
   useSplitter,
-  IconButton,
   MultiSelect,
-  Label,
   Text,
-  Box,
   useTheme2,
-  TabsBar,
-  Tab,
   LoadingPlaceholder
 } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
-import { Action, FunctionElement, RuleBase, YamlBindRule, YamlStylingRule } from 'types/types';
+import { Action, FunctionElement, YamlBindRule, YamlStylingRule } from 'types/types';
 import { css } from '@emotion/css';
-import { parse } from 'path';
 import RuleInputWrapper from 'components/RuleInputWrapper';
 import { FunctionInput } from 'components/FunctionInput';
-import ButtonWrapper from 'components/ButtonWrapper';
 import { ActionInput } from 'components/ActionInput';
-import { bindData } from 'utils/DataBindingUtils';
 import { RuleCreateActionBar } from 'components/RuleCreateActionBar';
 
 
@@ -36,6 +24,7 @@ interface CreateRuleModalProps {
   onClose: () => void;
   onSubmit: (rule: YamlBindRule | YamlStylingRule) => void;
   elements: string[],
+  element?: string,
   rule?: YamlBindRule | YamlStylingRule
 }
 
@@ -55,6 +44,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
   onClose, 
   onSubmit,
   elements,
+  element,
   rule
 }) => {
     //History
@@ -71,7 +61,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const [elseIfActionAdded, setElseIfActionAdded] = useState<boolean>(false);
     const [elseActionAdded, setelseActionAdded] = useState<boolean>(false);
     const [generalActionsAdded, setGeneralActionsAdded] = useState<boolean>(false);
-    //Action
+    //General
     const [activeTab, setActiveTab] = useState<'if' | 'else_if' | 'else'>('if');
     const  [ElementList, setElementList] = useState<SelectableValue[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -175,7 +165,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
 
     const handleGeneralRuleChange = (action: Action) => {
       saveStateToHistory(newRuleRef.current);
-      const currentRule = newRuleRef.current
+      const currentRule = newRuleRef.current.clone()
     
       if (currentRule.getRuleType() === 'binding') {
         const bindRule = currentRule as YamlBindRule;
@@ -192,7 +182,29 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
         
         newRuleRef.current = stylingRule;
       }
-    
+      forceUpdate();
+    }
+
+    const handleGeneralRuleDelete = () =>{
+      saveStateToHistory(newRuleRef.current);
+      const currentRule = newRuleRef.current.clone()
+
+      if (currentRule.getRuleType() === 'binding') {
+        const bindRule = currentRule as YamlBindRule;
+        bindRule.bindData =  undefined;
+        
+        newRuleRef.current = bindRule;
+      } else if (currentRule.getRuleType() === 'styling') {
+        const stylingRule = currentRule as YamlStylingRule;
+        
+        stylingRule.applyClass = undefined;
+        stylingRule.applyText = undefined;
+        stylingRule.applyStyle = undefined;
+        stylingRule.applyShape = undefined;
+        
+        newRuleRef.current = stylingRule;
+      }
+      setGeneralActionsAdded(false)
       forceUpdate();
     }
 
@@ -250,40 +262,45 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
       setGeneralActionsAdded(false)
       if(rule){
         newRuleRef.current = rule.clone()
-        newRuleRef.current.priority && setPriorityActionAdded(true);
-        newRuleRef.current.elements && setElementsActionAdded(true);
-
-        if(newRuleRef.current.function){
-            setFunctionActionAdded(true);
-            if(typeof newRuleRef.current.function !== 'string'){
-              setIfActionAdded(true);
-              if(newRuleRef.current.function.else_if){
-                setElseIfActionAdded(true);
-              }else if(activeTab === 'else_if'){
-                setActiveTab('if')
-              }
-              if(newRuleRef.current.function.else){
-                setelseActionAdded(true);
-              }else if(activeTab === 'else'){
-                if(newRuleRef.current.function.else_if){
-                  setActiveTab('else_if')
-                }setActiveTab('if')
-              }
-            }
-          }
-          if((newRuleRef.current as YamlBindRule).bindData !== undefined){
-            setGeneralActionsAdded(true)
-          }
-          let temp = (rule as YamlStylingRule)
-          if(temp.applyClass !== undefined || temp.applyShape !== undefined || temp.applyStyle !== undefined || temp.applyText !== undefined){
-            setGeneralActionsAdded(true)
-          }
-          
+        reconfigureEditor()
       }else{
-        newRuleRef.current = new YamlBindRule({id: ''})
+        newRuleRef.current = element?new YamlBindRule({id: '', elements: [element]}):new YamlBindRule({id: ''})
+        console.log(newRuleRef)
+        reconfigureEditor()
       }
       forceUpdate()
       setIsLoading(false)
+    }
+
+    const reconfigureEditor = () =>{
+      newRuleRef.current.priority && setPriorityActionAdded(true);
+      newRuleRef.current.elements && setElementsActionAdded(true);
+
+      if(newRuleRef.current.function){
+          setFunctionActionAdded(true);
+          if(typeof newRuleRef.current.function !== 'string'){
+            setIfActionAdded(true);
+            if(newRuleRef.current.function.else_if){
+              setElseIfActionAdded(true);
+            }else if(activeTab === 'else_if'){
+              setActiveTab('if')
+            }
+            if(newRuleRef.current.function.else){
+              setelseActionAdded(true);
+            }else if(activeTab === 'else'){
+              if(newRuleRef.current.function.else_if){
+                setActiveTab('else_if')
+              }setActiveTab('if')
+            }
+          }
+        }
+        if((newRuleRef.current as YamlBindRule).bindData !== undefined){
+          setGeneralActionsAdded(true)
+        }
+        let temp = (newRuleRef.current as YamlStylingRule)
+        if(temp.applyClass !== undefined || temp.applyShape !== undefined || temp.applyStyle !== undefined || temp.applyText !== undefined){
+          setGeneralActionsAdded(true)
+        }
     }
 
     useEffect(()=>{
@@ -461,11 +478,14 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               </RuleInputWrapper>
             )}
   
-            {generalActionsAdded && !functionActionAdded && <ActionInput
+            {generalActionsAdded && !functionActionAdded && 
+            <RuleInputWrapper onDelete={handleGeneralRuleDelete}>
+              <ActionInput
               action={getGeneralActions()}
               onChange={handleGeneralRuleChange}
-              type={ruleType.value}
-            ></ActionInput>}
+              type={ruleType.value}>
+              </ActionInput>
+            </RuleInputWrapper>}
   
             {functionActionAdded && !generalActionsAdded && (
               <FunctionInput
@@ -481,7 +501,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
         </div>
       )}
       <Modal.ButtonRow>
-        <Button variant={"secondary"}>Cancel</Button>
+        <Button variant={"secondary"} onClick={onClose}>Cancel</Button>
         {rule ? (
           <Button variant={"primary"}>Update</Button>
         ) : (

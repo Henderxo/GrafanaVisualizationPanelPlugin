@@ -326,39 +326,32 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     
     const currentElement = event.target as HTMLElement;
     
-    // Check for flowchart nodes or clusters (subgraphs)
     const nodeElement = currentElement.closest('[id^="flowchart-"], .cluster') as HTMLElement | null;
     
     if (!nodeElement) {
-      // If no direct node or cluster found, do nothing
       return;
     }
     
     let nodeId: string;
     
     if (nodeElement.classList.contains('cluster')) {
-      // For clusters, use the cluster's ID directly
       const clusterId = nodeElement.id;
       if (clusterId) {
         nodeId = clusterId;
       } else {
-        // Fallback: Look for a label within the cluster
         const labelElement = nodeElement.querySelector('.nodeLabel') as HTMLElement | null;
         if (labelElement) {
-          // Use the text content of the label
           nodeId = labelElement.textContent?.trim() || '';
         } else {
           return;
         }
       }
     } else {
-      // For direct flowchart nodes
       nodeId = nodeElement.id.replace('flowchart-', '').replace(/[-_]\d+$/, '');
     }
     
     console.log('Node/Subgraph identified:', nodeId);
     
-    // Find the element in either nodes or subgraphs
     const element = findElementInMaps(nodeId, fullMapRef.current);
     
     if (element) {
@@ -370,7 +363,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     }
   };
 
-// Handle YAML config changes from the modal
 const handleYamlConfigChange = (newYamlConfig: string) => {
   onOptionsChange({
     ...options,
@@ -378,7 +370,6 @@ const handleYamlConfigChange = (newYamlConfig: string) => {
   });
 };
 
-// Add a debug function to log node-element relationships when diagram renders
 const debugNodeElementMapping = (svgElement: SVGElement) => {
   const nodeElements = svgElement.querySelectorAll('[id^="flowchart-"]');
   console.log('All flowchart elements:', nodeElements.length);
@@ -402,7 +393,6 @@ useEffect(() => {
               
               const svgElement = chartRef.current.querySelector('svg');
               if (svgElement) {
-                // Initialize pan-zoom
                 createPanZoom(svgElement, {
                   zoomDoubleClickSpeed: 1,
                   maxZoom: 4,

@@ -4,7 +4,7 @@ import {
     YamlBindRule, 
     YamlStylingRule 
 } from "types/types"
-import { Text } from '@grafana/ui'
+import { Icon, Text } from '@grafana/ui'
 import { css } from '@emotion/css'
 import ButtonWrapper from 'components/ButtonWrapper'
 
@@ -148,8 +148,12 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
                 `}
             >
                 <Text>Creation Actions:</Text>
-                <ButtonWrapper onClick={() => resetRule(rule)}>Reset</ButtonWrapper>
-                <ButtonWrapper onClick={() => handleUndo()}>Undo</ButtonWrapper>
+                <ButtonWrapper onClick={() => resetRule(rule)}>
+                    <Icon size={'lg'} name={'history-alt'} className={css`margin-right: 3px;`}></Icon><Text>Reset</Text>
+                </ButtonWrapper>
+                <ButtonWrapper onClick={() => handleUndo()}>
+                    <Icon size={'lg'} name={'enter'} className={css`margin-right: 3px;`}></Icon><Text>Undo</Text>
+                </ButtonWrapper>
             </div>
   
             {(!priorityActionAdded || !elementsActionAdded) && (

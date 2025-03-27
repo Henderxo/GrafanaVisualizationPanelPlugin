@@ -117,6 +117,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         {isModalOpen && <CreateRuleModal 
         elements={elements}
         isOpen={isModalOpen}
+        element={element?.id}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleRuleSubmit}/>}
         {" "}

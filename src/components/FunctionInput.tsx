@@ -71,12 +71,16 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
     }
   };
 
-  const handleActionDelete = (index: number) =>{
-    if (functionData && typeof functionData !== 'string'){
-      const updatedFunction = { ...functionData };
-      if (updatedFunction.else_if){
-        delete updatedFunction.else_if[index]
+  const handleActionDelete = (index: number) => {
+    if (functionData && typeof functionData !== 'string') {
+      const updatedFunction = JSON.parse(JSON.stringify(functionData));
+      
+      if (updatedFunction.else_if) {
+        updatedFunction.else_if = updatedFunction.else_if
+          .filter((_: any, i: any) => i !== index)
+          .filter((item:any) => item !== null && item !== undefined);
       }
+      
       onFunctionChange(updatedFunction);
       forceUpdate();
     }
