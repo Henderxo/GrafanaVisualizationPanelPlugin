@@ -24,6 +24,7 @@ import { RuleCreateActionBar } from 'components/RuleCreateActionBar';
 
 interface CreateRuleModalProps {
   isOpen: boolean;
+  isEdit?: boolean;
   onClose: () => void;
   onSubmit: (rule: YamlBindRule | YamlStylingRule) => void;
   elements: string[],
@@ -53,7 +54,8 @@ interface RuleUIState {
 }
 
 export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({ 
-  isOpen, 
+  isOpen,
+  isEdit = false, 
   onClose, 
   onSubmit,
   totalRuleCount,
@@ -491,7 +493,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
               min-width: 0;  // Prevent children from expanding the div's width
             `}
           >
-            <RuleInputWrapper isIcon={false}>
+            {!isEdit && <RuleInputWrapper isIcon={false}>
               <Text>Rule Type:</Text>
               <Field className={css`margin: 0px;`}>
                 <Select
@@ -501,7 +503,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                 className="mb-2"
                 />
               </Field>
-            </RuleInputWrapper>
+            </RuleInputWrapper>}
                   
             <RuleInputWrapper isIcon={false}>
               <Text>Rule ID:</Text>

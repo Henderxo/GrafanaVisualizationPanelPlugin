@@ -47,7 +47,8 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       onMouseEnter={() => setIsHovered(hover)} 
       onMouseLeave={() => setIsHovered(false)} 
     >
-      {isModalOpen && <CreateRuleModal 
+      {isModalOpen && <CreateRuleModal
+      isEdit={true} 
       possibleClasses={possibleClasses}
       rule={rule}
       elements={elements}

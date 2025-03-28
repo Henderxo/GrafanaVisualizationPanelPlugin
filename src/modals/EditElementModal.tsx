@@ -29,23 +29,27 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
   const [activeTab, setActiveTab] = useState<'bindingRules' | 'stylingRules'>('bindingRules');
   const [parsedYaml, setParsedYaml] = useState<{bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]}>({bindingRules: [], stylingRules: []});
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [activeRule, setActiveRule] = useState<YamlBindRule | YamlStylingRule | null>(null); // Track selected rule
+  
+  // Separate state for active rules
+  const [activeBindRule, setActiveBindRule] = useState<YamlBindRule | null>(null);
+  const [activeStyleRule, setActiveStyleRule] = useState<YamlStylingRule | null>(null);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [elementRules, setElementRules] = useState<{ bindingRules: YamlBindRule[]; stylingRules: YamlStylingRule[] }>({
     bindingRules: [],
     stylingRules: [],
   });
+  
   const { containerProps, primaryProps, secondaryProps, splitterProps } = useSplitter({
     direction: 'row',
     initialSize: 0.1,
     dragPosition: 'start',
-
   });
+
   const CreateRule = () => {
     setIsModalOpen(true);
   };
 
-  
   const handleRuleSubmit = (rule: YamlBindRule | YamlStylingRule) => {
     const updatedYamlConfig = { ...yamlConfig };
 
@@ -57,7 +61,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
       }));
       
       setActiveTab('bindingRules');
-      setActiveRule(rule);
+      setActiveBindRule(rule);
     } else if (rule instanceof YamlStylingRule) {
       updatedYamlConfig.stylingRules.push(rule);
       setElementRules(prev => ({
@@ -66,9 +70,9 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
       }));
     
       setActiveTab('stylingRules');
-      setActiveRule(rule);
+      setActiveStyleRule(rule);
     }
-    const newYamlConfigString =  convertToYaml(updatedYamlConfig)
+    const newYamlConfigString = convertToYaml(updatedYamlConfig)
 
     onYamlConfigChange(newYamlConfigString);
   };
@@ -91,7 +95,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
       }));
   
       setActiveTab('bindingRules');
-      setActiveRule(rule);
+      setActiveBindRule(rule);
     } else if (rule instanceof YamlStylingRule) {
       const ruleIndex = updatedYamlConfig.stylingRules.findIndex(r => r.id === oldRuleId);
       
@@ -107,9 +111,8 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
       }));
   
       setActiveTab('stylingRules');
-      setActiveRule(rule);
+      setActiveStyleRule(rule);
     }
-    console.log(rule)
     const newYamlConfigString = convertToYaml(updatedYamlConfig);
     onYamlConfigChange(newYamlConfigString);
   };
@@ -131,15 +134,12 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
     }
   };
 
-
-
   useEffect(() => {
     try {
       setParsedYaml({
         bindingRules: yamlConfig.bindingRules || [],
         stylingRules: yamlConfig.stylingRules || [],
       });
-      console.log()
     } catch (e) {
       console.error('Error parsing YAML:', e);
     }
@@ -153,148 +153,178 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
       bindingRules: elementRuless.bindRules.map(rule => new YamlBindRule(rule)),
       stylingRules: elementRuless.stylingRules.map(rule => new YamlStylingRule(rule))
     });
-    setActiveRule(elementRules.bindingRules[0]??null)
+    
+    // Set initial active rules separately
+    setActiveBindRule(elementRuless.bindRules.length > 0 ? new YamlBindRule(elementRuless.bindRules[0]) : null);
+    setActiveStyleRule(elementRuless.stylingRules.length > 0 ? new YamlStylingRule(elementRuless.stylingRules[0]) : null);
+    
     setIsLoading(false)
   }, [element, parsedYaml]);
 
   const handleClose = () => {
     setActiveTab('bindingRules')
-    setActiveRule(null)
+    setActiveBindRule(null)
+    setActiveStyleRule(null)
     onClose(); 
   };
 
   if (!isOpen) return null;
 
-  const rulesToDisplay =
-    activeTab === 'bindingRules' ? elementRules.bindingRules : elementRules.stylingRules;
+  // Determine which rules and active rule to display based on the current tab
+  const rulesToDisplay = activeTab === 'bindingRules' 
+    ? elementRules.bindingRules 
+    : elementRules.stylingRules;
+  
+  const activeRule = activeTab === 'bindingRules' 
+    ? activeBindRule 
+    : activeStyleRule;
 
-    return (
-      <Modal
-        className={css`
-          width: 900px;
-          height: 700px;
-          display: flex;
-          flex-direction: column;
-        `}
-        title={`Configure Element: ${element?.id || "Unknown"}`}
-        isOpen={isOpen}
-        onDismiss={handleClose}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'row', marginBottom: '5px' }}>
-          <Text element={'h5'}>Add a new Rule:</Text>      
-          <IconButton 
-            className={css`
-              margin-left: 5px;
-              background: linear-gradient(45deg, #FFA500,rgb(255, 102, 0)); 
-              color: black; 
-              border: none;
-              border-radius: 4px; 
-              padding: 1px; 
-              transition: background 0.3s ease; 
-              &:hover {
-                background: linear-gradient(45deg, #FF8C00, #FFA500); 
-              }
-            `}
-            name={'plus'} 
-            aria-label="newRule" 
-            size="xxxl" 
-            variant="secondary" onClick={CreateRule}/>
+  const setActiveRule = (rule: YamlBindRule | YamlStylingRule) => {
+    if (rule instanceof YamlBindRule) {
+      setActiveBindRule(rule);
+      setActiveTab('bindingRules');
+    } else {
+      setActiveStyleRule(rule);
+      setActiveTab('stylingRules');
+    }
+  };
 
-        </div>
-        {isModalOpen && <CreateRuleModal
+  return (
+    <Modal
+      className={css`
+        width: 900px;
+        height: 700px;
+        display: flex;
+        flex-direction: column;
+      `}
+      title={`Configure Element: ${element?.id || "Unknown"}`}
+      isOpen={isOpen}
+      onDismiss={handleClose}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'row', marginBottom: '5px' }}>
+        <Text element={'h5'}>Add a new Rule:</Text>      
+        <IconButton 
+          className={css`
+            margin-left: 5px;
+            background: linear-gradient(45deg, #FFA500,rgb(255, 102, 0)); 
+            color: black; 
+            border: none;
+            border-radius: 4px; 
+            padding: 1px; 
+            transition: background 0.3s ease; 
+            &:hover {
+              background: linear-gradient(45deg, #FF8C00, #FFA500); 
+            }
+          `}
+          name={'plus'} 
+          aria-label="newRule" 
+          size="xxxl" 
+          variant="secondary" 
+          onClick={CreateRule}
+        />
+      </div>
+      
+      {isModalOpen && <CreateRuleModal
         possibleClasses={possibleClasses}
-        totalRuleCount={parsedYaml.bindingRules.length??0 + parsedYaml.stylingRules.length??0}
+        totalRuleCount={parsedYaml.bindingRules.length + parsedYaml.stylingRules.length}
         elements={elements}
         isOpen={isModalOpen}
         element={element?.id}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleRuleSubmit}/>}
-        {" "}
-        <TabsBar>
-          <Tab
-            label="Binding Rules"
-            active={activeTab === "bindingRules"}
-            onChangeTab={() => setActiveTab("bindingRules")}
-          />
-          <Tab
-            label="Styling Rules"
-            active={activeTab === "stylingRules"}
-            onChangeTab={() => setActiveTab("stylingRules")}
-          />
-        </TabsBar>
-        <div
-          style={{
-            marginTop: "3px",
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
+        onSubmit={handleRuleSubmit}
+      />}
+      
+      <TabsBar>
+        <Tab
+          label="Binding Rules"
+          active={activeTab === "bindingRules"}
+          onChangeTab={() => {
+            setActiveTab("bindingRules")
           }}
-        >
-          {isLoading ? (
+        />
+        <Tab
+          label="Styling Rules"
+          active={activeTab === "stylingRules"}
+          onChangeTab={() => {
+            setActiveTab("stylingRules")
+          }}
+        />
+      </TabsBar>
+      
+      <div
+        style={{
+          marginTop: "3px",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {isLoading ? (
+          <div
+            className={css`
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex: 1;
+            `}
+          >
+            <LoadingBar width={500} />
+          </div>
+        ) : (
+          <div>
             <div
+              {...containerProps}
               className={css`
                 display: flex;
-                align-items: center;
-                justify-content: center;
-                flex: 1;
+                flex-direction: row;
+                width: 100%;
+                height: 500px;
               `}
             >
-              <LoadingBar width={500} />
-            </div>
-          ) : (
-            <div>
               <div
-                {...containerProps}
+                {...primaryProps}
                 className={css`
                   display: flex;
-                  flex-direction: row;
-                  width: 100%;
-                  height: 500px;
+                  flex-direction: column;
+                  width: 125px;
+                  overflow-y: auto;
                 `}
               >
-                {
-                  <div
-                    {...primaryProps}
-                    className={css`
-                      display: flex;
-                      flex-direction: column;
-                      width: 125px;
-                      overflow-y: auto;
-                    `}
-                  >
-                    {rulesToDisplay.map((rule) => (
-                      <Tab
-                        label={rule.id}
-                        active={activeRule === rule}
-                        onChangeTab={() => {
-                          setActiveRule(rule);
-                        }}
-                      />
-                    ))}
-                  </div>
-                }
-                <div {...splitterProps}></div>
-                <div
-                  {...secondaryProps}
-                  className={css`
-                    width: "100%";
-                  `}
-                >
-                  {activeRule && (
-                    <RuleDisplay
-                      elements={elements}
-                      possibleClasses={possibleClasses}
-                      onEditSubmit={handleRuleEdit}
-                      textSize="span"
-                      labelSize="span"
-                      rule={activeRule}
-                    ></RuleDisplay>
-                  )}
-                </div>
+                {rulesToDisplay.map((rule) => (
+                  <Tab
+                    key={rule.id}
+                    label={rule.id}
+                    active={activeRule === rule}
+                    onChangeTab={() => {
+                      setActiveRule(rule);
+                    }}
+                  />
+                ))}
+              </div>
+              
+              <div {...splitterProps}></div>
+              
+              <div
+                {...secondaryProps}
+                className={css`
+                  width: "100%";
+                `}
+              >
+                {activeRule && (
+                  <RuleDisplay
+                    elements={elements}
+                    possibleClasses={possibleClasses}
+                    onEditSubmit={handleRuleEdit}
+                    textSize="span"
+                    labelSize="span"
+                    rule={activeRule}
+                  />
+                )}
               </div>
             </div>
-          )}
-        </div>
-      </Modal>
-    );
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
 };
