@@ -51,6 +51,16 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   let parsedYaml: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], functions: YamlFunction[]};
   try {
     parsedYaml = yaml.load(yamlConfig);
+
+    if (!Array.isArray(parsedYaml.bindingRules)) {
+      parsedYaml.bindingRules = [];
+    }
+    if (!Array.isArray(parsedYaml.stylingRules)) {
+      parsedYaml.stylingRules = [];
+    }
+    if (!Array.isArray(parsedYaml.functions)) {
+      parsedYaml.functions = [];
+    }
   } catch (e) {
     if (e instanceof Error) {
       return <div>Error parsing YAML: {e.message}</div>;
@@ -271,7 +281,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
           applyStyleAction(Action, Element)
           break;
         case "applyText":
-          applyTextAction(Action, Element )
+          applyTextAction(Action, Element)
           break;
         case "applyShape":
           applyShapeAction(Action, Element)
