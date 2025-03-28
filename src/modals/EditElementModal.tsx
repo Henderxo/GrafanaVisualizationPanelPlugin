@@ -28,7 +28,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'bindingRules' | 'stylingRules'>('bindingRules');
   const [parsedYaml, setParsedYaml] = useState<{bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]}>({bindingRules: [], stylingRules: []});
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
   // Separate state for active rules
   const [activeBindRule, setActiveBindRule] = useState<YamlBindRule | null>(null);

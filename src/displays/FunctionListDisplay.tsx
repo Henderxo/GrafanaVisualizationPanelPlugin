@@ -18,13 +18,13 @@ interface FunctionDisplayProps extends customHtmlBase{
   label: string;
 }
 
-export const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p' }> = ({ action, textSize }) => {
-  console.log(action)
+export const ActionDisplay: React.FC<{ backGroundColor?: string, label?: string, action: Action, textSize: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p' }> = ({backGroundColor, label, action, textSize }) => {
   return (
-    
-    <Box >
+    <>
+    {label&& <Text>{label}</Text>}
+    <Box backgroundColor={'primary'} padding={label?1:0} >
       {action.bindData && (
-        <Box >
+        <Box marginBottom={1} marginTop={1}>
         <Text>Bind Data: </Text>
           {action.bindData.length > 0 ? (
             action.bindData.map((item, i) => (
@@ -37,7 +37,7 @@ export const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | '
       )}
       
       {action.applyClass && action.applyClass.length > 0 && (
-        <Box >
+        <Box marginBottom={1} marginTop={1}>
           <Text >Apply Class: </Text>
             {action.applyClass.map((item, i) => (
               <Badge className={css`margin-right: 2px;`} key={i} color="red" text={<Text variant='body'>{item}</Text>} />
@@ -46,14 +46,14 @@ export const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | '
       )}
       
       {action.applyText && (
-        <Box >
+        <Box marginBottom={1} marginTop={1}>
           <Text >Apply Text: </Text>
           <Badge className={css`margin-right: 2px;`} color="green" text={<Text variant='body'>{action.applyText}</Text>} />
         </Box>
       )}
       
       {action.applyStyle && action.applyStyle.length > 0 && (
-        <Box >
+        <Box marginBottom={1} marginTop={1}>
           <Text >Apply Style: </Text>
             {action.applyStyle.map((item, i) => (
               <Badge className={css`margin-right: 2px;`} key={i} color="purple" text={<Text variant='body'>{item}</Text>} />
@@ -62,12 +62,13 @@ export const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | '
       )}
       
       {action.applyShape && (
-        <Box >
+        <Box marginBottom={1} marginTop={1}>
           <Text element={textSize} >Apply Shape: </Text>
           <Badge className={css`margin-right: 2px;`} color="orange" text={<Text variant='body'>{action.applyShape}</Text>} />
         </Box>
       )}
     </Box>
+    </>
   );
 };
 
@@ -123,7 +124,7 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ func, label, l
     }
     
     return (
-      <Box  marginBottom={2}>
+      <Box >
         {func.if && (
           <ConditionDisplay textSize={textSize} condition={func.if} type="if" />
         )}

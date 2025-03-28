@@ -27,7 +27,6 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
   console.log(rule.getActions())
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [baseActions, setBaseActions] = useState<Action|undefined>(undefined)
   const theme = useTheme2();
   
   const bgHoverColor = theme.colors.border.medium;
@@ -79,7 +78,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
             rule={rule} 
             func={rule.function as FunctionElement}
         />} 
-        {rule.getActions().areActions && <ActionDisplay textSize={textSize}  action={rule.getActions().Action}></ActionDisplay>}
+        {rule.getActions().areActions && <ActionDisplay label="General Actions:" textSize={textSize} action={rule.getActions().Action}></ActionDisplay>}
 
       </div>
     </div>
