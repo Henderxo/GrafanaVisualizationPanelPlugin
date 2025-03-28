@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Input, 
   Text, 
@@ -8,15 +8,16 @@ import {
   useTheme2,
   LoadingPlaceholder
 } from '@grafana/ui';
-import { FunctionElement } from 'types/types';
+import { FlowClass, FunctionElement } from 'types/types';
 import RuleInputWrapper from './RuleInputWrapper';
 import { ActionInput } from './ActionInput';
 
 
 interface FunctionInputProps {
-  functionData: string | FunctionElement | undefined;
+  possibleClasses: Map<string, FlowClass>
+  functionData: FunctionElement | undefined;
   type: 'styling' | 'binding'
-  onFunctionChange: (updatedFunction: string | FunctionElement | undefined, deletedTab?: string) => void;
+  onFunctionChange: (updatedFunction: FunctionElement | undefined, deletedTab?: string) => void;
   forceUpdate: () => void;
   activeTab: 'if' | 'else_if' | 'else';
   onActiveTabChange: (tab: 'if' | 'else_if' | 'else') => void;
@@ -24,7 +25,8 @@ interface FunctionInputProps {
 }
 
 export const FunctionInput: React.FC<FunctionInputProps> = ({ 
-  functionData, 
+  functionData,
+  possibleClasses,
   onFunctionChange, 
   forceUpdate,
   type,
@@ -34,6 +36,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
 }) => {
   const theme = useTheme2()
   const [isLoaded, setisLoaded] = useState<boolean>(false)
+
   const handleConditionChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'if' | 'else_if' = 'if', index?: number) => {
     if (functionData && typeof functionData !== 'string') {
       const updatedFunction = { ...functionData };
@@ -89,11 +92,6 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
     }
   }
 
-  const handleStringFunctionDelete = () =>{
-    onFunctionChange(undefined)
-    forceUpdate()
-  }
-
   const handleConditionDelete = () =>{
       if(activeTab !== 'if'){
         if (functionData && typeof functionData !== 'string'){
@@ -112,21 +110,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
     }
     forceUpdate()
   }
-
-  if (!functionData || typeof functionData === 'string') {
-    return (
-      <RuleInputWrapper onDelete={()=>handleStringFunctionDelete()}>
-        <Text>Function:</Text>
-        <Select 
-          placeholder="Function" 
-          value={functionData || ''} 
-          onChange={(e) => onFunctionChange(e.currentTarget.value)}
-          className="mb-2"
-        />
-      </RuleInputWrapper>
-    );
-  }
-
+  if(functionData)
   return (
     <RuleInputWrapper  onDelete={()=>{handleConditionDelete()}}>
       <TabsBar>
@@ -174,6 +158,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
               </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
               <div style={{marginTop: '5px', marginBottom: '5px'}}>
                   <ActionInput 
+                    possibleClasses={possibleClasses}
                       type={type}
                       actionBackgroundColor={theme.colors.background.primary}
                       action={functionData.if.action} 
@@ -190,6 +175,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
 
       {activeTab === 'else_if' && functionData.else_if  && (
         <div>
+          <form></form>
           {functionData.else_if.map((elseIfCondition, index) => (
             <div key={index} style={{marginTop: '5px', marginBottom: '5px'}}>
                 <RuleInputWrapper onDelete={()=>handleActionDelete(index)} backgroundColor={theme.colors.background.secondary} icon={'x'} isIcon={functionData.else_if && functionData.else_if?.length>1}>
@@ -203,7 +189,8 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                         />
                     </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
                     <div style={{ marginTop: '5px'}}>                     
-                        <ActionInput 
+                        <ActionInput
+                            possibleClasses={possibleClasses}
                             type={type}
                             actionBackgroundColor={theme.colors.background.primary}
                             action={elseIfCondition.action} 
@@ -224,6 +211,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
         <div style={{marginTop: '5px', marginBottom: '10px'}}>
           <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
              <ActionInput 
+             possibleClasses={possibleClasses}
               type={type}
               actionBackgroundColor={theme.colors.background.primary}
               action={functionData.else.action} 
@@ -238,5 +226,5 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
         </div>
       )}
     </RuleInputWrapper>
-  );
+  );return(<></>)
 };

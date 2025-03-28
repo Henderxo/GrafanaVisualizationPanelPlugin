@@ -8,9 +8,10 @@ import {
   Badge,
   useTheme2,
   Box,
-  Field
+  Field,
+  Select
 } from '@grafana/ui';
-import { Action } from 'types/types';
+import { Action, FlowClass, FlowVertexTypeParam } from 'types/types';
 import RuleInputWrapper from '../components/RuleInputWrapper';
 import { css } from '@emotion/css';
 
@@ -20,6 +21,7 @@ interface ActionInputProps {
   label?: string;
   type: 'binding' | 'styling'
   actionBackgroundColor?: string
+  possibleClasses: Map<string, FlowClass>
   onLoaded?: (status: boolean) => void;
 }
 
@@ -27,6 +29,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
   action = {}, 
   onChange,
   type,
+  possibleClasses,
   label = 'Currently added actions:',
   actionBackgroundColor,
   onLoaded
@@ -36,11 +39,31 @@ export const ActionInput: React.FC<ActionInputProps> = ({
     ? ['bindData'] 
     : ['applyClass', 'applyText', 'applyStyle', 'applyShape'];
 
+  const shapeOptions: Array<{label: string, value: FlowVertexTypeParam}> = [
+    { label: 'Square', value: 'square' },
+    { label: 'Double Circle', value: 'doublecircle' },
+    { label: 'Circle', value: 'circle' },
+    { label: 'Ellipse', value: 'ellipse' },
+    { label: 'Stadium', value: 'stadium' },
+    { label: 'Subroutine', value: 'subroutine' },
+    { label: 'Rectangle', value: 'rect' },
+    { label: 'Cylinder', value: 'cylinder' },
+    { label: 'Round', value: 'round' },
+    { label: 'Diamond', value: 'diamond' },
+    { label: 'Hexagon', value: 'hexagon' },
+    { label: 'Odd', value: 'odd' },
+    { label: 'Trapezoid', value: 'trapezoid' },
+    { label: 'Inverted Trapezoid', value: 'inv_trapezoid' },
+    { label: 'Lean Right', value: 'lean_right' },
+    { label: 'Lean Left', value: 'lean_left' }
+  ];
+
   const [activeActions, setActiveActions] = useState<Array<keyof Action>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const theme = useTheme2()
 
   useEffect(()=>{
+    console.log(possibleClasses)
     setIsLoading(true)
     const incomingActionKeys = Object.keys(action) as Array<keyof Action>;
     
@@ -95,7 +118,45 @@ export const ActionInput: React.FC<ActionInputProps> = ({
   const renderActionInput = (actionType: keyof Action) => {
     switch (actionType) {
       case 'bindData':
+        return (
+          <>
+            <Text>{actionType}</Text>
+            <MultiSelect
+              label={actionType}
+              placeholder={`Select ${actionType}`}
+              value={action[actionType] || []}
+              onChange={(selected) => {
+                const values = selected.map(s => s.value).filter((v): v is string => v !== undefined);
+                onChange({...action, [actionType]: values});
+              }}
+              options={(action[actionType] || []).map(value => ({
+                label: value,
+                value: value
+              }))}
+              allowCustomValue
+            />
+          </>
+        );
       case 'applyClass':
+        return (
+          <>
+            <Text>{actionType}</Text>
+            <MultiSelect
+              label={actionType}
+              placeholder={`Select ${actionType}`}
+              value={action.applyClass || []}
+              onChange={(selected) => {
+                const values = selected.map(s => s.value).filter((v): v is string => v !== undefined);
+                onChange({...action, applyClass: values});
+              }}
+              options={Array.from(possibleClasses.keys()).map(className => ({
+                label: className,
+                value: className
+              }))}
+              allowCustomValue
+            />
+          </>
+        );
       case 'applyStyle':
         return (
           <>
@@ -105,7 +166,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
               placeholder={`Select ${actionType}`}
               value={action[actionType] || []}
               onChange={(selected) => {
-                const values = selected.map(s => s.value);
+                const values = selected.map(s => s.value).filter((v): v is string => v !== undefined);
                 onChange({...action, [actionType]: values});
               }}
               options={(action[actionType] || []).map(value => ({
@@ -134,14 +195,15 @@ export const ActionInput: React.FC<ActionInputProps> = ({
         return (
           <>
             <Text>{actionType}</Text>
-            <Field className={css`margin: 0px;`}>
-              <Input
-                label={actionType}
-                placeholder={`Enter ${actionType}`}
-                value={action.applyShape || ''}
-                onChange={(e) => onChange({...action, applyShape: e.currentTarget.value})}
-              />
-            </Field>
+            <Select
+              label={actionType}
+              placeholder={`Select ${actionType}`}
+              value={action.applyShape || ''}
+              onChange={(selected) => {
+                onChange({...action, applyShape: selected.value});
+              }}
+              options={shapeOptions}
+            />
           </>
         );
       default:

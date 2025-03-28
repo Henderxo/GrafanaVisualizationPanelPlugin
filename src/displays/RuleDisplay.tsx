@@ -1,44 +1,37 @@
 import React, { useEffect, useState } from "react";
-import { customHtmlBase, FunctionElement, YamlBindRule, YamlFunction, YamlStylingRule } from "types/types";
+import { Action, customHtmlBase, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from "types/types";
 import StringList from "./StringListDisplay";
 import { useTheme2, Text, Divider, TabsBar, Tab, PageToolbar, ToolbarButton } from '@grafana/ui';
-import FunctionList from "./FunctionListDisplay";
+import FunctionList, { ActionDisplay } from "./FunctionListDisplay";
 import { css } from '@emotion/css';
 import { CreateRuleModal } from "modals/CreateRule";
 
 interface RuleDisplayProps extends customHtmlBase {
   rule: YamlBindRule | YamlStylingRule;
-  functions: YamlFunction[];
   height?: string;
+  elements: string[]
+  possibleClasses: Map<string, FlowClass>
+  onEditSubmit: (rule: YamlBindRule | YamlStylingRule, oldRule: string) => void;
 }
 
 export const RuleDisplay: React.FC<RuleDisplayProps> = ({ 
   hover = false, 
-  functions, 
   rule, 
   height = '100%', 
   textSize = 'span', 
-  labelSize = 'span' 
+  elements,
+  labelSize = 'span',
+  possibleClasses,
+  onEditSubmit 
 }) => {
+  console.log(rule.getActions())
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [baseActions, setBaseActions] = useState<Action|undefined>(undefined)
   const theme = useTheme2();
   
   const bgHoverColor = theme.colors.border.medium;
   const bgColor = theme.colors.background.secondary;
-
-  useEffect(() => {
-    if (rule.function) {
-      if (typeof rule.function === 'string') {
-        const foundFunction = functions.find((functionn) => functionn.id === rule.function)?.function;
-        if (foundFunction) {
-          rule.function = foundFunction; 
-        } else {
-          rule.function = {};
-        }
-      }
-    }
-  }, [rule, functions]);
 
   return (
     <div
@@ -55,11 +48,12 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       onMouseLeave={() => setIsHovered(false)} 
     >
       {isModalOpen && <CreateRuleModal 
+      possibleClasses={possibleClasses}
       rule={rule}
-      elements={[]}
+      elements={elements}
       isOpen={isModalOpen}
       onClose={() => setIsModalOpen(false)}
-      onSubmit={()=>{}}/>}
+      onSubmit={(newRule) =>onEditSubmit(newRule, rule.id)}/>}
      <PageToolbar className={css`background: ${isHovered ? bgHoverColor : bgColor}; padding: 1px; padding-top: 3px; padding-bottom: 3px;`} title={`${rule.id}`} >
       <ToolbarButton onClick={()=>setIsModalOpen(true)} iconSize="lg" className={css`&:hover{ background-color: ${theme.colors.background.primary}}`} icon="edit">Edit</ToolbarButton>
      </PageToolbar>
@@ -69,7 +63,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
         <div className={css`margin-top: 4px; margin-bottom: 8px;`}>
           <StringList 
             label="Elements:" 
-            content={rule.elements ? rule.elements : []} 
+            content={rule.elements} 
             textSize={textSize} 
             labelSize={labelSize}
             bgColor={theme.colors.warning.text}
@@ -77,15 +71,15 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
           />
         </div>
         {rule.function && 
-        <div>
           <FunctionList 
             label="Function:" 
             textSize={textSize} 
             labelSize={labelSize} 
             rule={rule} 
             func={rule.function as FunctionElement}
-          />
-        </div>}
+        />} 
+        {rule.getActions().areActions && <ActionDisplay textSize={textSize}  action={rule.getActions().Action}></ActionDisplay>}
+
       </div>
     </div>
   );

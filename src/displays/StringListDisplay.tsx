@@ -5,7 +5,7 @@ import { css } from '@emotion/css';
 
 interface StringListProps extends customHtmlBase{
   label: string;
-  content: string[];
+  content: string[] | undefined;
 }
 
 const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'span', textSize = 'span', bgColor = useTheme2().colors.success.main}, color = 'black') => {
@@ -34,29 +34,40 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
     // Account for the "+X more" element's width
     const moreItemWidth = 80; // Approximate width for "+X more" element
     const availableWidth = containerWidth - moreItemWidth;
-    if(content.length === 0){
-      const str = 'All';
+    if(content!==undefined){
+      if(content.length === 0){
+        const str = 'none';
+        const strWidth = getTextWidth(str)
+  
+        if (totalWidth + strWidth <= availableWidth) {
+          visible.push(str);
+          totalWidth += strWidth + 5; // Add gap width (5px)
+        }
+      }else{
+        for (let i = 0; i < content.length; i++) {
+          const str = content[i];
+          const strWidth = getTextWidth(str);
+          
+          // Check if this string would fit
+          if (totalWidth + strWidth <= availableWidth) {
+            visible.push(str);
+            totalWidth += strWidth + 5; // Add gap width (5px)
+          } else {
+            remaining = content.length - i;
+            break;
+          }
+        }
+      }
+    }else{
+      const str = 'all';
       const strWidth = getTextWidth(str)
 
       if (totalWidth + strWidth <= availableWidth) {
         visible.push(str);
         totalWidth += strWidth + 5; // Add gap width (5px)
       }
-    }else{
-      for (let i = 0; i < content.length; i++) {
-        const str = content[i];
-        const strWidth = getTextWidth(str);
-        
-        // Check if this string would fit
-        if (totalWidth + strWidth <= availableWidth) {
-          visible.push(str);
-          totalWidth += strWidth + 5; // Add gap width (5px)
-        } else {
-          remaining = content.length - i;
-          break;
-        }
-      }
     }
+    
     
 
     setVisibleStrings(visible);

@@ -9,18 +9,22 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     id: string;
     elements?: string[];
     priority?: number;
-    function?: (string | FunctionElement);
+    function?: FunctionElement
   
     constructor(data: {
       id: string;
       elements?: string[];
       priority?: number;
-      function?: (string | FunctionElement);
+      function?: FunctionElement
     }) {
       this.id = data.id;
       this.elements = data.elements;
       this.priority = data.priority;
       this.function = data.function;
+    }
+
+    getActions(): {Action: Action, areActions: boolean } {
+      return {Action: {}, areActions: false}; 
     }
   
     abstract getRuleType(): 'binding' | 'styling';
@@ -50,13 +54,21 @@ export class YamlBindRule extends RuleBase<YamlBindRule> {
       id: string;
       elements?: string[];
       priority?: number;
-      function?: (string | FunctionElement);
+      function?: FunctionElement
       bindData?: string[];
     }) {
       super(data);
       this.bindData = data.bindData;
     }
-  
+
+    getActions(): {Action: Action, areActions: boolean } {
+      return {
+        Action: {bindData: this.bindData},
+        areActions: this.bindData?true:false
+      };
+    }
+
+
     getRuleType(): 'binding' | 'styling' {
       return 'binding';
     }
@@ -81,7 +93,7 @@ export class YamlStylingRule extends RuleBase<YamlStylingRule> {
       id: string;
       elements?: string[];
       priority?: number;
-      function?: (string | FunctionElement);
+      function?: FunctionElement
       applyClass?: string[];
       applyText?: string;
       applyStyle?: string[];
@@ -98,6 +110,17 @@ export class YamlStylingRule extends RuleBase<YamlStylingRule> {
       return 'styling';
     }
 
+    getActions(): {Action: Action, areActions: boolean } {
+      return {
+        Action: {applyClass: this.applyClass,
+        applyText: this.applyText,
+        applyStyle: this.applyStyle,
+        applyShape: this.applyShape},
+
+        areActions: this.applyClass||this.applyText||this.applyStyle||this.applyShape?true:false
+      };
+    }
+
 
     clone(): YamlStylingRule {
       const baseClone = super.clone();
@@ -110,12 +133,7 @@ export class YamlStylingRule extends RuleBase<YamlStylingRule> {
       });
     }
 }
-  
-  export interface YamlFunction {
-    id: string;
-    function: FunctionElement;
-  }
-  
+
   export interface FunctionElement {
     if?: ConditionElement;
     else_if?: ConditionElement[];

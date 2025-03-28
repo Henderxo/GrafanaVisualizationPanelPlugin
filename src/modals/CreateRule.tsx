@@ -10,10 +10,11 @@ import {
   useTheme2,
   LoadingPlaceholder,
   Field,
-  FieldValidationMessage
+  FieldValidationMessage,
+  FormsOnSubmit
 } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
-import { Action, FunctionElement, YamlBindRule, YamlStylingRule } from 'types/types';
+import { Action, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from 'types/types';
 import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/RuleInputWrapper';
 import { FunctionInput } from 'components/FunctionInput';
@@ -27,7 +28,17 @@ interface CreateRuleModalProps {
   onSubmit: (rule: YamlBindRule | YamlStylingRule) => void;
   elements: string[],
   element?: string,
+  possibleClasses: Map<string, FlowClass>,
+  totalRuleCount?: number,
   rule?: YamlBindRule | YamlStylingRule
+}
+
+interface ValidationErrors {
+  id?: string;
+  priority?: string;
+  elements?: string;
+  generalActions?: string;
+  function?: string;
 }
 
 interface RuleUIState {
@@ -45,10 +56,14 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
   isOpen, 
   onClose, 
   onSubmit,
+  totalRuleCount,
   elements,
+  possibleClasses,
   element,
   rule
 }) => {
+    //Errors
+    const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
     //History
     const [stateHistory, setStateHistory] = useState<{
       rule: YamlBindRule | YamlStylingRule,
@@ -69,9 +84,19 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const  [ElementList, setElementList] = useState<SelectableValue[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [areElementsLoading, setElementsAreLoading] = useState<boolean>(false)
-    const newRuleRef = useRef<YamlBindRule | YamlStylingRule>(new YamlBindRule({id: ''}));
+    const newRuleRef = useRef<YamlBindRule | YamlStylingRule>(new YamlBindRule({id: 'NewRule'}));
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
     const theme = useTheme2();
+
+    const ruleTypeOptions: SelectableValue[] = [
+      { label: 'Binding Rule', value: 'binding' },
+      { label: 'Styling Rule', value: 'styling' }
+    ];
+    
+    const [ruleType, setRuleType] = useState<SelectableValue>({
+      label: 'Binding Rule', 
+      value: 'binding'
+    });
 
     const saveStateToHistory = (state?: YamlBindRule | YamlStylingRule) => {
       setStateHistory(prevHistory => {
@@ -116,15 +141,55 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
       }
     };
 
-    const ruleTypeOptions: SelectableValue[] = [
-      { label: 'Binding Rule', value: 'binding' },
-      { label: 'Styling Rule', value: 'styling' }
-    ];
-    
-    const [ruleType, setRuleType] = useState<SelectableValue>({
-      label: 'Binding Rule', 
-      value: 'binding'
-    });
+    const validateRule = (): boolean => {
+      const errors: ValidationErrors = {};
+
+      if (!newRuleRef.current.id || newRuleRef.current.id.trim() === '') {
+        errors.id = 'Rule ID is required';
+      }
+
+      // if (priorityActionAdded) {
+      //   if (newRuleRef.current.priority === undefined || newRuleRef.current.priority === null) {
+      //     errors.priority = 'Priority is required';
+      //   } else if (newRuleRef.current.priority < 0) {
+      //     errors.priority = 'Priority must be a non-negative number';
+      //   }
+      // }
+
+      // if (elementsActionAdded) {
+      //   if (!newRuleRef.current.elements || newRuleRef.current.elements.length === 0) {
+      //     errors.elements = 'At least one element must be selected';
+      //   }
+      // }
+
+      // if (functionActionAdded) {
+      //   const func = newRuleRef.current.function;
+      //   if (!func) {
+      //     errors.function = 'Function details are required';
+      //   }
+      // }
+
+      // if (generalActionsAdded && ruleType.value === 'binding') {
+      //   const bindRule = newRuleRef.current as YamlBindRule;
+      //   if (!bindRule.bindData) {
+      //     errors.generalActions = 'Binding data is required';
+      //   }
+      // }
+
+      // if (generalActionsAdded && ruleType.value === 'styling') {
+      //   const stylingRule = newRuleRef.current as YamlStylingRule;
+      //   if (!stylingRule.applyClass && !stylingRule.applyStyle && 
+      //       !stylingRule.applyShape && !stylingRule.applyText) {
+      //     errors.generalActions = 'At least one styling action is required';
+      //   }
+      // }
+
+      setValidationErrors(errors);
+
+      return Object.keys(errors).length === 0;
+    };
+
+
 
     const getGeneralActions = (): Action => {
       let tempAction: Action = {};
@@ -208,7 +273,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
       forceUpdate();
     }
 
-    const handleFunctionChange = (updatedFunction: string | FunctionElement | undefined, deletedTab?: string) => {
+    const handleFunctionChange = (updatedFunction: FunctionElement | undefined, deletedTab?: string) => {
       saveStateToHistory(newRuleRef.current.clone());
       if(updatedFunction){
         newRuleRef.current.function = updatedFunction;
@@ -258,7 +323,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
         newRuleRef.current = rule.clone()
         reconfigureEditor(rule)
       }else{
-        newRuleRef.current = element?new YamlBindRule({id: '', elements: [element]}):new YamlBindRule({id: ''})
+        newRuleRef.current = element?new YamlBindRule({id: `${element}_Rule_${totalRuleCount}`, elements: [element]}):new YamlBindRule({id: `Rule_${totalRuleCount}`})
         reconfigureEditor(newRuleRef.current)
       }
       forceUpdate()
@@ -320,27 +385,10 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
   }, [])
 
   const handleSubmit = () => {
-    const newCreatedRule = newRuleRef.current.clone();
-
-    if (!newCreatedRule.id) {
-      return;
+    if(validateRule()){
+      onSubmit(newRuleRef.current.clone());
+      onClose();
     }
-
-    if (newCreatedRule.getRuleType() === 'binding') {
-      if (!(newCreatedRule as YamlBindRule).bindData && !newCreatedRule.function && !newCreatedRule.elements) {
-        return;
-      }
-    } else if (newCreatedRule.getRuleType() === 'styling') {
-      const stylingRule = newCreatedRule as YamlStylingRule;
-      if (!stylingRule.applyClass && !stylingRule.applyStyle && 
-          !stylingRule.applyShape && !stylingRule.applyText && 
-          !stylingRule.function) {
-        return;
-      }
-    }
-
-    onSubmit(newCreatedRule);
-    onClose();
   };
 
   const { containerProps, primaryProps, secondaryProps, splitterProps } = useSplitter({
@@ -454,10 +502,10 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                 />
               </Field>
             </RuleInputWrapper>
-  
+                  
             <RuleInputWrapper isIcon={false}>
               <Text>Rule ID:</Text>
-              <Field className={css`margin: 0px;`}>
+              <Field invalid={newRuleRef.current.id==='' || validationErrors.id?true:false} className={css`margin: 0px;`} error={'Rule ID is required'}>
                 <Input 
                 placeholder="Rule ID"
                 value={newRuleRef.current.id}
@@ -481,7 +529,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
                     value={newRuleRef.current.priority}
                     type="number"
                     onChange={(e) => {
-                      newRuleRef.current.priority = e.currentTarget.value;
+                      newRuleRef.current.priority = parseInt(e.currentTarget.value)
                       forceUpdate();
                     }}
                     className="mb-2"
@@ -518,6 +566,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
             {generalActionsAdded && !functionActionAdded && 
             <RuleInputWrapper onDelete={handleGeneralRuleDelete}>
               <ActionInput
+              possibleClasses={possibleClasses}
               action={getGeneralActions()}
               onChange={handleGeneralRuleChange}
               type={ruleType.value}>
@@ -526,6 +575,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
   
             {functionActionAdded && !generalActionsAdded && (
               <FunctionInput
+                possibleClasses={possibleClasses}
                 onLoaded={setIsFunctionLoaded}
                 activeTab={activeTab}
                 onActiveTabChange={setActiveTab}

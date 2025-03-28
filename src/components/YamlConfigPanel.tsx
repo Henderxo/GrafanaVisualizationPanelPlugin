@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import { PanelData } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
-import { YamlBindRule, YamlFunction, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject, FlowVertexTypeParam, FlowSubGraph, FunctionElement } from 'types/types';
+import { YamlBindRule, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject, FlowVertexTypeParam, FlowSubGraph, FunctionElement, FlowClass } from 'types/types';
 import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
 import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
@@ -48,7 +48,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     return <div>Please provide both YAML rules and a Mermaid template.</div>;
   }
 
-  let parsedYaml: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], functions: YamlFunction[]};
+  let parsedYaml: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]};
   try {
     parsedYaml = yaml.load(yamlConfig);
 
@@ -57,9 +57,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     }
     if (!Array.isArray(parsedYaml.stylingRules)) {
       parsedYaml.stylingRules = [];
-    }
-    if (!Array.isArray(parsedYaml.functions)) {
-      parsedYaml.functions = [];
     }
   } catch (e) {
     if (e instanceof Error) {
@@ -76,7 +73,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const stylingRules: YamlStylingRule[] = (parsedYaml.stylingRules || []).map(
     rule => new YamlStylingRule(rule)
   );
-  const functions: YamlFunction[] = parsedYaml.functions || []
 
   const table = extractTableData(data)
   if (!table) return <div>No Data Available</div>;
@@ -89,19 +85,19 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     fullMapRef.current = fullMap;
     setAllElements(findAllElementsInMaps(fullMap))
     updateMapValuesWithDefault(fullMap)
-    applyAllRules(bindingRules, stylingRules, fullMap, rows, functions)
+    applyAllRules(bindingRules, stylingRules, fullMap, rows)
     console.log(fullMap)
     console.log(generateDynamicMermaidFlowchart(fullMap))
     return generateDynamicMermaidFlowchart(fullMap);
   };
 
-  const applyAllRules = ((bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], fullMap: fullMermaidMap, rows: Record<string, any>[], functions: YamlFunction[])=>{
+  const applyAllRules = ((bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], fullMap: fullMermaidMap, rows: Record<string, any>[])=>{
     const sortedBindingRules = sortByPriority(bindingRules)
     const sortedStylingRules = sortByPriority(stylingRules)
 
     sortedBindingRules.forEach(rule => {
       if(rule.function){
-        findAndApplyBindings(fullMap, rule, rows, functions)
+        findAndApplyBindings(fullMap, rule, rows)
       }else if(rule.bindData){
         getElements(rule, fullMap).forEach(element=>{
           let mapElement = findElementInMaps(element, fullMap)
@@ -144,20 +140,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     }
   };
 
-  const determineAction = (rule: YamlBindRule | YamlStylingRule, row: Record<string, any> | undefined, functions: YamlFunction[]):  ConditionElement[] | null => {
+  const determineAction = (rule: YamlBindRule | YamlStylingRule, row: Record<string, any> | undefined):  ConditionElement[] | null => {
     let matchedAction: ConditionElement[] = []
     let func = rule.function
     if(!func){
       return null
     }
    
-    if (typeof func === 'string') {
-      const foundFunction = functions.find((functionn) => functionn.id === func)?.function;
-      if (!foundFunction) {
-        return null
-      }
-      func = foundFunction; 
-    }
     let valueFound = false
     if (func.if && evaluateCondition(func.if.condition, row)) {
       matchedAction.push(func.if); 
@@ -180,9 +169,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     return matchedAction.length > 0 ? matchedAction : null;
   };
 
-  const findAndApplyBindings = (map: fullMermaidMap, rule: YamlBindRule, rows: Record<string, any>[], functions: YamlFunction[]) => {
+  const findAndApplyBindings = (map: fullMermaidMap, rule: YamlBindRule, rows: Record<string, any>[]) => {
     rows.some((row) => {
-      const actionDataList = determineAction(rule, row, functions);
+      const actionDataList = determineAction(rule, row);
       if (actionDataList) {
         let elementList: string[] = getElements(rule, map)
         elementList.forEach(element => {
@@ -317,7 +306,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     elementList.forEach(object =>{
       let mapElement = findElementInMaps(object, fullMap)
       if(mapElement && mapElement.data &&  Object.keys(mapElement.data).length > 0){
-        const actionDataList = determineAction(rule, mapElement.data, functions);
+        const actionDataList = determineAction(rule, mapElement.data);
         if(actionDataList){
           actionDataList.forEach(action=>{
             if(action.action.bindData){
@@ -446,6 +435,7 @@ return (
       onClose={() => setIsModalOpen(false)}
       element={selectedElement}
       elements={allElements}
+      possibleClasses={fullMapRef.current?.classes as Map<string, FlowClass>}
       yamlConfig={parsedYaml}
       onYamlConfigChange={handleYamlConfigChange}
     />

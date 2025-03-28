@@ -98,6 +98,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
         });
 
         forceUpdate();
+        setFunctionActionAdded(true)
         setIfActionAdded(true);
     }
 
@@ -113,19 +114,6 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
         setPriorityActionAdded(true);
     }
 
-    const createFunctionInput = () => {
-        console.log(newRuleRef.current)
-        saveStateToHistory(newRuleRef.current)
-        newRuleRef.current = new (newRuleRef.current.constructor as
-            | typeof YamlBindRule
-            | typeof YamlStylingRule)({
-            ...newRuleRef.current,
-            function: '',
-        });
-        console.log(newRuleRef.current)
-        forceUpdate();
-        setFunctionActionAdded(true);
-    }
 
     const createElementsInput = () => {
         saveStateToHistory(newRuleRef.current)
@@ -188,7 +176,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
                     <ButtonWrapper onClick={() => createActionInputs()}>   
                         Add General Action
                     </ButtonWrapper>
-                    <ButtonWrapper onClick={() => createFunctionInput()}>   
+                    <ButtonWrapper onClick={() => createIfInput()}>   
                         Add Function
                     </ButtonWrapper>
                 </div>   
@@ -201,11 +189,6 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
                     <div>
                         <Text>Function Actions:</Text>
                     </div>
-                    {!ifActionAdded && functionActionAdded && (
-                        <ButtonWrapper onClick={() => createIfInput()}>
-                            Add If
-                        </ButtonWrapper>
-                    )}
                     {ifActionAdded && (
                         <ButtonWrapper onClick={() => createElseIfInput()}>
                             Add Else If

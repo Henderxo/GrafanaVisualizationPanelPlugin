@@ -18,8 +18,8 @@ interface FunctionDisplayProps extends customHtmlBase{
   label: string;
 }
 
-const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p' }> = ({ action, textSize }) => {
-
+export const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p' }> = ({ action, textSize }) => {
+  console.log(action)
   return (
     
     <Box >
@@ -36,7 +36,7 @@ const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | 'h3' | '
       </Box>
       )}
       
-      {action.applyClass && (
+      {action.applyClass && action.applyClass.length > 0 && (
         <Box >
           <Text >Apply Class: </Text>
             {action.applyClass.map((item, i) => (
@@ -52,14 +52,12 @@ const ActionDisplay: React.FC<{ action: Action, textSize: 'h1' | 'h2' | 'h3' | '
         </Box>
       )}
       
-      {action.applyStyle && (
+      {action.applyStyle && action.applyStyle.length > 0 && (
         <Box >
           <Text >Apply Style: </Text>
-          <Stack direction="row" wrap="wrap" gap={1}>
             {action.applyStyle.map((item, i) => (
               <Badge className={css`margin-right: 2px;`} key={i} color="purple" text={<Text variant='body'>{item}</Text>} />
             ))}
-          </Stack>
         </Box>
       )}
       
@@ -115,17 +113,17 @@ const ConditionDisplay: React.FC<{
 export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ func, label, labelSize = 'span', textSize = 'span' }) => {
 
 
-  const renderFunction = (func: string | FunctionElement, index: string) => {
+  const renderFunction = (func: string | FunctionElement) => {
     if (typeof func === 'string') {
       return (
-        <Box key={index} marginBottom={1}>
+        <Box marginBottom={1}>
           <Badge color="red" text={func} />
         </Box>
       );
     }
     
     return (
-      <Box key={index} marginBottom={2}>
+      <Box  marginBottom={2}>
         {func.if && (
           <ConditionDisplay textSize={textSize} condition={func.if} type="if" />
         )}
@@ -151,7 +149,7 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ func, label, l
     <Box >
       <Text element={labelSize}>{label}</Text>
       <Box>
-        {func && renderFunction(func, 'cat')}
+        {func && renderFunction(func)}
       </Box>
     </Box>
   );
