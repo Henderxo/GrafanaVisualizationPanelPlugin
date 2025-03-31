@@ -124,6 +124,7 @@ function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
   }
 
 function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgraphs' | 'all'): string[] {
+  console.log(map)
     let elements: string[] = [];
     if (!options || options === 'all') {
         elements = [...Array.from(map.nodes.keys()), ...Array.from(map.subGraphs.keys())];

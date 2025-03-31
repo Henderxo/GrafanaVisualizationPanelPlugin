@@ -5,6 +5,7 @@ import { FileUploadEditor } from 'components/FileUpload';
 import { CustomTextEditor } from 'components/CustomTextEditor';
 import { FileExport } from 'components/FileExport';
 import { YamlEditor } from 'components/YamlEditor';
+import { RuleConfigButton } from 'components/RuleConfigButton';
 
 export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions((builder) => {
   return builder
@@ -21,14 +22,11 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
     defaultValue: 'mermaid',
   }) 
   .addCustomEditor({
-    id: 'rulesEdit',
+    id: 'elementConfigButton',
     path: 'yamlConfig',
-    name: 'Upload YAML Config',
-    description: 'Upload a YAML file for configuration',
-    editor: FileUploadEditor,
-    settings:{
-      chartType: 'Upload YAML Config'
-    }
+    name: 'Element Configuration',
+    description: 'Configure elements in the diagram',
+    editor: RuleConfigButton,
   })
   .addCustomEditor({
       id: 'yamlFile',

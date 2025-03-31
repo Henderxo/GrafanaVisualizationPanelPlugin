@@ -18,7 +18,7 @@ interface OtherViewPanelProps {
 }
 
 export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, onOptionsChange }) => {
-  const { yamlConfig, template } = options;
+  const { yamlConfig, template, diagramMap } = options;
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedElement, setSelectedElement] = useState<BaseObject | null>(null);
@@ -77,7 +77,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const table = extractTableData(data)
   if (!table) return <div>No Data Available</div>;
   const rows = mapDataToRows(data)
-  console.log('Extracted rows Data:', rows);
 
   const getDiagram = async (template: string) : Promise<string> => {
     const res = await mermaid.mermaidAPI.getDiagramFromText(template)
@@ -86,10 +85,10 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     setAllElements(findAllElementsInMaps(fullMap))
     updateMapValuesWithDefault(fullMap)
     applyAllRules(bindingRules, stylingRules, fullMap, rows)
-    console.log(fullMap)
-    console.log(generateDynamicMermaidFlowchart(fullMap))
+    onOptionsChange({...options, diagramMap: fullMap, diagramElements: findAllElementsInMaps(fullMap)})
     return generateDynamicMermaidFlowchart(fullMap);
   };
+  
 
   const applyAllRules = ((bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], fullMap: fullMermaidMap, rows: Record<string, any>[])=>{
     const sortedBindingRules = sortByPriority(bindingRules)
@@ -428,7 +427,6 @@ return (
     {isLoading && <div className="loading-indicator">Loading diagram...</div>}
     <div ref={chartRef} className={isLoading ? "hidden" : ""} />
     
-    {/* Configuration Modal */}
     <ElementConfigModal
       isOpen={isModalOpen}
       onClose={() => setIsModalOpen(false)}

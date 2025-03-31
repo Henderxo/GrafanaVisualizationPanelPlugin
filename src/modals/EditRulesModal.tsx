@@ -10,17 +10,15 @@ import { CreateRuleModal } from './CreateRule';
 interface ElementConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
-  element?: BaseObject | null;
   elements: string[]
   possibleClasses: Map<string, FlowClass>
   yamlConfig: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]};
   onYamlConfigChange: (newYamlConfig: string) => void;
 }
 
-export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
+export const RuleConfigModal: React.FC<ElementConfigModalProps> = ({
   isOpen,
   onClose,
-  element,
   possibleClasses,
   yamlConfig,
   elements,
@@ -117,8 +115,8 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
       if (ruleIndex !== -1) {
         updatedYamlConfig.bindingRules[ruleIndex] = rule;
       }
-      if(element){
-        const elementRuless = getElementRules(element, [updatedYamlConfig.bindingRules, updatedYamlConfig.stylingRules])
+
+        const elementRuless = {bindRules: updatedYamlConfig.bindingRules}
 
         setElementRules(prev => ({
           ...prev,
@@ -128,7 +126,6 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
 
       setActiveTab('bindingRules');
       elementRuless.bindRules.includes(rule)?setActiveBindRule(rule):setActiveBindRule(null)
-     }
 
     } else if (rule instanceof YamlStylingRule) {
       const ruleIndex = updatedYamlConfig.stylingRules.findIndex(r => r.id === oldRuleId);
@@ -137,8 +134,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         updatedYamlConfig.stylingRules[ruleIndex] = rule;
       }
   
-      if(element){
-        const elementRuless = getElementRules(element, [updatedYamlConfig.bindingRules, updatedYamlConfig.stylingRules])
+        const elementRuless = {stylingRules: updatedYamlConfig.stylingRules}
         setElementRules(prev => ({
           ...prev,
           stylingRules: elementRuless.stylingRules.map(rule => new YamlStylingRule(rule))
@@ -146,7 +142,6 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
        
         setActiveTab('stylingRules');
         elementRuless.stylingRules.includes(rule)?setActiveStyleRule(rule):setActiveStyleRule(null)
-      }
     }
     const newYamlConfigString = convertToYaml(updatedYamlConfig);
     onYamlConfigChange(newYamlConfigString);
@@ -182,19 +177,17 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
   }, [yamlConfig]);
 
   useEffect(() => {
-    if (!element) return;
     setIsLoading(true)
-    const elementRuless = getElementRules(element, [parsedYaml.bindingRules, parsedYaml.stylingRules])
     setElementRules({
-      bindingRules: elementRuless.bindRules.map(rule => new YamlBindRule(rule)),
-      stylingRules: elementRuless.stylingRules.map(rule => new YamlStylingRule(rule))
+      bindingRules: parsedYaml.bindingRules.map(rule => new YamlBindRule(rule)),
+      stylingRules: parsedYaml.stylingRules.map(rule => new YamlStylingRule(rule))
     });
     
     activeBindRule===null&&setActiveBindRule(null);
     activeStyleRule===null&&setActiveStyleRule(null);
     
     setIsLoading(false)
-  }, [element, parsedYaml]);
+  }, [parsedYaml]);
 
   const handleClose = () => {
     setActiveTab('bindingRules')
@@ -232,7 +225,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         display: flex;
         flex-direction: column;
       `}
-      title={`Configure Element: ${element?.id || "Unknown"}`}
+      title={`Edit Rules`}
       isOpen={isOpen}
       onDismiss={handleClose}
     >
@@ -264,7 +257,6 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         totalRuleCount={parsedYaml.bindingRules.length + parsedYaml.stylingRules.length}
         elements={elements}
         isOpen={isModalOpen}
-        element={element?.id}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleRuleSubmit}
       />}
