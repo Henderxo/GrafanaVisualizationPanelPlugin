@@ -21,6 +21,16 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
     defaultValue: 'mermaid',
   }) 
   .addCustomEditor({
+    id: 'rulesEdit',
+    path: 'yamlConfig',
+    name: 'Upload YAML Config',
+    description: 'Upload a YAML file for configuration',
+    editor: FileUploadEditor,
+    settings:{
+      chartType: 'Upload YAML Config'
+    }
+  })
+  .addCustomEditor({
       id: 'yamlFile',
       path: 'yamlConfig',
       name: 'Upload YAML Config',
@@ -213,49 +223,4 @@ bindingRules:
         placeholder: 'Enter Mermaid configuration...'
       }
     })
-    .addBooleanSwitch({
-      path: 'showSeriesCount',
-      name: 'Show series counter',
-      defaultValue: false,
-    })
-    .addColorPicker({
-      path: 'selectedNodeStroke',
-      name: 'Stroke Color',
-      description: 'Change the stroke color of the selected node',
-      defaultValue: '#000000',
-    })
-    .addColorPicker({
-      path: 'selectedNodeFill',
-      name: 'Fill Color',
-      description: 'Change the fill color of the selected node',
-      defaultValue: '#ffffff',
-    })
-    .addTextInput({
-      path: 'selectedNodeLabel',
-      name: 'Node Label',
-      description: 'Label of the selected node',
-      defaultValue: '',
-    })
-    .addRadio({
-      path: 'seriesCountSize',
-      defaultValue: 'sm',
-      name: 'Series counter size',
-      settings: {
-        options: [
-          {
-            value: 'sm',
-            label: 'Small',
-          },
-          {
-            value: 'md',
-            label: 'Medium',
-          },
-          {
-            value: 'lg',
-            label: 'Large',
-          },
-        ],
-      },
-      showIf: (config) => config.showSeriesCount,
-    });
 });

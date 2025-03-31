@@ -123,13 +123,6 @@ function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
     return elementRules
   }
 
-  function getRuleElements(rule: YamlBindRule | YamlStylingRule, elementList: BaseObject[]){
-    elementList.forEach(element => {
-      const elementType = getElementTypeInBaseObject(element)
-
-    });
-  }
-
 function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgraphs' | 'all'): string[] {
     let elements: string[] = [];
     if (!options || options === 'all') {
