@@ -59,13 +59,14 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       onClose={() => setIsEditModalOpen(false)}
       onSubmit={(newRule) =>onEditSubmit(newRule, rule.id)}/>}
       <ConfirmModal 
+        modalClass={css`top: 30%;`}
         isOpen={isDeleteModalOpen} 
         title={`Delete Rule: ${rule.id}`} 
         body={
           <div>
             <Text element="p">Are you sure you want to delete this rule?</Text>
-            <Text color="error" element="p">Rule will be deleted and removed from all elements associated with it!</Text>
-            <DeleteRuleDisplay rule={rule} />
+            <Text color="error" element="span">Rule will be deleted and removed from all elements associated with it!</Text>
+            {/* <DeleteRuleDisplay rule={rule} /> */}
           </div>
         } 
         confirmText="Delete" 

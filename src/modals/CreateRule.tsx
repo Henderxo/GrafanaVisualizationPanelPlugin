@@ -11,7 +11,8 @@ import {
   LoadingPlaceholder,
   Field,
   FieldValidationMessage,
-  FormsOnSubmit
+  FormsOnSubmit,
+  ConfirmModal
 } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { Action, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from 'types/types';
@@ -81,6 +82,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     const [elseActionAdded, setelseActionAdded] = useState<boolean>(false);
     const [generalActionsAdded, setGeneralActionsAdded] = useState<boolean>(false);
     //General
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false)
     const [isFunctionLoaded, setIsFunctionLoaded] = useState<boolean>(false)
     const [activeTab, setActiveTab] = useState<'if' | 'else_if' | 'else'>('if');
     const  [ElementList, setElementList] = useState<SelectableValue[]>([])
@@ -417,7 +419,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
     <Modal
       isOpen={isOpen}
       onDismiss={onClose}
-      title="Create New Rule"
+      title={`${isEdit?'Edit Rule':'Create New Rule'}`}
       className={css`
         width: 900px;
         height: 825px;
@@ -483,6 +485,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
           <div
             {...secondaryProps}
             className={css`
+              z-index: 1000;
               display: flex;
               padding: 10px;
               flex-direction: column;
@@ -590,8 +593,9 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
           </div>
         </div>
       )}
+      <ConfirmModal modalClass={css`top: 30%;`} dismissText='Cancel' confirmText='Confirm' body={`Are you sure you want to cancel this objects ${!isEdit?'creation':'edit'}?`} title={`Cancel ${!isEdit?'creation progress':'editing progress'}`} isOpen={isConfirmModalOpen} onDismiss={()=>setIsConfirmModalOpen(false)} onConfirm={()=>{onClose(); setIsConfirmModalOpen(false)}}></ConfirmModal>
       <Modal.ButtonRow>
-        <Button variant={"secondary"} onClick={onClose}>Cancel</Button>
+        <Button variant={"secondary"} onClick={()=>setIsConfirmModalOpen(true)}>Cancel</Button>
         {rule ? (
           <Button onClick={handleSubmit} variant={"primary"}>Update</Button>
         ) : (
