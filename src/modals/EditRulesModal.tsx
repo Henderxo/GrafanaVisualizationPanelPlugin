@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, TabsBar, Tab, Grid, LoadingPlaceholder, LoadingBar, useSplitter, Text, Icon, IconButton, Label, Drawer } from '@grafana/ui';
-import { YamlBindRule, YamlStylingRule, BaseObject, FlowClass } from 'types/types';
+import { Modal, TabsBar, Tab, LoadingBar, useSplitter, Text, IconButton } from '@grafana/ui';
+import { YamlBindRule, YamlStylingRule, FlowClass } from 'types/types';
 import { RuleDisplay } from '../displays/RuleDisplay';
 import { css } from '@emotion/css';
 import * as yaml from 'js-yaml';
-import { getElementRules, getElementTypeInBaseObject } from 'utils/TransformationUtils';
 import { CreateRuleModal } from './CreateRule';
 
 interface ElementConfigModalProps {

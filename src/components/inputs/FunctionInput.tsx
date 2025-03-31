@@ -9,7 +9,7 @@ import {
   LoadingPlaceholder
 } from '@grafana/ui';
 import { FlowClass, FunctionElement } from 'types/types';
-import RuleInputWrapper from './RuleInputWrapper';
+import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 import { ActionInput } from './ActionInput';
 
 

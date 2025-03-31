@@ -1,11 +1,11 @@
 import { PanelPlugin } from '@grafana/data';
 import { SimpleOptions } from './types';
-import { MainPanel } from 'components/MainPanel';
-import { FileUploadEditor } from 'components/FileUpload';
-import { CustomTextEditor } from 'components/CustomTextEditor';
-import { FileExport } from 'components/FileExport';
-import { YamlEditor } from 'components/YamlEditor';
-import { RuleConfigButton } from 'components/RuleConfigButton';
+import { MainPanel } from 'components/panels/MainPanel';
+import { FileUploadEditor } from 'components/options/FileUpload';
+import { CustomTextEditor } from 'components/options/CustomTextEditor';
+import { FileExport } from 'components/options/FileExport';
+import { YamlEditor } from 'components/options/YamlEditor';
+import { RuleConfigButton } from 'components/options/RuleConfigButton';
 
 export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions((builder) => {
   return builder

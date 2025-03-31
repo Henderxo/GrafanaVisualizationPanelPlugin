@@ -9,7 +9,7 @@ import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
 import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData, bindDataToString } from 'utils/DataBindingUtils';
-import { ElementConfigModal } from '../modals/EditElementModal';
+import { ElementConfigModal } from '../../modals/EditElementModal';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;

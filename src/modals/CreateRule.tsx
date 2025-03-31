@@ -17,10 +17,10 @@ import {
 import { SelectableValue } from '@grafana/data';
 import { Action, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from 'types/types';
 import { css } from '@emotion/css';
-import RuleInputWrapper from 'components/RuleInputWrapper';
-import { FunctionInput } from 'components/FunctionInput';
-import { ActionInput } from 'components/ActionInput';
-import { RuleCreateActionBar } from 'components/RuleCreateActionBar';
+import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
+import { FunctionInput } from 'components/inputs/FunctionInput';
+import { ActionInput } from 'components/inputs/ActionInput';
+import { RuleCreateActionBar } from 'components/inputs/RuleCreateActionBar';
 
 
 interface CreateRuleModalProps {

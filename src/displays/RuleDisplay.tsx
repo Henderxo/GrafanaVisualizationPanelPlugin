@@ -5,7 +5,6 @@ import { useTheme2, Text, Divider, TabsBar, Tab, PageToolbar, ToolbarButton, Con
 import FunctionList, { ActionDisplay } from "./FunctionListDisplay";
 import { css } from '@emotion/css';
 import { CreateRuleModal } from "modals/CreateRule";
-import { DeleteRuleDisplay } from "modals/DeleteRule";
 
 interface RuleDisplayProps extends customHtmlBase {
   rule: YamlBindRule | YamlStylingRule;

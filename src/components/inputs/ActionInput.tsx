@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { 
   Input, 
   Text, 
-  Button, 
   MultiSelect,
-  IconButton,
   Badge,
   useTheme2,
   Box,
@@ -12,7 +10,7 @@ import {
   Select
 } from '@grafana/ui';
 import { Action, FlowClass, FlowVertexTypeParam } from 'types/types';
-import RuleInputWrapper from '../components/RuleInputWrapper';
+import RuleInputWrapper from '../wrappers/RuleInputWrapper';
 import { css } from '@emotion/css';
 
 interface ActionInputProps {
@@ -34,7 +32,6 @@ export const ActionInput: React.FC<ActionInputProps> = ({
   actionBackgroundColor,
   onLoaded
 }) => {
-  // Dynamically filter action types based on the input type
   const actionTypes: Array<keyof Action> = type === 'binding' 
     ? ['bindData'] 
     : ['applyClass', 'applyText', 'applyStyle', 'applyShape'];
@@ -63,7 +60,6 @@ export const ActionInput: React.FC<ActionInputProps> = ({
   const theme = useTheme2()
 
   useEffect(()=>{
-    console.log(possibleClasses)
     setIsLoading(true)
     const incomingActionKeys = Object.keys(action) as Array<keyof Action>;
     
