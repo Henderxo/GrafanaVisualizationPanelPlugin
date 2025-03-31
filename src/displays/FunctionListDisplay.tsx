@@ -28,10 +28,10 @@ export const ActionDisplay: React.FC<{ backGroundColor?: string, label?: string,
         <Text>Bind Data: </Text>
           {action.bindData.length > 0 ? (
             action.bindData.map((item, i) => (
-              <Badge className={css`margin-right: 2px;`} color="blue" text={<Text variant='body'>{item}</Text>} /> 
+              <Badge className={css`margin-right: 2px;`} color="green" text={<Text variant='body'>{item}</Text>} /> 
             ))
           ) : (
-              <Badge className={css`margin-right: 2px;`} color="blue" text={<Text variant='body'>Any</Text>} />
+            <Badge className={css`margin-right: 2px;`} color="red" text={<div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}><Icon className={css`margin-right: 2px;`} size={`sm`} name={`exclamation-triangle`}></Icon><Text variant='body'>{`No Data Found`}</Text></div>} />
           )}
       </Box>
       )}
@@ -40,7 +40,7 @@ export const ActionDisplay: React.FC<{ backGroundColor?: string, label?: string,
         <Box marginBottom={1} marginTop={1}>
           <Text >Apply Class: </Text>
             {action.applyClass.map((item, i) => (
-              <Badge className={css`margin-right: 2px;`} key={i} color="red" text={<Text variant='body'>{item}</Text>} />
+              <Badge className={css`margin-right: 2px;`} key={i} color="green" text={<Text variant='body'>{item}</Text>} />
             ))}
         </Box>
       )}
@@ -56,7 +56,7 @@ export const ActionDisplay: React.FC<{ backGroundColor?: string, label?: string,
         <Box marginBottom={1} marginTop={1}>
           <Text >Apply Style: </Text>
             {action.applyStyle.map((item, i) => (
-              <Badge className={css`margin-right: 2px;`} key={i} color="purple" text={<Text variant='body'>{item}</Text>} />
+              <Badge className={css`margin-right: 2px;`} key={i} color="green" text={<Text variant='body'>{item}</Text>} />
             ))}
         </Box>
       )}
@@ -64,9 +64,45 @@ export const ActionDisplay: React.FC<{ backGroundColor?: string, label?: string,
       {action.applyShape && (
         <Box marginBottom={1} marginTop={1}>
           <Text element={textSize} >Apply Shape: </Text>
-          <Badge className={css`margin-right: 2px;`} color="orange" text={<Text variant='body'>{action.applyShape}</Text>} />
+          <Badge className={css`margin-right: 2px;`} color="green" text={<Text variant='body'>{action.applyShape}</Text>} />
         </Box>
       )}
+
+      {!action.applyShape && !action.applyStyle  && !action.applyText && !action.applyClass && !action.bindData && (
+        <Box marginBottom={1} marginTop={1}>
+          <Text element={textSize} >No Actions Found</Text>
+        </Box>
+      )}
+
+      {(action.applyStyle && action.applyStyle.length === 0) && (
+        <Box marginBottom={1} marginTop={1}>
+          <Text element={textSize} >Apply Style: </Text>
+          <Badge className={css`margin-right: 2px;`} color="red" text={<div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}><Icon className={css`margin-right: 2px;`} size={`sm`} name={`exclamation-triangle`}></Icon><Text variant='body'>{`No Styles Found`}</Text></div>} />
+        </Box>
+      )}
+
+      {action.applyShape !== undefined && !action.applyShape &&  (
+        <Box marginBottom={1} marginTop={1}>
+          <Text element={textSize} >Apply Shape: </Text>
+          <Badge className={css`margin-right: 2px;`} color="red" text={<div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}><Icon className={css`margin-right: 2px;`} size={`sm`} name={`exclamation-triangle`}></Icon><Text variant='body'>{`No Shape Found`}</Text></div>} />
+        </Box>
+      )}  
+
+      {(action.applyClass && action.applyClass.length === 0) && (
+        <Box marginBottom={1} marginTop={1}>
+          <Text element={textSize} >Apply Class: </Text>
+          <Badge className={css`margin-right: 2px;`} color="red" text={<div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}><Icon className={css`margin-right: 2px;`} size={`sm`} name={`exclamation-triangle`}></Icon><Text variant='body'>{`No Classes Found`}</Text></div>} />
+        </Box>
+      )}
+
+      {action.applyText !== undefined && !action.applyText && (
+        <Box marginBottom={1} marginTop={1}>
+          <Text element={textSize} >Apply Text: </Text>
+          <Badge className={css`margin-right: 2px;`} color="red" text={<div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}><Icon className={css`margin-right: 2px;`} size={`sm`} name={`exclamation-triangle`}></Icon><Text variant='body'>{`No Text Found`}</Text></div>} />
+        </Box>
+      )}
+
+
     </Box>
     </>
   );
@@ -113,7 +149,6 @@ const ConditionDisplay: React.FC<{
 // Main component to display function elements
 export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ func, label, labelSize = 'span', textSize = 'span' }) => {
 
-
   const renderFunction = (func: string | FunctionElement) => {
     if (typeof func === 'string') {
       return (
@@ -147,7 +182,7 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ func, label, l
   };
   
   return (
-    <Box >
+    <Box>
       <Text element={labelSize}>{label}</Text>
       <Box>
         {func && renderFunction(func)}

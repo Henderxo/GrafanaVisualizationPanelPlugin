@@ -108,6 +108,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
   };
 
   const handleRuleEdit = (rule: YamlBindRule | YamlStylingRule, oldRuleId: string) => {
+    setIsLoading(true)
     const updatedYamlConfig = { ...yamlConfig };
   
     if (rule instanceof YamlBindRule) {
@@ -149,6 +150,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
     }
     const newYamlConfigString = convertToYaml(updatedYamlConfig);
     onYamlConfigChange(newYamlConfigString);
+    setIsLoading(false)
   };
 
   const convertToYaml = (jsonObject: any): string => {
@@ -188,14 +190,14 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
       stylingRules: elementRuless.stylingRules.map(rule => new YamlStylingRule(rule))
     });
     
-    // Set initial active rules separately
-    setActiveBindRule(null);
-    setActiveStyleRule(null);
+    activeBindRule===null&&setActiveBindRule(null);
+    activeStyleRule===null&&setActiveStyleRule(null);
     
     setIsLoading(false)
   }, [element, parsedYaml]);
 
   const handleClose = () => {
+    console.log('xasdassssssssssssssssssssssssssssssssssss')
     setActiveTab('bindingRules')
     setActiveBindRule(null)
     setActiveStyleRule(null)
@@ -344,7 +346,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
                   width: "100%";
                 `}
               >
-                {activeRule && (
+                {activeRule && !isLoading && (
                   <RuleDisplay
                     onDelete={(rule)=>{handleRuleDelete(rule)}}
                     elements={elements}

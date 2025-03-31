@@ -81,7 +81,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
      </PageToolbar>
       <Divider/>
       <div className={css`flex: 1;`}>
-        <Text truncate={true} element={textSize}>Priority: {rule?.priority ? rule?.priority : 'default'}</Text>
+        <Text truncate={true} element={textSize}>Priority: {rule?.priority ? rule?.priority : '-1'}</Text>
         <div className={css`margin-top: 4px; margin-bottom: 8px;`}>
           <StringList 
             label="Elements:" 

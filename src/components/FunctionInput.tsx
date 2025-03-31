@@ -118,8 +118,8 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
           label="If" 
           active={activeTab === 'if'} 
           onChangeTab={() => {
+            activeTab!=="if"&&setisLoaded(false)
             onActiveTabChange('if') 
-            setisLoaded(false)
           }}
         />
         {functionData.else_if && (
@@ -127,8 +127,8 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
             label="Else If" 
             active={activeTab === 'else_if'} 
             onChangeTab={() => {
+              activeTab!=="else_if"&&setisLoaded(false)
               onActiveTabChange('else_if')
-              setisLoaded(false)
             }}
           />
         )}
@@ -137,8 +137,8 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
             label="Else" 
             active={activeTab === 'else'} 
             onChangeTab={() => {
+              activeTab!=="else"&&setisLoaded(false)
               onActiveTabChange('else')
-              setisLoaded(false)
             }}
           />
         )}
