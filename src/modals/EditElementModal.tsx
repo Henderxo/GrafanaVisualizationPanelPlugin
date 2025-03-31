@@ -50,6 +50,36 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
     setIsModalOpen(true);
   };
 
+  const handleRuleDelete = (rule: YamlBindRule | YamlStylingRule) => {
+    const updatedYamlConfig = { ...yamlConfig };
+    
+    if (rule instanceof YamlBindRule) {
+      updatedYamlConfig.bindingRules = updatedYamlConfig.bindingRules.filter(r => r.id !== rule.id);
+      
+      setElementRules(prev => ({
+        ...prev,
+        bindingRules: prev.bindingRules.filter(r => r.id !== rule.id)
+      }));
+      
+      setActiveBindRule(elementRules.bindingRules.length > 1 ? 
+        elementRules.bindingRules.find(r => r.id !== rule.id) || null : null);
+        
+    } else if (rule instanceof YamlStylingRule) {
+      updatedYamlConfig.stylingRules = updatedYamlConfig.stylingRules.filter(r => r.id !== rule.id);
+      
+      setElementRules(prev => ({
+        ...prev,
+        stylingRules: prev.stylingRules.filter(r => r.id !== rule.id)
+      }));
+      
+      setActiveStyleRule(elementRules.stylingRules.length > 1 ? 
+        elementRules.stylingRules.find(r => r.id !== rule.id) || null : null);
+    }
+    
+    const newYamlConfigString = convertToYaml(updatedYamlConfig);
+    onYamlConfigChange(newYamlConfigString);
+  };
+
   const handleRuleSubmit = (rule: YamlBindRule | YamlStylingRule) => {
     const updatedYamlConfig = { ...yamlConfig };
 
@@ -312,6 +342,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
               >
                 {activeRule && (
                   <RuleDisplay
+                    onDelete={(rule)=>{handleRuleDelete(rule)}}
                     elements={elements}
                     possibleClasses={possibleClasses}
                     onEditSubmit={handleRuleEdit}

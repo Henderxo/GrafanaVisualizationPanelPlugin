@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Action, customHtmlBase, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from "types/types";
 import StringList from "./StringListDisplay";
-import { useTheme2, Text, Divider, TabsBar, Tab, PageToolbar, ToolbarButton } from '@grafana/ui';
+import { useTheme2, Text, Divider, TabsBar, Tab, PageToolbar, ToolbarButton, ConfirmModal } from '@grafana/ui';
 import FunctionList, { ActionDisplay } from "./FunctionListDisplay";
 import { css } from '@emotion/css';
 import { CreateRuleModal } from "modals/CreateRule";
+import { DeleteRuleDisplay } from "modals/DeleteRule";
 
 interface RuleDisplayProps extends customHtmlBase {
   rule: YamlBindRule | YamlStylingRule;
@@ -12,6 +13,7 @@ interface RuleDisplayProps extends customHtmlBase {
   elements: string[]
   possibleClasses: Map<string, FlowClass>
   onEditSubmit: (rule: YamlBindRule | YamlStylingRule, oldRule: string) => void;
+  onDelete: (rule: YamlBindRule | YamlStylingRule) => void
 }
 
 export const RuleDisplay: React.FC<RuleDisplayProps> = ({ 
@@ -22,11 +24,13 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
   elements,
   labelSize = 'span',
   possibleClasses,
-  onEditSubmit 
+  onEditSubmit,
+  onDelete,
 }) => {
   console.log(rule.getActions())
   const [isHovered, setIsHovered] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const theme = useTheme2();
   
   const bgHoverColor = theme.colors.border.medium;
@@ -46,16 +50,32 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       onMouseEnter={() => setIsHovered(hover)} 
       onMouseLeave={() => setIsHovered(false)} 
     >
-      {isModalOpen && <CreateRuleModal
+      {isEditModalOpen && <CreateRuleModal
       isEdit={true} 
       possibleClasses={possibleClasses}
       rule={rule}
       elements={elements}
-      isOpen={isModalOpen}
-      onClose={() => setIsModalOpen(false)}
+      isOpen={isEditModalOpen}
+      onClose={() => setIsEditModalOpen(false)}
       onSubmit={(newRule) =>onEditSubmit(newRule, rule.id)}/>}
+      <ConfirmModal 
+        isOpen={isDeleteModalOpen} 
+        title={`Delete Rule: ${rule.id}`} 
+        body={
+          <div>
+            <Text element="p">Are you sure you want to delete this rule?</Text>
+            <DeleteRuleDisplay rule={rule} />
+          </div>
+        } 
+        confirmText="Delete" 
+        confirmButtonVariant="destructive" 
+        dismissText="Cancel" 
+        onConfirm={() => {onDelete(rule); setIsDeleteModalOpen(false);}} 
+        onDismiss={() => setIsDeleteModalOpen(false)}
+      />
      <PageToolbar className={css`background: ${isHovered ? bgHoverColor : bgColor}; padding: 1px; padding-top: 3px; padding-bottom: 3px;`} title={`${rule.id}`} >
-      <ToolbarButton onClick={()=>setIsModalOpen(true)} iconSize="lg" className={css`&:hover{ background-color: ${theme.colors.background.primary}}`} icon="edit">Edit</ToolbarButton>
+      <ToolbarButton onClick={()=>setIsEditModalOpen(true)} iconSize="lg" className={css`&:hover{ background-color: ${theme.colors.background.primary}}`} icon="edit">Edit</ToolbarButton>
+      <ToolbarButton onClick={()=>setIsDeleteModalOpen(true)} iconSize="lg" className={css`&:hover{ background-color: ${theme.colors.background.primary}}`} icon="trash-alt"></ToolbarButton>
      </PageToolbar>
       <Divider/>
       <div className={css`flex: 1;`}>
