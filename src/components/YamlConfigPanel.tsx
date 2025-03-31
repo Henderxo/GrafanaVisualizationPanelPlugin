@@ -8,7 +8,7 @@ import { YamlBindRule, YamlStylingRule, ConditionElement, Action, FlowVertex, fu
 import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
 import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
-import { bindData } from 'utils/DataBindingUtils';
+import { bindData, bindDataToString } from 'utils/DataBindingUtils';
 import { ElementConfigModal } from '../modals/EditElementModal';
 
 interface OtherViewPanelProps {
@@ -235,10 +235,11 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
 
   const applyTextAction = (Action: Action, Element: BaseObject)=>{
     if(Action.applyText){
+      const text = bindDataToString(Action.applyText, Element)
       if ('title' in Element) {
-        Element.title = Action.applyText
+        Element.title = text
       } else if ('text' in Element) {
-        Element.text = Action.applyText
+        Element.text = text
       }
     }
   }
@@ -252,7 +253,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     }
   }
 
-  const addActions = (
+  const  addActions = (
     Action: Action,
     Element: BaseObject,
     row?: any

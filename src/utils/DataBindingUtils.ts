@@ -1,5 +1,5 @@
   
-import { FlowSubGraph, FlowVertex, fullMermaidMap } from "types/types";
+import { BaseObject, FlowSubGraph, FlowVertex, fullMermaidMap } from "types/types";
 import { findAllElementsInMaps, findElementInMaps } from "./TransformationUtils";
   
 const bindData = (fullMap: fullMermaidMap) => {
@@ -26,4 +26,18 @@ const bindData = (fullMap: fullMermaidMap) => {
       })
     }
 };
-export { bindData }
+
+const bindDataToString = (inputString: string, element: BaseObject): string => {
+    if (!inputString) return inputString;
+    
+    const elementData = element.data || null;
+    
+    if (!elementData || Object.keys(elementData).length === 0) {
+      return inputString;
+    }
+    
+    return inputString.replace(/\$(\w+)/g, (match: string, variable: string) => {
+      return elementData[variable] !== undefined ? String(elementData[variable]) : match;
+    });
+  };
+export { bindData, bindDataToString }
