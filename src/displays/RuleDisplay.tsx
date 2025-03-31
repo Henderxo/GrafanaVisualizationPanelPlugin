@@ -64,6 +64,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
         body={
           <div>
             <Text element="p">Are you sure you want to delete this rule?</Text>
+            <Text color="error" element="p">Rule will be deleted and removed from all elements associated with it!</Text>
             <DeleteRuleDisplay rule={rule} />
           </div>
         } 

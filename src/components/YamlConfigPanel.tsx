@@ -362,10 +362,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     }
   };
 
-const handleYamlConfigChange = (newYamlConfig: string) => {
-  console.log(newYamlConfig)
-  options.yamlConfig = newYamlConfig
-};
+  const handleYamlConfigChange = (newYamlConfig: string) => {
+    onOptionsChange({...options, yamlConfig: newYamlConfig})
+  };
 
 const debugNodeElementMapping = (svgElement: SVGElement) => {
   const nodeElements = svgElement.querySelectorAll('[id^="flowchart-"]');

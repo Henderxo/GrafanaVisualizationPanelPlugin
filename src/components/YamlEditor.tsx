@@ -14,6 +14,10 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(()=>{
+    setLocalYaml(value)
+  }, [value])
+
   useEffect(() => {
     if (!isModalOpen || !containerRef.current) return;
 

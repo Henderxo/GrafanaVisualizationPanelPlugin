@@ -7,20 +7,18 @@ import * as yaml from 'js-yaml';
 import { getElementRules, getElementTypeInBaseObject } from 'utils/TransformationUtils';
 import { CreateRuleModal } from './CreateRule';
 
-interface ElementConfigModalProps {
+interface EditRulesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  element: BaseObject | null;
   elements: string[]
   possibleClasses: Map<string, FlowClass>
   yamlConfig: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]};
   onYamlConfigChange: (newYamlConfig: string) => void;
 }
 
-export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
+export const EditRules: React.FC<EditRulesModalProps> = ({
   isOpen,
   onClose,
-  element,
   possibleClasses,
   yamlConfig,
   elements,
@@ -116,18 +114,16 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
       if (ruleIndex !== -1) {
         updatedYamlConfig.bindingRules[ruleIndex] = rule;
       }
-      if(element){
-        const elementRuless = getElementRules(element, [updatedYamlConfig.bindingRules, updatedYamlConfig.stylingRules])
 
-        setElementRules(prev => ({
-          ...prev,
-          bindingRules: elementRuless.bindRules.map(rule => new YamlBindRule(rule))
-        }))
+      setElementRules(prev => ({
+        ...prev,
+        bindingRules: prev.bindingRules.map(r =>
+          r.id === oldRuleId ? rule : r
+        )
+      }))
        
-
       setActiveTab('bindingRules');
-      elementRuless.bindRules.includes(rule)?setActiveBindRule(rule):setActiveBindRule(null)
-     }
+      setActiveBindRule(rule)
 
     } else if (rule instanceof YamlStylingRule) {
       const ruleIndex = updatedYamlConfig.stylingRules.findIndex(r => r.id === oldRuleId);
@@ -136,16 +132,16 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         updatedYamlConfig.stylingRules[ruleIndex] = rule;
       }
   
-      if(element){
-        const elementRuless = getElementRules(element, [updatedYamlConfig.bindingRules, updatedYamlConfig.stylingRules])
-        setElementRules(prev => ({
-          ...prev,
-          stylingRules: elementRuless.stylingRules.map(rule => new YamlBindRule(rule))
-        }))
-       
-        setActiveTab('stylingRules');
-        elementRuless.stylingRules.includes(rule)?setActiveStyleRule(rule):setActiveStyleRule(null)
-      }
+      setElementRules(prev => ({
+        ...prev,
+        stylingRules: prev.stylingRules.map(r =>
+          r.id === oldRuleId ? rule : r
+        )
+      }))
+      
+      setActiveTab('stylingRules');
+      setActiveStyleRule(rule);
+
     }
     const newYamlConfigString = convertToYaml(updatedYamlConfig);
     onYamlConfigChange(newYamlConfigString);
@@ -180,20 +176,11 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
   }, [yamlConfig]);
 
   useEffect(() => {
-    if (!element) return;
     setIsLoading(true)
-    const elementRuless = getElementRules(element, [parsedYaml.bindingRules, parsedYaml.stylingRules])
-    setElementRules({
-      bindingRules: elementRuless.bindRules.map(rule => new YamlBindRule(rule)),
-      stylingRules: elementRuless.stylingRules.map(rule => new YamlStylingRule(rule))
-    });
-    
-    // Set initial active rules separately
     setActiveBindRule(null);
     setActiveStyleRule(null);
-    
     setIsLoading(false)
-  }, [element, parsedYaml]);
+  }, [parsedYaml]);
 
   const handleClose = () => {
     setActiveTab('bindingRules')
@@ -231,7 +218,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         display: flex;
         flex-direction: column;
       `}
-      title={`Configure Element: ${element?.id || "Unknown"}`}
+      title={`Rules: `}
       isOpen={isOpen}
       onDismiss={handleClose}
     >
@@ -263,7 +250,6 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         totalRuleCount={parsedYaml.bindingRules.length + parsedYaml.stylingRules.length}
         elements={elements}
         isOpen={isModalOpen}
-        element={element?.id}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleRuleSubmit}
       />}
