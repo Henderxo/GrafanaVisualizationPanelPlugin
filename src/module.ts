@@ -4,8 +4,9 @@ import { MainPanel } from 'components/panels/MainPanel';
 import { FileUploadEditor } from 'components/options/FileUpload';
 import { CustomTextEditor } from 'components/options/CustomTextEditor';
 import { FileExport } from 'components/options/FileExport';
-import { YamlEditor } from 'components/options/YamlEditor';
+import { YamlEditor } from 'components/options/yamlEditor/YamlEditor';
 import { RuleConfigButton } from 'components/options/RuleConfigButton';
+import { YamlEditorButton } from 'components/options/yamlEditor/YamlEditorButton';
 
 export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions((builder) => {
   return builder
@@ -57,7 +58,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       category: ['YAML Configuration'],
       name: "Edit YAML Configuration",
       description: "Opens a modal to edit YAML",
-      editor: YamlEditor,
+      editor: YamlEditorButton,
     })
     .addCustomEditor({
       id: 'yamlConfigEditor',

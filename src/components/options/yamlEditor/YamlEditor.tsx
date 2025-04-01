@@ -5,10 +5,14 @@ import { css } from "@emotion/css";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { configureMonacoYaml } from "monaco-yaml";
 
-interface Props extends StandardEditorProps<string> {}
+interface EditorProps{
+  value: string,
+  onChange: (newConfig: string)=>void
+  onClose: ()=>void
+  isOpen: boolean
+}
 
-export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
-  const [isModalOpen, setModalOpen] = useState(false);
+export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, isOpen }) => {
   const [localYaml, setLocalYaml] = useState(value || "");
   const [areSuggestionsSet, setSuggestions] = useState(false)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -19,10 +23,8 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
   }, [value])
 
   useEffect(() => {
-    if (!isModalOpen || !containerRef.current) return;
-
-    console.log("Initializing Monaco Editor...");
-
+    if (!isOpen || !containerRef.current) return;
+    console.log('Idnd tmake it here yet lul')
     monaco.languages.register({ id: "yaml" });
 
     configureMonacoYaml(monaco, {
@@ -376,31 +378,22 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
           editorRef.current = null;
         }
       };
-  }, [isModalOpen]); 
+  }, [isOpen]); 
 
   const handleSave = () => {
     onChange(localYaml);
-    setModalOpen(false);
   };
 
   return (
     <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-      <Button
-        style={{ width: "100%", display: "flex", justifyContent: "center" }}
-        variant="primary"
-        onClick={() => setModalOpen(true)}
-      >
-        Edit YAML Config
-      </Button>
-
-      {isModalOpen && (
+      {isOpen && (
         <Modal
           className={css`
             width: 1750px;
           `}
           title="Edit YAML Configuration"
-          isOpen={isModalOpen}
-          onDismiss={() => setModalOpen(false)}
+          isOpen={isOpen}
+          onDismiss={() => onClose()}
         >
           <div
             className={css`
@@ -417,7 +410,7 @@ export const YamlEditor: React.FC<Props> = ({ value, onChange }) => {
               <Button variant="secondary" onClick={handleSave}>
                 Save
               </Button>
-              <Button variant="destructive" onClick={() => setModalOpen(false)} style={{ marginRight: "10px" }}>
+              <Button variant="destructive" onClick={() => onClose()} style={{ marginRight: "10px" }}>
                 Cancel
               </Button>
             </div>
