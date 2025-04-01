@@ -95,7 +95,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const getDiagram = async (templateStr: string): Promise<string> => {
     const res = await mermaid.mermaidAPI.getDiagramFromText(templateStr);
     const config = extractMermaidConfigString(templateStr)
-    console.log(config)
     const fullMap = reformatDataFromResponse(res);
     const variables = getTemplateSrv().getVariables();
     fullMapRef.current = fullMap;
@@ -512,7 +511,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   }, [template, variableChangeCount, data, parsedYamlState]);
 
 
-  if (!yamlConfig || !template) {
+  if (!yamlConfig || !template || parsedYamlState.parseError !== null) {
     return (
       <NoTemplatesProvidedDisplay 
         onConfigChanges={(yaml, template) => onOptionsChange({...options, yamlConfig: yaml, template: template})} 
