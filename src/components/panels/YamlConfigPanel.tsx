@@ -413,14 +413,11 @@ const debugNodeElementMapping = (svgElement: SVGElement) => {
 };
 
 useEffect(() => {
-  // Listen to dashboard variable changes using locationService
   const subscription = locationService.getHistory().listen(() => {
-    // This will trigger when URL changes, which happens on variable selection
     setVariableChangeCount((prev) => prev + 1);
   });
   
   return () => {
-    // Clean up subscription when component unmounts
     subscription();
   };
 }, []);

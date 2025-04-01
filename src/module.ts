@@ -24,6 +24,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
   .addCustomEditor({
     id: 'elementConfigButton',
     path: 'yamlConfig',
+    category: ['YAML Configuration'],
     name: 'Element Configuration',
     description: 'Configure elements in the diagram',
     editor: RuleConfigButton,
@@ -31,6 +32,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
   .addCustomEditor({
       id: 'yamlFile',
       path: 'yamlConfig',
+      category: ['YAML Configuration'],
       name: 'Upload YAML Config',
       description: 'Upload a YAML file for configuration',
       editor: FileUploadEditor,
@@ -41,6 +43,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
     .addCustomEditor({
       id: 'yamlFileExporter',
       path: 'yamlConfig',
+      category: ['YAML Configuration'],
       name: 'Export YAML Config',
       description: 'Export a YAML file for configuration',
       editor: FileExport, 
@@ -51,6 +54,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
     .addCustomEditor({
       id: "yamlEditor",
       path: "yamlConfig",
+      category: ['YAML Configuration'],
       name: "Edit YAML Configuration",
       description: "Opens a modal to edit YAML",
       editor: YamlEditor,
@@ -58,6 +62,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
     .addCustomEditor({
       id: 'yamlConfigEditor',
       path: 'yamlConfig',
+      category: ['YAML Configuration'],
       name: 'YAML Configuration',
       description: 'Define rules for Mermaid chart in YAML format',
       editor: CustomTextEditor,
@@ -146,6 +151,7 @@ bindingRules:
     .addCustomEditor({
       id: 'mermaidFile',
       path: 'template',
+      category: ['Mermaid Configuration'],
       name: 'Upload Mermaid Template',
       description: 'Upload a Mermaid (.mmd) file',
       editor: FileUploadEditor,
@@ -156,6 +162,7 @@ bindingRules:
     .addCustomEditor({
       id: 'mermaidFileExporter',
       path: 'template',
+      category: ['Mermaid Configuration'],
       name: 'Export Mermaid Template',
       description: 'Export a Mermaid file for configuration',
       editor: FileExport, 
@@ -166,6 +173,7 @@ bindingRules:
     .addCustomEditor({
       id: 'mermaidTemplateEditor',
       path: 'template',
+      category: ['Mermaid Configuration'],
       name: 'Mermaid Template',
       description: 'Define rules for Mermaid chart to display',
       editor: CustomTextEditor,
