@@ -1,3 +1,4 @@
+import { MermaidConfig } from "mermaid";
 import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex } from "types/types";
 
 
@@ -5,10 +6,16 @@ export function generateDynamicMermaidFlowchart(data: {
     nodes: Map<string, FlowVertex>,
     edges: FlowEdge[],
     classes: Map<string, FlowClass>,
-    subGraphs: Map<string, FlowSubGraph>
+    subGraphs: Map<string, FlowSubGraph>,
+    config?: string
   }): string {
+
+    let mermaidString = "";
+    if (data.config) {
+      mermaidString += `%%{init: ${data.config}}%%\n`;
+    }
     // Start building the Mermaid flowchart string
-    let mermaidString = "graph TB\n";
+    mermaidString += "graph TB\n";
     
     // Track nodes that are part of subgraphs
     const nodesInSubgraphs = new Set<string>();

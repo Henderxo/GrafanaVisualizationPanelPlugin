@@ -6,11 +6,11 @@ import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
 import { YamlBindRule, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject, FlowVertexTypeParam, FlowSubGraph, FunctionElement, FlowClass } from 'types/types';
 import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
-import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
+import { extractMermaidConfigString, extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, sortByPriority } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData, bindDataToString } from 'utils/DataBindingUtils';
 import { ElementConfigModal } from '../../modals/EditElementModal';
-import { getLocationSrv, getTemplateSrv, locationService } from '@grafana/runtime';
+import { getTemplateSrv, locationService } from '@grafana/runtime';
 import { NoTemplatesProvidedDisplay } from 'displays/NoTemplatesProvidedDisplay';
 
 interface OtherViewPanelProps {
@@ -23,6 +23,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const { yamlConfig, template } = options;
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [ diagramConfig, setDiagramConfig] = useState<string>('')
   const [grafanaVariables, setGrafanaVariables] = useState<TypedVariableModel[] | null>(null);
   const [variableChangeCount, setVariableChangeCount] = useState(0);
   const [selectedElement, setSelectedElement] = useState<BaseObject | null>(null);
@@ -46,7 +47,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     'trapezoid', 'inv_trapezoid', 'lean_right', 'lean_left',
   ]), []);
 
-  // Parse YAML config when it changes
   useEffect(() => {
     if (!yamlConfig) {
       setParsedYamlState({
@@ -62,10 +62,10 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
       
       setParsedYamlState({
         bindingRules: Array.isArray(parsed.bindingRules) 
-          ? parsed.bindingRules.map(rule => new YamlBindRule(rule)) 
+          ? parsed.bindingRules.map((rule:any) => new YamlBindRule(rule)) 
           : [],
         stylingRules: Array.isArray(parsed.stylingRules) 
-          ? parsed.stylingRules.map(rule => new YamlStylingRule(rule)) 
+          ? parsed.stylingRules.map((rule:any) => new YamlStylingRule(rule)) 
           : [],
         parseError: null
       });
@@ -82,7 +82,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     }
   }, [yamlConfig]);
 
-  // Listen for location changes (variable updates)
   useEffect(() => {
     const subscription = locationService.getHistory().listen(() => {
       setVariableChangeCount(prev => prev + 1);
@@ -95,6 +94,8 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
 
   const getDiagram = async (templateStr: string): Promise<string> => {
     const res = await mermaid.mermaidAPI.getDiagramFromText(templateStr);
+    const config = extractMermaidConfigString(templateStr)
+    console.log(config)
     const fullMap = reformatDataFromResponse(res);
     const variables = getTemplateSrv().getVariables();
     fullMapRef.current = fullMap;
@@ -120,7 +121,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
       diagramElements: findAllElementsInMaps(fullMap)
     });
     
-    return generateDynamicMermaidFlowchart(fullMap);
+    return generateDynamicMermaidFlowchart({...fullMap, config: config});
   };
 
   const updateMapValuesWithDefault = (fullMap: fullMermaidMap) => {
@@ -469,6 +470,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     mermaid.initialize({});
     getDiagram(template)
       .then((rez) => {
+        console.log(rez)
         if (chartRef.current) {
           mermaid.render('graphDiv', rez)
             .then(({ svg }) => {
@@ -509,7 +511,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     };
   }, [template, variableChangeCount, data, parsedYamlState]);
 
-  // Handle missing templates or YAML config
+
   if (!yamlConfig || !template) {
     return (
       <NoTemplatesProvidedDisplay 
@@ -520,12 +522,10 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     );
   }
 
-  // Handle YAML parsing errors
   if (parsedYamlState.parseError) {
     return <div>Error parsing YAML: {parsedYamlState.parseError}</div>;
   }
 
-  // Main render
   return (
     <div>
       {isLoading && <div className="loading-indicator">Loading diagram...</div>}

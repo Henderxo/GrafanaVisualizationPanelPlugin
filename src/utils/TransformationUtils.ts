@@ -96,6 +96,17 @@ function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
     }
   }
 
+  function extractMermaidConfigString(template: string): string | undefined {
+    const initRegex = /%%\{init:\s*(.*?)\s*\}%%/;
+    const match = template.match(initRegex);
+    
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+    
+    return undefined;
+  }
+
   function getElementRules(element: BaseObject, rules: [YamlBindRule[]?, YamlStylingRule[]?]){
     const [bindRules, stylingRules] = rules;
     let elementRules: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]} = {bindingRules: [], stylingRules: []}
@@ -136,4 +147,4 @@ function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgra
     return elements;
 };
 
-export{extractTableData, getElementRules, getElementTypeInBaseObject, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse, sortByPriority}
+export{extractTableData, getElementRules, extractMermaidConfigString, getElementTypeInBaseObject, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse, sortByPriority}

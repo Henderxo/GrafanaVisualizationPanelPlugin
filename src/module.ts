@@ -145,7 +145,7 @@ bindingRules:
       
       `,
       settings:{
-        rows: 5,
+        rows: 10,
         placeholder: 'Enter YAML configuration...'
       }
     })
@@ -226,7 +226,7 @@ bindingRules:
   classDef unknown fill:#B0BEC5,stroke:#78909C,stroke-width:2px;
 `,
       settings:{
-        rows: 5,
+        rows: 10,
         placeholder: 'Enter Mermaid configuration...'
       }
     })
