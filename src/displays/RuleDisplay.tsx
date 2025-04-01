@@ -5,6 +5,7 @@ import { useTheme2, Text, Divider, TabsBar, Tab, PageToolbar, ToolbarButton, Con
 import FunctionList, { ActionDisplay } from "./FunctionListDisplay";
 import { css } from '@emotion/css';
 import { CreateRuleModal } from "modals/CreateRule";
+import RuleInputWrapper from "components/wrappers/RuleInputWrapper";
 
 interface RuleDisplayProps extends customHtmlBase {
   rule: YamlBindRule | YamlStylingRule;
@@ -64,7 +65,6 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
           <div>
             <Text element="p">Are you sure you want to delete this rule?</Text>
             <Text color="error" element="span">Rule will be deleted and removed from all elements associated with it!</Text>
-            {/* <DeleteRuleDisplay rule={rule} /> */}
           </div>
         } 
         confirmText="Delete" 
@@ -79,8 +79,8 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
      </PageToolbar>
       <Divider/>
       <div className={css`flex: 1;`}>
-        <Text truncate={true} element={textSize}>Priority: {rule?.priority ? rule?.priority : '-1'}</Text>
-        <div className={css`margin-top: 4px; margin-bottom: 8px;`}>
+        <RuleInputWrapper isIcon={false}><Text truncate={true} element={textSize}>Priority: {rule?.priority ? rule?.priority : '-1'}</Text></RuleInputWrapper>
+        <RuleInputWrapper isIcon={false}><div className={css`margin-top: 4px; margin-bottom: 8px;`}>
           <StringList 
             label="Elements:" 
             content={rule.elements} 
@@ -89,16 +89,18 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
             bgColor={theme.colors.warning.text}
             color='black'
           />
-        </div>
+        </div></RuleInputWrapper>
         {rule.function && 
-          <FunctionList 
+          <RuleInputWrapper isIcon={false}> 
+          <FunctionList
+            bgColor={theme.colors.background.secondary}
             label="Function:" 
             textSize={textSize} 
             labelSize={labelSize} 
             rule={rule} 
             func={rule.function as FunctionElement}
-        />} 
-        {rule.getActions().areActions && <ActionDisplay label="General Actions:" textSize={textSize} action={rule.getActions().Action}></ActionDisplay>}
+        /></RuleInputWrapper>} 
+        {rule.getActions().areActions && <RuleInputWrapper isIcon={false}><ActionDisplay label="General Actions:" textSize={textSize} action={rule.getActions().Action}></ActionDisplay></RuleInputWrapper>}
 
       </div>
     </div>

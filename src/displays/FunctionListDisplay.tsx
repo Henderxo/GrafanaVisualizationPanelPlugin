@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  useTheme2, 
   Collapse, 
   Icon, 
   Box,
   Text, 
   Badge,
-  Stack,
-  Divider
+  LoadingPlaceholder,
+  useTheme2
 } from '@grafana/ui';
 import { FunctionElement, ConditionElement, Action, YamlBindRule, YamlStylingRule, customHtmlBase } from 'types/types';
 import { css } from '@emotion/css';
@@ -22,7 +21,7 @@ export const ActionDisplay: React.FC<{ backGroundColor?: string, label?: string,
   return (
     <>
     {label&& <Text>{label}</Text>}
-    <Box backgroundColor={'primary'} padding={label?1:0} >
+    <div  style={{backgroundColor: backGroundColor??useTheme2().colors.background.primary, padding: label?'1px':'2px'}}  >
       {action.bindData && (
         <Box marginBottom={1} marginTop={1}>
         <Text>Bind Data: </Text>
@@ -103,21 +102,24 @@ export const ActionDisplay: React.FC<{ backGroundColor?: string, label?: string,
       )}
 
 
-    </Box>
+    </div>
     </>
   );
 };
 
-// Component to display condition and its actions
 const ConditionDisplay: React.FC<{ 
   condition: ConditionElement; 
   type: 'if' | 'else_if' | 'else';
   index?: number;
+  bgColor?: string
   textSize: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p'
-}> = ({ condition, type, index, textSize }) => {
-  const [isOpen, setIsOpen] = useState(false); // Initially closed
+}> = ({ condition, type, index, textSize ,bgColor }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    setIsOpen(false); // Reset state when condition changes
+    setIsLoading(true)
+    setIsOpen(false);
+    setIsLoading(false)
   }, [condition]);
 
   let label = '';
@@ -135,19 +137,19 @@ const ConditionDisplay: React.FC<{
 
   return (
     <Box>
-      <Collapse
+      {!isLoading && <Collapse className={css`background-color: ${bgColor??useTheme2().colors.background.primary}`}
         onToggle={() => setIsOpen(!isOpen)}
         isOpen={isOpen}
         label={`${label}: ${condition.condition || 'No condition'}`}
       >
-        {/* Ensure ActionDisplay only renders if it's open */}
-        {isOpen && <ActionDisplay action={condition.action} textSize={textSize} />}
-      </Collapse>
+        {isOpen && <ActionDisplay backGroundColor={bgColor} action={condition.action} textSize={textSize} />}
+      </Collapse>}
+      {isLoading && <LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>}
     </Box>
   );
 };
-// Main component to display function elements
-export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ func, label, labelSize = 'span', textSize = 'span' }) => {
+
+export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ bgColor, func, label, labelSize = 'span', textSize = 'span' }) => {
 
   const renderFunction = (func: string | FunctionElement) => {
     if (typeof func === 'string') {
@@ -161,11 +163,12 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ func, label, l
     return (
       <Box >
         {func.if && (
-          <ConditionDisplay textSize={textSize} condition={func.if} type="if" />
+          <ConditionDisplay bgColor={bgColor} textSize={textSize} condition={func.if} type="if" />
         )}
         
         {func.else_if && func.else_if.map((elseIf, i) => (
           <ConditionDisplay 
+            bgColor={bgColor}
             textSize={textSize}
             key={`else_if_${i}`} 
             condition={elseIf} 
@@ -175,7 +178,7 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ func, label, l
         ))}
         
         {func.else && (
-          <ConditionDisplay textSize={textSize} condition={func.else} type="else" />
+          <ConditionDisplay bgColor={bgColor} textSize={textSize} condition={func.else} type="else" />
         )}
       </Box>
     );
