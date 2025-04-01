@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Button, Modal } from "@grafana/ui";
+import { Button, Modal, useTheme2 } from "@grafana/ui";
 import { StandardEditorProps } from "@grafana/data";
 import { css } from "@emotion/css";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
@@ -17,6 +17,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
   const [areSuggestionsSet, setSuggestions] = useState(false)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const theme = useTheme2()
 
   useEffect(()=>{
     setLocalYaml(value)
@@ -286,6 +287,48 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
       ],
     });
 
+    monaco.editor.defineTheme('customTheme', {
+      base: 'vs-dark', // Can be 'vs', 'vs-dark', or 'hc-black'
+      inherit: true, // Inherits tokens from the base theme
+      rules: [
+        { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
+        { token: 'keyword', foreground: '569CD6' },
+        { token: 'string', foreground: 'CE9178' },
+        { token: 'number', foreground: 'B5CEA8' },
+        { token: 'regexp', foreground: 'D16969' },
+        { token: 'operator', foreground: 'D4D4D4' },
+        { token: 'namespace', foreground: '4EC9B0' },
+        { token: 'type.identifier', foreground: '4EC9B0' },
+        { token: 'struct', foreground: '4EC9B0' },
+        { token: 'class', foreground: '4EC9B0' },
+        { token: 'interface', foreground: '4EC9B0' },
+        { token: 'enum', foreground: '4EC9B0' },
+        { token: 'function', foreground: 'DCDCAA' },
+        { token: 'member.operator', foreground: 'D4D4D4' },
+        // Add more token rules as needed
+      ],
+      colors: {
+        // Editor UI colors
+        'editor.background': '#1E1E1E',
+        'editor.foreground': '#D4D4D4',
+        'editor.inactiveSelectionBackground': '#3A3D41',
+        'editor.selectionHighlightBackground': '#ADD6FF26',
+        'editor.selectionBackground': '#264F78',
+        'editor.wordHighlightBackground': '#575757B8',
+        'editor.wordHighlightStrongBackground': '#004972B8',
+        'editor.findMatchBackground': '#515C6A',
+        'editor.findMatchHighlightBackground': '#EA5C0055',
+        'editor.lineHighlightBackground': '#2A2D2E',
+        'editorCursor.foreground': '#AEAFAD',
+        'editorWhitespace.foreground': '#3B3B3B',
+        'editorIndentGuide.background': '#404040',
+        'editorIndentGuide.activeBackground': '#707070',
+        'editor.lineNumberForeground': '#858585',
+        'editorLineNumber.activeForeground': '#C6C6C6',
+        // Add more color rules as needed
+      }
+    });
+
     monaco.editor.onDidChangeMarkers((e) => {
       const model = editor.getModel();
       const markers = monaco.editor.getModelMarkers({ model });
@@ -295,7 +338,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
     const editor = monaco.editor.create(containerRef.current, {
         value: localYaml,
         language: "yaml",
-        theme: "vs-dark",
+        theme: "customTheme",
         automaticLayout: true,
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
@@ -385,11 +428,12 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+    <div style={{ display: "flex", justifyContent: "center", width: "100%", height: '100%' }}>
       {isOpen && (
         <Modal
           className={css`
             width: 1750px;
+            height: 100%;
           `}
           title="Edit YAML Configuration"
           isOpen={isOpen}
@@ -397,23 +441,32 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
         >
           <div
             className={css`
-              border: 2px solid grey;
               border-radius: 8px;
-              padding: 20px;
+              padding: 10px;
               display: flex;
               flex-direction: column;
             `}
           >
-            <div ref={containerRef} style={{ height: "800px", width: "100%" }} />
+            <div ref={containerRef} className={css`
+   .monaco-editor, .monaco-editor-background, .monaco-editor .inputarea.ime-input {
+    background-color: ${theme.colors.background.secondary};
+  }
+   .monaco-editor .margin {
+    background-color: ${theme.colors.background.secondary};
+  }
+  .monaco-editor .line-numbers {
+    color: #858585;
+  }
+`} style={{ height: "625px", width: "100%" , borderColor: 'Background'}} />
 
-            <div style={{ display: "flex", flexDirection: "row-reverse", marginTop: "15px" }}>
-              <Button variant="secondary" onClick={handleSave}>
+            <Modal.ButtonRow>
+            <Button variant="secondary" onClick={handleSave}>
                 Save
               </Button>
               <Button variant="destructive" onClick={() => onClose()} style={{ marginRight: "10px" }}>
                 Cancel
               </Button>
-            </div>
+            </Modal.ButtonRow>
           </div>
         </Modal>
       )}
