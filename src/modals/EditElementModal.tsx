@@ -30,7 +30,6 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
   const [parsedYaml, setParsedYaml] = useState<{bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]}>({bindingRules: [], stylingRules: []});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Separate state for active rules
   const [activeBindRule, setActiveBindRule] = useState<YamlBindRule | null>(null);
   const [activeStyleRule, setActiveStyleRule] = useState<YamlStylingRule | null>(null);
   
@@ -51,59 +50,39 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
   };
 
   const handleRuleDelete = (rule: YamlBindRule | YamlStylingRule) => {
+    setIsLoading(true)
     const updatedYamlConfig = { ...yamlConfig };
     
     if (rule instanceof YamlBindRule) {
-      updatedYamlConfig.bindingRules = updatedYamlConfig.bindingRules.filter(r => r.id !== rule.id);
-      
-      setElementRules(prev => ({
-        ...prev,
-        bindingRules: prev.bindingRules.filter(r => r.id !== rule.id)
-      }));
-      
-      setActiveBindRule(elementRules.bindingRules.length > 1 ? 
-        elementRules.bindingRules.find(r => r.id !== rule.id) || null : null);
-        
+      updatedYamlConfig.bindingRules = updatedYamlConfig.bindingRules.filter(r => r.id !== rule.id)
+      setActiveBindRule(null)
+      setActiveTab('bindingRules');
     } else if (rule instanceof YamlStylingRule) {
       updatedYamlConfig.stylingRules = updatedYamlConfig.stylingRules.filter(r => r.id !== rule.id);
-      
-      setElementRules(prev => ({
-        ...prev,
-        stylingRules: prev.stylingRules.filter(r => r.id !== rule.id)
-      }));
-      
-      setActiveStyleRule(elementRules.stylingRules.length > 1 ? 
-        elementRules.stylingRules.find(r => r.id !== rule.id) || null : null);
+      setActiveStyleRule(null)
+      setActiveTab('stylingRules');
     }
     
     const newYamlConfigString = convertToYaml(updatedYamlConfig);
+    setIsLoading(false)
     onYamlConfigChange(newYamlConfigString);
   };
 
   const handleRuleSubmit = (rule: YamlBindRule | YamlStylingRule) => {
+    setIsLoading(true)
     const updatedYamlConfig = { ...yamlConfig };
 
     if (rule instanceof YamlBindRule) {
       updatedYamlConfig.bindingRules.push(rule);
-      setElementRules(prev => ({
-        ...prev,
-        bindingRules: [...prev.bindingRules, rule]
-      }));
-      
+      setActiveBindRule(rule)
       setActiveTab('bindingRules');
-      setActiveBindRule(rule);
     } else if (rule instanceof YamlStylingRule) {
       updatedYamlConfig.stylingRules.push(rule);
-      setElementRules(prev => ({
-        ...prev,
-        stylingRules: [...prev.stylingRules, rule]
-      }));
-    
+      setActiveStyleRule(rule)
       setActiveTab('stylingRules');
-      setActiveStyleRule(rule);
     }
     const newYamlConfigString = convertToYaml(updatedYamlConfig)
-
+    setIsLoading(false)
     onYamlConfigChange(newYamlConfigString);
   };
 
@@ -118,17 +97,11 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         updatedYamlConfig.bindingRules[ruleIndex] = rule;
       }
       if(element){
-        const elementRuless = getElementRules(element, [updatedYamlConfig.bindingRules, updatedYamlConfig.stylingRules])
-
-        setElementRules(prev => ({
-          ...prev,
-          bindingRules: elementRuless.bindRules.map(rule => new YamlBindRule(rule))
-        }))
-       
-
+        rule.elements&&rule.elements.includes(element.id??'')?setActiveBindRule(rule):setActiveBindRule(null)
+      }else{
+        setActiveBindRule(rule)
+      }
       setActiveTab('bindingRules');
-      elementRuless.bindRules.includes(rule)?setActiveBindRule(rule):setActiveBindRule(null)
-     }
 
     } else if (rule instanceof YamlStylingRule) {
       const ruleIndex = updatedYamlConfig.stylingRules.findIndex(r => r.id === oldRuleId);
@@ -137,16 +110,12 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         updatedYamlConfig.stylingRules[ruleIndex] = rule;
       }
   
-      if(element){
-        const elementRuless = getElementRules(element, [updatedYamlConfig.bindingRules, updatedYamlConfig.stylingRules])
-        setElementRules(prev => ({
-          ...prev,
-          stylingRules: elementRuless.stylingRules.map(rule => new YamlStylingRule(rule))
-        }))
-       
-        setActiveTab('stylingRules');
-        elementRuless.stylingRules.includes(rule)?setActiveStyleRule(rule):setActiveStyleRule(null)
+      if(element){ 
+        rule.elements&&rule.elements.includes(element.id??'')?setActiveStyleRule(rule):setActiveStyleRule(null)
+      }else{
+        setActiveStyleRule(rule)
       }
+      setActiveTab('stylingRules');
     }
     const newYamlConfigString = convertToYaml(updatedYamlConfig);
     onYamlConfigChange(newYamlConfigString);
@@ -182,17 +151,12 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
   }, [yamlConfig]);
 
   useEffect(() => {
-    if (!element) return;
     setIsLoading(true)
-    const elementRuless = getElementRules(element, [parsedYaml.bindingRules, parsedYaml.stylingRules])
+    const elementRuless = element?getElementRules(element, [parsedYaml.bindingRules, parsedYaml.stylingRules]):parsedYaml
     setElementRules({
-      bindingRules: elementRuless.bindRules.map(rule => new YamlBindRule(rule)),
+      bindingRules: elementRuless.bindingRules.map(rule => new YamlBindRule(rule)),
       stylingRules: elementRuless.stylingRules.map(rule => new YamlStylingRule(rule))
     });
-    
-    activeBindRule===null&&setActiveBindRule(null);
-    activeStyleRule===null&&setActiveStyleRule(null);
-    
     setIsLoading(false)
   }, [element, parsedYaml]);
 
@@ -205,7 +169,6 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Determine which rules and active rule to display based on the current tab
   const rulesToDisplay = activeTab === 'bindingRules' 
     ? elementRules.bindingRules 
     : elementRules.stylingRules;
@@ -258,13 +221,12 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
           onClick={CreateRule}
         />
       </div>
-      
       {isModalOpen && <CreateRuleModal
         possibleClasses={possibleClasses}
         totalRuleCount={parsedYaml.bindingRules.length + parsedYaml.stylingRules.length}
         elements={elements}
         isOpen={isModalOpen}
-        element={element?.id}
+        element={element?.id??undefined}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleRuleSubmit}
       />}
@@ -329,7 +291,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
                   <Tab
                     key={rule.id}
                     label={rule.id}
-                    active={activeRule === rule}
+                    active={JSON.stringify(activeRule) === JSON.stringify(rule)}
                     onChangeTab={() => {
                       setActiveRule(rule);
                     }}

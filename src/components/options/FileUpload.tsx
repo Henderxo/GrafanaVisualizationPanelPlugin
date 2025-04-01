@@ -16,7 +16,6 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  console.log(context)
   const handleFileRead = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {

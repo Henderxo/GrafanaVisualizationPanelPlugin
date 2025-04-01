@@ -79,7 +79,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
 
   const rows = extractTableData(data)?mapDataToRows(data):undefined
   const getDiagram = async (template: string) : Promise<string> => {
-    console.log(rows)
     const res = await mermaid.mermaidAPI.getDiagramFromText(template)
     const fullMap = reformatDataFromResponse(res)
     const variables = getTemplateSrv().getVariables()
@@ -355,7 +354,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   }
 
   const handleElementDoubleClick = (event: MouseEvent) => {
-    console.log(event.target);
     if (!fullMapRef.current) return;
     
     const currentElement = event.target as HTMLElement;
@@ -401,14 +399,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     onOptionsChange({...options, yamlConfig: newYamlConfig})
   };
 
-const debugNodeElementMapping = (svgElement: SVGElement) => {
-  const nodeElements = svgElement.querySelectorAll('[id^="flowchart-"]');
-  console.log('All flowchart elements:', nodeElements.length);
-  nodeElements.forEach(node => {
-    const nodeId = node.id.replace('flowchart-', '').replace(/[-_]\d+$/, '');
-    console.log(`Node mapping: ${node.id} -> ${nodeId}`);
-  });
-};
+
 
 useEffect(() => {
   const subscription = locationService.getHistory().listen(() => {
@@ -439,8 +430,6 @@ useEffect(() => {
                   maxZoom: 4,
                   minZoom: 0.5,
                 });
-                
-                debugNodeElementMapping(svgElement as SVGElement);
                 
                 svgElement.addEventListener('dblclick', handleElementDoubleClick);
               }

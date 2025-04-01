@@ -60,7 +60,7 @@ export const RuleConfigButton: React.FC<StandardEditorProps<string, any, SimpleO
       </Button>
       
       {isModalOpen && fullMapRef.current && options?.diagramElements && (
-        <RuleConfigModal
+        <ElementConfigModal
           isOpen={true}
           onClose={closeModal}
           elements={options.diagramElements}

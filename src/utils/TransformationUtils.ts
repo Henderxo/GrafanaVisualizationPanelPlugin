@@ -98,13 +98,13 @@ function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
 
   function getElementRules(element: BaseObject, rules: [YamlBindRule[]?, YamlStylingRule[]?]){
     const [bindRules, stylingRules] = rules;
-    let elementRules: {bindRules: YamlBindRule[], stylingRules: YamlStylingRule[]} = {bindRules: [], stylingRules: []}
+    let elementRules: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]} = {bindingRules: [], stylingRules: []}
 
     const elementType = getElementTypeInBaseObject(element)
     const elementId = element.id || '';
 
     if (bindRules && element.id) {
-      elementRules.bindRules = bindRules.filter((rule) =>{
+      elementRules.bindingRules = bindRules.filter((rule) =>{
         return !rule.elements || rule.elements?.includes('all')  
         ||rule.elements?.includes('nodes') && elementType === 'node' 
         || rule.elements?.includes('subgraphs') && elementType === 'subgraph'
