@@ -22,11 +22,8 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
   };
 
   useEffect(()=>{
-    console.log('I DID IT OMG', value, valueState)
     setValueState(value)
   }, [value])
-
-  
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
@@ -39,11 +36,13 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
       </Button>
 
       {isModalOpen && (
-        <Modal className={css`width: 800px`} title={item.settings?.chartType} isOpen={isModalOpen} onDismiss={() => setIsModalOpen(false)}>
+        <Modal className={css`width: 1200px`} title={item.settings?.chartType} isOpen={isModalOpen} onDismiss={() => setIsModalOpen(false)}>
           <div
             className={css`
               border: 2px solid grey;
               display: flex;
+              width: 100%;
+              height: 100%;
               flex-direction: column;
               justify-content: center;
               padding: 20px;
@@ -61,7 +60,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
                     <strong>📜 File Content:</strong>
                 </div>
                 <pre style={{overflow: 'auto', marginTop: '15px', padding: '10px',
-                    whiteSpace: 'pre-wrap', maxHeight: '400px', textAlign: 'left', fontSize: '12px'
+                    whiteSpace: 'pre-wrap', maxHeight: '630px', textAlign: 'left', fontSize: '12px'
                 }}>{valueState}</pre>
               </div>
             )}
