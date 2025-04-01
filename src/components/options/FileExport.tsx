@@ -133,25 +133,6 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
               border-radius: 8px;
             `}
           >
-            <p><strong>Export {isMermaid ? 'Mermaid Template' : 'Configuration'}</strong></p>
-            
-            <div style={{width: '100%', marginBottom: '15px'}}>
-              <Button 
-                variant="primary" 
-                fullWidth={true} 
-                onClick={handleModernExport}
-                disabled={!valueState}
-              >
-                💾 Save File
-              </Button>
-              
-              {exportStatus && (
-                <div style={{ marginTop: '10px', color: exportStatus.includes('Error') ? theme.colors.error.text : theme.colors.success.text }}>
-                  {exportStatus}
-                </div>
-              )}
-            </div>
-
             {valueState && (
               <RuleInputWrapper isIcon={false} backgroundColor={theme.colors.background.primary}> 
                 <div style={{display: 'row', justifyContent: 'start', alignItems: 'start', textAlign: 'left'}}>
@@ -164,7 +145,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
                     marginTop: '15px', 
                     padding: '10px',
                     whiteSpace: 'pre-wrap', 
-                    maxHeight: '600px', 
+                    maxHeight: '550px', 
                     textAlign: 'left', 
                     fontSize: '12px'
                   }}

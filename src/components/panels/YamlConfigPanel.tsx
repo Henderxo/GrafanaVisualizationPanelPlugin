@@ -161,6 +161,14 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     sortedStylingRules.forEach(rule => {
       if (rule.function) {
         findAndApplyStyling(fullMap, rule, grafanaVariables);
+      } else if (rule.applyClass||rule.applyShape||rule.applyStyle||rule.applyText) {
+        getElements(rule, fullMap).forEach(element => {
+          let mapElement = findElementInMaps(element, fullMap);
+          if (mapElement) {
+            const action = rule.getActions().Action
+            addActions(action, mapElement);
+          }
+        });
       }
     });
   };
