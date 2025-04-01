@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StandardEditorProps } from '@grafana/data';
 import { Button, Modal, useTheme2 } from '@grafana/ui';
+import { saveAs } from 'file-saver';
 import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 
@@ -10,19 +11,16 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [valueState, setValueState] = useState(value);
   const [exportStatus, setExportStatus] = useState('');
-  const downloadLinkRef = useRef<HTMLAnchorElement>(null);
   
   const theme = useTheme2();
   
   const isMermaid = item.settings?.chartType === 'Export Mermaid Template';
   const defaultFileName = isMermaid ? 'exported_template.mmd' : 'exported_config.yaml';
 
-  // Update valueState when value changes
   useEffect(() => {
     setValueState(value);
   }, [value]);
   
-  // Reset status when modal closes
   useEffect(() => {
     if (!isModalOpen) {
       setExportStatus('');
@@ -33,70 +31,17 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
     if (!valueState) return;
     
     try {
-      // Create a blob with the content
       const blob = new Blob([valueState], { type: 'text/plain' });
-      
-      // Create a download link
-      const url = URL.createObjectURL(blob);
-      
-      if (downloadLinkRef.current) {
-        downloadLinkRef.current.href = url;
-        downloadLinkRef.current.download = defaultFileName;
-        downloadLinkRef.current.click();
-        URL.revokeObjectURL(url);
-        setExportStatus('File exported successfully!');
-        
-        // Close modal after a brief delay
-        setTimeout(() => {
-          setIsModalOpen(false);
-        }, 1500);
-      }
-    } catch (error) {
-      console.error('Error exporting file:', error);
-      setExportStatus('Error exporting file. Please try again.');
-    }
-  };
-
-  // Alternative export method using the File System Access API (for modern browsers)
-  const handleModernExport = async () => {
-    if (!valueState) return;
-    
-    if (!('showSaveFilePicker' in window)) {
-      setExportStatus('Your browser does not support the File System Access API. Using fallback method...');
-      handleExport();
-      return;
-    }
-    
-    try {
-      // This opens the native OS file picker
-      const handle = await window.showSaveFilePicker({
-        suggestedName: defaultFileName,
-        types: [{
-          description: isMermaid ? 'Mermaid Files' : 'YAML Files',
-          accept: {
-            'text/plain': [isMermaid ? '.mmd' : '.yaml'],
-          },
-        }],
-      });
-      
-      // Create a writable stream and write the content
-      const writable = await handle.createWritable();
-      await writable.write(valueState);
-      await writable.close();
+      saveAs(blob, defaultFileName);
       
       setExportStatus('File exported successfully!');
       
-      // Close modal after a brief delay
       setTimeout(() => {
         setIsModalOpen(false);
-      }, 1500);
+      }, 500);
     } catch (error) {
-      // User cancelled or API error
-      console.error('Error saving file:', error);
-      if (error.name !== 'AbortError') {
-        setExportStatus('Error exporting file. Using fallback method...');
-        handleExport();
-      }
+      console.error('Error exporting file:', error);
+      setExportStatus('Error exporting file. Please try again.');
     }
   };
 
@@ -110,9 +55,6 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
       >
         📤 {item.settings?.chartType || "Export File"}
       </Button>
-      
-      {/* Hidden download link for fallback method */}
-      <a ref={downloadLinkRef} style={{ display: 'none' }} />
 
       {isModalOpen && (
         <Modal 
@@ -159,7 +101,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
               <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button variant="primary" onClick={handleModernExport}>
+              <Button variant="primary" onClick={handleExport}>
                 Export
               </Button>
             </Modal.ButtonRow>
