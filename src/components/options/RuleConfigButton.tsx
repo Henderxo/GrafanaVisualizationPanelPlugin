@@ -52,11 +52,12 @@ export const RuleConfigButton: React.FC<StandardEditorProps<string, any, SimpleO
   
   return (
     <div>
-      <Button 
+      <Button
+        style={{ display: "flex", justifyContent: "center", width: "100%" }}
         onClick={openModal} 
         disabled={!fullMapRef.current}
       >
-        Open Element Configuration
+        Open Rule Configuration
       </Button>
       
       {isModalOpen && fullMapRef.current && options?.diagramElements && (

@@ -254,6 +254,8 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
             actionDataList.forEach(action => {
               if (action.action.bindData) {
                 addActions({bindData: action.action.bindData}, elementInMap, row, grafanaVariables);
+              }else{
+                addActions({bindData: []}, elementInMap, row, grafanaVariables);
               }
             });
           }

@@ -195,7 +195,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
         display: flex;
         flex-direction: column;
       `}
-      title={`Configure Element: ${element?.id || "Unknown"}`}
+      title={element?`Configure Element: ${element?.id || "Unknown"}`:`Configure Rules`}
       isOpen={isOpen}
       onDismiss={handleClose}
     >
