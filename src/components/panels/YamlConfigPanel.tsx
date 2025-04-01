@@ -10,7 +10,7 @@ import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDat
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData, bindDataToString } from 'utils/DataBindingUtils';
 import { ElementConfigModal } from '../../modals/EditElementModal';
-import { getTemplateSrv } from '@grafana/runtime';
+import { getLocationSrv, getTemplateSrv, locationService } from '@grafana/runtime';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;
@@ -23,6 +23,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [grafanaVariables, setGrafanaVariables] = useState<TypedVariableModel[] | null>(null)
+  const [variableChangeCount, setVariableChangeCount] = useState(0);
   const [selectedElement, setSelectedElement] = useState<BaseObject | null>(null);
   const [allElements, setAllElements] = useState<string[]>([])
   const chartRef = useRef<HTMLDivElement>(null);
@@ -412,6 +413,19 @@ const debugNodeElementMapping = (svgElement: SVGElement) => {
 };
 
 useEffect(() => {
+  // Listen to dashboard variable changes using locationService
+  const subscription = locationService.getHistory().listen(() => {
+    // This will trigger when URL changes, which happens on variable selection
+    setVariableChangeCount((prev) => prev + 1);
+  });
+  
+  return () => {
+    // Clean up subscription when component unmounts
+    subscription();
+  };
+}, []);
+
+useEffect(() => {
   setIsLoading(true);
   
   mermaid.initialize({});
@@ -457,7 +471,7 @@ useEffect(() => {
       }
     }
   };
-}, [template, yamlConfig]);
+}, [template, yamlConfig, variableChangeCount]);
 
 return (
   <div>
