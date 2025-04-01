@@ -77,11 +77,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     rule => new YamlStylingRule(rule)
   );
 
-  const table = extractTableData(data)
-  if (!table) return <div>No Data Available</div>;
-  const rows = mapDataToRows(data)
-
+  const rows = extractTableData(data)?mapDataToRows(data):undefined
   const getDiagram = async (template: string) : Promise<string> => {
+    console.log(rows)
     const res = await mermaid.mermaidAPI.getDiagramFromText(template)
     const fullMap = reformatDataFromResponse(res)
     const variables = getTemplateSrv().getVariables()
@@ -89,7 +87,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     setGrafanaVariables(variables)
     setAllElements(findAllElementsInMaps(fullMap))
     updateMapValuesWithDefault(fullMap)
-    applyAllRules(bindingRules, stylingRules, fullMap, rows, variables)
+    rows&&applyAllRules(bindingRules, stylingRules, fullMap, rows, variables)
     onOptionsChange({...options, diagramMap: fullMap, diagramElements: findAllElementsInMaps(fullMap)})
     return generateDynamicMermaidFlowchart(fullMap);
   };
@@ -468,7 +466,7 @@ useEffect(() => {
       }
     }
   };
-}, [template, yamlConfig, variableChangeCount]);
+}, [template, yamlConfig, variableChangeCount, data]);
 
 return (
   <div>

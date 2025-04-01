@@ -26,7 +26,6 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
   onEditSubmit,
   onDelete,
 }) => {
-  console.log(rule.getActions())
   const [isHovered, setIsHovered] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)

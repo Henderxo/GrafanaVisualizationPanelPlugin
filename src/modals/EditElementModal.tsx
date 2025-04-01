@@ -252,8 +252,8 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
             }
           `}
           name={'plus'} 
+          size={`xl`}
           aria-label="newRule" 
-          size="xxxl" 
           variant="secondary" 
           onClick={CreateRule}
         />
