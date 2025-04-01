@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StandardEditorProps } from '@grafana/data';
-import { Button, Modal, SelectMenuOptions } from '@grafana/ui';
+import { Button, Modal, SelectMenuOptions, useTheme2 } from '@grafana/ui';
 import { css } from '@emotion/css';
+import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 
 interface FileUploadSettings {
   chartType?: string;
@@ -15,6 +16,7 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const theme = useTheme2()
 
   const handleFileRead = (file: File) => {
     const reader = new FileReader();
@@ -65,14 +67,14 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
       </div>
 
       {isModalOpen && (
-        <Modal className={css`width: 800px`} title="Import File" isOpen={isModalOpen} onDismiss={handleCloseModal} >
+        <Modal className={css`width: 1200px`} title="Import File" isOpen={isModalOpen} onDismiss={handleCloseModal} >
           <div
             className={css`
-              border: 2px solid grey;
+
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding: 20px;
+              padding: 10px;
               text-align: center;
               border-radius: 8px;
             `}
@@ -89,36 +91,43 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
             />
 
             <p><strong>{item.settings?.chartType}</strong></p>
-
-            <label htmlFor="fileInput">
-              <Button variant="primary" onClick={() => fileInputRef.current?.click()}>
+            <div  style={{width: '100%'}}>
+              <label htmlFor="fileInput">
+              <Button variant="primary" fullWidth={true} onClick={() => fileInputRef.current?.click()}>
                 📂 Select a File
               </Button>
-            </label>
-            <p style={{ color: '#666', marginTop: 10 }}>or drag & drop here</p>
+              </label>
+              <p style={{ color: '#666', marginTop: 10 }}>or drag & drop here</p>
+            </div>
 
-            {fileName && (
-              <div style={{ marginTop: 15, fontSize: '16px', color: 'white' }}>
-                <strong>📄 {fileName}</strong> ({(fileSize! / 1024).toFixed(2)} KB)
-              </div>
-            )}
-
-            {fileContent && (
-              <div>
-                <div style={{display: 'row', justifyContent: 'start', alignItems: 'start', textAlign: 'left'}}>
-                    <strong>📜 File Content:</strong>
+            {(fileName || fileContent) && <RuleInputWrapper isIcon={false} backgroundColor={theme.colors.background.primary}>
+              {fileName && (
+                <div style={{ marginTop: 15, fontSize: '16px', color: 'white' }}>
+                  <strong>📄 {fileName}</strong> ({(fileSize! / 1024).toFixed(2)} KB)
                 </div>
-                <pre style={{overflow: 'auto', marginTop: '15px', padding: '10px',
-                    whiteSpace: 'pre-wrap', maxHeight: '400px', textAlign: 'left', fontSize: '12px'
-                }}>{fileContent}</pre>
-              </div>
-            )}
+              )}
+
+              {fileContent && (
+                <div>
+                  <div style={{display: 'row', justifyContent: 'start', alignItems: 'start', textAlign: 'left'}}>
+                      <strong>📜 File Content:</strong>
+                  </div>
+                  <pre style={{overflow: 'auto', backgroundColor: theme.colors.background.secondary, marginTop: '15px', padding: '10px',
+                      whiteSpace: 'pre-wrap', maxHeight: '600px', textAlign: 'left', fontSize: '12px'
+                  }}>{fileContent}</pre>
+                </div>
+              )}
+            </RuleInputWrapper>}
+            
             </div>
-            <div style={{display: 'flex', flexDirection: 'row-reverse', marginTop: '5px' }}>
-                <Button variant="secondary" onClick={handleConfirm}>
-                    Confirm
-                </Button>  
-            </div>
+            <Modal.ButtonRow>
+              <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleConfirm}>
+                Confirm
+              </Button>
+            </Modal.ButtonRow>
         </Modal>
       )}
 

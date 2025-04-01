@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { StandardEditorProps } from '@grafana/data';
-import { Button, Modal } from '@grafana/ui';
+import { Button, Modal, useTheme2 } from '@grafana/ui';
 import { saveAs } from 'file-saver';
 import { css } from '@emotion/css';
+import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 
 interface FileExportProps extends StandardEditorProps<string, any, { chartType?: string }> {}
 
@@ -12,6 +13,8 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
 
   const isMermaid = item.settings?.chartType === 'Export Mermaid Template';
   const fileName = isMermaid ? 'exported_template.mmd' : 'exported_config.yaml';
+
+  const theme = useTheme2()
 
   const handleExport = () => {
     if (valueState) {
@@ -39,37 +42,38 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
         <Modal className={css`width: 1200px`} title={item.settings?.chartType} isOpen={isModalOpen} onDismiss={() => setIsModalOpen(false)}>
           <div
             className={css`
-              border: 2px solid grey;
               display: flex;
               width: 100%;
               height: 100%;
               flex-direction: column;
               justify-content: center;
-              padding: 20px;
+              padding: 10px;
               text-align: center;
               border-radius: 8px;
             `}
           >
-            <div style={{ marginTop: 15, fontSize: '16px', color: 'white' }}>
-              <strong>File Name:</strong> {fileName}
-            </div>
-
             {valueState && (
               <div>
+                <RuleInputWrapper isIcon={false} backgroundColor={theme.colors.background.primary}> 
                 <div style={{display: 'row', justifyContent: 'start', alignItems: 'start', textAlign: 'left'}}>
-                    <strong>📜 File Content:</strong>
+                  <strong>📜 File Content:</strong>
                 </div>
-                <pre style={{overflow: 'auto', marginTop: '15px', padding: '10px',
+                <pre style={{overflow: 'auto', backgroundColor: theme.colors.background.secondary,marginTop: '15px', padding: '10px',
                     whiteSpace: 'pre-wrap', maxHeight: '630px', textAlign: 'left', fontSize: '12px'
                 }}>{valueState}</pre>
+                </RuleInputWrapper>
+               
               </div>
             )}
 
-          <div style={{ display: 'flex', flexDirection: 'row-reverse', marginTop: '15px' }}>
-            <Button variant="secondary" onClick={handleExport}>
+          <Modal.ButtonRow>
+            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleExport}>
               Confirm
             </Button>
-          </div>
+          </Modal.ButtonRow>
           </div>
         </Modal>
       )}
