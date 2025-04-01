@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import yaml from 'js-yaml';
-import { PanelData } from '@grafana/data';
+import { PanelData, TypedVariableModel, VariableWithOptions } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
 import { YamlBindRule, YamlStylingRule, ConditionElement, Action, FlowVertex, fullMermaidMap, BaseObject, FlowVertexTypeParam, FlowSubGraph, FunctionElement, FlowClass } from 'types/types';
@@ -10,6 +10,7 @@ import { extractTableData, findAllElementsInMaps, findElementInMaps, reformatDat
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { bindData, bindDataToString } from 'utils/DataBindingUtils';
 import { ElementConfigModal } from '../../modals/EditElementModal';
+import { getTemplateSrv } from '@grafana/runtime';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;
@@ -18,9 +19,10 @@ interface OtherViewPanelProps {
 }
 
 export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, onOptionsChange }) => {
-  const { yamlConfig, template, diagramMap } = options;
+  const { yamlConfig, template } = options;
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [grafanaVariables, setGrafanaVariables] = useState<TypedVariableModel[] | null>(null)
   const [selectedElement, setSelectedElement] = useState<BaseObject | null>(null);
   const [allElements, setAllElements] = useState<string[]>([])
   const chartRef = useRef<HTMLDivElement>(null);
@@ -81,22 +83,23 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const getDiagram = async (template: string) : Promise<string> => {
     const res = await mermaid.mermaidAPI.getDiagramFromText(template)
     const fullMap = reformatDataFromResponse(res)
+    const variables = getTemplateSrv().getVariables()
     fullMapRef.current = fullMap;
+    setGrafanaVariables(variables)
     setAllElements(findAllElementsInMaps(fullMap))
     updateMapValuesWithDefault(fullMap)
-    applyAllRules(bindingRules, stylingRules, fullMap, rows)
+    applyAllRules(bindingRules, stylingRules, fullMap, rows, variables)
     onOptionsChange({...options, diagramMap: fullMap, diagramElements: findAllElementsInMaps(fullMap)})
     return generateDynamicMermaidFlowchart(fullMap);
   };
   
 
-  const applyAllRules = ((bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], fullMap: fullMermaidMap, rows: Record<string, any>[])=>{
+  const applyAllRules = ((bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[], fullMap: fullMermaidMap, rows: Record<string, any>[], grafanaVariables: TypedVariableModel[] | null)=>{
     const sortedBindingRules = sortByPriority(bindingRules)
     const sortedStylingRules = sortByPriority(stylingRules)
-
     sortedBindingRules.forEach(rule => {
       if(rule.function){
-        findAndApplyBindings(fullMap, rule, rows)
+        findAndApplyBindings(fullMap, rule, rows, grafanaVariables)
       }else if(rule.bindData){
         getElements(rule, fullMap).forEach(element=>{
           let mapElement = findElementInMaps(element, fullMap)
@@ -109,7 +112,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     bindData(fullMap)
     sortedStylingRules.forEach(rule => {
       if(rule.function){
-        findAndApplyStyling(fullMap, rule)
+        findAndApplyStyling(fullMap, rule, grafanaVariables)
       }
     });
   })
@@ -124,37 +127,47 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     })
   }
 
-  const evaluateCondition = (condition: string, row: Record<string, any> | undefined): boolean => {
+  const evaluateCondition = (condition: string, row: Record<string, any> | undefined, grafanaVariables: TypedVariableModel[] | null): boolean => {
     try {
-      if(row){
-      const keys = Object.keys(row);
-      const values = Object.values(row);
-      const func = new Function(...keys, `return ${condition};`);
-
-      return func(...values);
+      if (!row) {
+        return false;
       }
-      return false
+      const rowKeys = Object.keys(row);
+      const rowValues = Object.values(row);
+      
+      const variableMap: Record<string, any> = {};
+      if (grafanaVariables) {
+        grafanaVariables.forEach((variable) => {
+          variableMap[variable.name] = (variable as VariableWithOptions).current.value;
+        });
+      }
+      
+      const allKeys = [...rowKeys, ...Object.keys(variableMap)];
+      const allValues = [...rowValues, ...Object.values(variableMap)];
+
+      const func = new Function(...allKeys, `return ${condition};`);
+      return func(...allValues);
     } catch (error) {
+      console.error('Error evaluating condition:', error);
       return false;
     }
   };
 
-  const determineAction = (rule: YamlBindRule | YamlStylingRule, row: Record<string, any> | undefined):  ConditionElement[] | null => {
+  const determineAction = (rule: YamlBindRule | YamlStylingRule, row: Record<string, any> | undefined, grafanaVariables: TypedVariableModel[] | null):  ConditionElement[] | null => {
     let matchedAction: ConditionElement[] = []
     let func = rule.function
     if(!func){
       return null
     }
-   
     let valueFound = false
-    if (func.if && evaluateCondition(func.if.condition, row)) {
+    if (func.if && evaluateCondition(func.if.condition, row, grafanaVariables)) {
       matchedAction.push(func.if); 
       valueFound = true
     } 
     else if (func.else_if) {
       const elseIfArray = Array.isArray(func.else_if) ? func.else_if : [func.else_if];
       for (const elseIf of elseIfArray) {
-        if (evaluateCondition(elseIf.condition, row)) {
+        if (evaluateCondition(elseIf.condition, row, grafanaVariables)) {
           matchedAction.push(elseIf);
           valueFound = true
           break
@@ -168,9 +181,9 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     return matchedAction.length > 0 ? matchedAction : null;
   };
 
-  const findAndApplyBindings = (map: fullMermaidMap, rule: YamlBindRule, rows: Record<string, any>[]) => {
+  const findAndApplyBindings = (map: fullMermaidMap, rule: YamlBindRule, rows: Record<string, any>[],  grafanaVariables: TypedVariableModel[] | null) => {
     rows.some((row) => {
-      const actionDataList = determineAction(rule, row);
+      const actionDataList = determineAction(rule, row, grafanaVariables);
       if (actionDataList) {
         let elementList: string[] = getElements(rule, map)
         elementList.forEach(element => {
@@ -178,7 +191,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
           if(elementInMap){
             actionDataList.forEach(action=>{
               if(action.action.bindData){
-                addActions({bindData: action.action.bindData}, elementInMap, row)
+                addActions({bindData: action.action.bindData}, elementInMap, row, grafanaVariables)
               }
             })
           }
@@ -188,24 +201,46 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     });
   };
 
-  const bindDataAction = (Action: Action,
+  const bindDataAction = (
+    Action: Action,
     Element: BaseObject,
-    row?: any)=>{
-    if(row) {
-      Object.keys(row).forEach((key) => {
-        if(Element.data) {
-          Element.data = row;
-        }
-      });
-    } 
-    Action.bindData?.forEach((actionX) => {
-      const [key, value] = actionX.split('=');
+    row?: any,
+    grafanaVariables?: TypedVariableModel[] | null
+  ) => {
+    if (!Element.data) {
+      Element.data = {};
+    }
+    
+    if (row) {
       Element.data = {
         ...Element.data,
-        [key]: value  
+        ...row
       };
-    });
-  }
+    }
+    
+    if (grafanaVariables && grafanaVariables.length > 0) {
+      const variablesData: Record<string, any> = {};
+      
+      grafanaVariables.forEach(variable => {
+        variablesData[variable.name] = (variable as VariableWithOptions).current.value;
+      });
+      
+      Element.data = {
+        ...Element.data,
+        ...variablesData
+      };
+    }
+    
+    if (Action.bindData && Array.isArray(Action.bindData)) {
+      Action.bindData.forEach((actionX) => {
+        const [key, value] = actionX.split('=');
+        Element.data = {
+          ...Element.data,
+          [key]: value
+        };
+      });
+    }
+  };
 
   const applyClassAction = (Action: Action, Element: BaseObject)=>{
     if(Action.applyClass){
@@ -256,12 +291,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const  addActions = (
     Action: Action,
     Element: BaseObject,
-    row?: any
+    row?: any,
+    grafanaVariables?: TypedVariableModel[] | null
   ) => {
     Object.keys(Action).forEach(action => {
       switch (action) {
         case "bindData":
-          bindDataAction(Action, Element, row)
+          bindDataAction(Action, Element, row, grafanaVariables)
           break;
         case "applyClass":
           applyClassAction(Action, Element)
@@ -301,12 +337,12 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     return elementList
   }
 
-  const findAndApplyStyling = (fullMap: fullMermaidMap, rule: YamlStylingRule) =>{
+  const findAndApplyStyling = (fullMap: fullMermaidMap, rule: YamlStylingRule, grafanaVariables: TypedVariableModel[] | null) =>{
     let elementList: string[] = getElements(rule, fullMap)
     elementList.forEach(object =>{
       let mapElement = findElementInMaps(object, fullMap)
       if(mapElement && mapElement.data &&  Object.keys(mapElement.data).length > 0){
-        const actionDataList = determineAction(rule, mapElement.data);
+        const actionDataList = determineAction(rule, mapElement.data, grafanaVariables);
         if(actionDataList){
           actionDataList.forEach(action=>{
             if(action.action.bindData){
