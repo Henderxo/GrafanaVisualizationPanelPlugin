@@ -290,18 +290,12 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
       ],
     });
 
-      monaco.editor.defineTheme('customTheme', {
+      monaco.editor.defineTheme('customTheme2', {
       base: theme.isDark ? 'vs-dark' : 'vs',
       inherit: true,
       rules: [
       ],
       colors: {
-        'editor.background': mainColor,
-        'editor.foreground': mainColor,
-        'editorWidget.background': mainColor,
-        'input.background': mainColor,
-        'input.foreground': mainColor,
-        'editor.lineHighlightBackground': mainColor,
         'focusBorder': mainColor,
         'contrastActiveBorder': mainColor,
         'contrastBorder': mainColor,
@@ -317,7 +311,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
     const editor = monaco.editor.create(containerRef.current, {
         value: localYaml,
         language: "yaml",
-        theme: "customTheme",
+        theme: "customTheme2",
         automaticLayout: true,
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
