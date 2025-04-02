@@ -5,7 +5,6 @@ import { Button, Icon, Text } from '@grafana/ui';
 import yaml from 'js-yaml';
 import { ElementConfigModal } from 'modals/EditElementModal';
 import { FlowClass, fullMermaidMap, YamlBindRule, YamlStylingRule } from 'types/types';
-import { RuleConfigModal } from 'modals/EditRulesModal';
 import { css } from '@emotion/css';
 
 interface YamlConfig {
@@ -37,16 +36,13 @@ export const RuleConfigButton: React.FC<StandardEditorProps<string, any, SimpleO
     }
   }, [value]);
   
-  // Store diagram map reference
   if (options?.diagramMap) {
     fullMapRef.current = options.diagramMap;
   }
   
-  // Handle opening/closing modal
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
   
-  // Error rendering
   if (!parsedYaml && typeof value === 'string') {
     return <div>Error parsing YAML configuration</div>;
   }
@@ -54,7 +50,7 @@ export const RuleConfigButton: React.FC<StandardEditorProps<string, any, SimpleO
   return (
     <div>
       <Button
-        variant='secondary'
+        variant={context.options?.buttonTheme??'primary'}
         style={{ display: "flex", justifyContent: "center", width: "100%" }}
         onClick={openModal} 
         disabled={!fullMapRef.current}

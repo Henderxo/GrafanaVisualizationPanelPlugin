@@ -4,21 +4,23 @@ import { Button, Icon, Modal, SelectMenuOptions, Text, useTheme2 } from '@grafan
 import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 import { FileUpload } from './FileUpload';
+import { SimpleOptions } from 'types';
 
 interface FileUploadSettings {
   chartType?: string;
+  buttonTheme: 'primary'|'secondary'
 }
 
 interface FileUploadProps extends StandardEditorProps<string, any, FileUploadSettings> {}
 
-export const FileUploadButton: React.FC<FileUploadProps> = ({ value, onChange, item }) => {
+export const FileUploadButton: React.FC<FileUploadProps> = ({ value, onChange, item, context }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+context
 
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-        <Button style={{ width: '100%', display: 'flex', justifyContent: 'center' }} variant="secondary" onClick={() => setIsModalOpen(true)}>
+        <Button style={{ width: '100%', display: 'flex', justifyContent: 'center' }} variant={context.options?.buttonTheme??'primary'} onClick={() => setIsModalOpen(true)}>
           <Icon className={css`margin-right: 6px;`} name={'import'}></Icon><Text>Select a File</Text>
         </Button>
       </div>

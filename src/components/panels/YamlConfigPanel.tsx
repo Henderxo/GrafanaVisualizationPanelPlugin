@@ -475,7 +475,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   // Main diagram rendering effect
   useEffect(() => {
     if (!template) return;
-    console.log('irender')
     setIsLoading(true);
     
     mermaid.initialize({});

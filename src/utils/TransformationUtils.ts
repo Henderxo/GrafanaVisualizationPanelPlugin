@@ -66,7 +66,7 @@ function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
   }
 
 function colorToHex(color: string): string{
-  console.log(color)
+
   if (color.startsWith('#')) {
     return color.substring(1);
   }
@@ -76,7 +76,6 @@ function colorToHex(color: string): string{
     const r = parseInt(match[1], 10).toString(16).padStart(2, '0');
     const g = parseInt(match[2], 10).toString(16).padStart(2, '0');
     const b = parseInt(match[3], 10).toString(16).padStart(2, '0');
-    console.log(`${r}${g}${b}`)
     return `${r}${g}${b}`;
   }
   
@@ -154,7 +153,6 @@ function colorToHex(color: string): string{
   }
 
 function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgraphs' | 'all'): string[] {
-  console.log(map)
     let elements: string[] = [];
     if (!options || options === 'all') {
         elements = [...Array.from(map.nodes.keys()), ...Array.from(map.subGraphs.keys())];

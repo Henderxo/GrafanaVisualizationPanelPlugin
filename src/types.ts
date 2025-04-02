@@ -11,6 +11,7 @@ export interface SimpleOptions {
   templateForYaml: string;
   showSeriesCount: boolean;
   seriesCountSize: SeriesSize;
+  buttonTheme: 'primary'|'secondary'
 
   nodeStyles?: Record<
     string,

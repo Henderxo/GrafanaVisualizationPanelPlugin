@@ -3,10 +3,11 @@ import { Button, Icon, Modal, Text } from "@grafana/ui";
 import { StandardEditorProps } from "@grafana/data";
 import { YamlEditor } from "./YamlEditor";
 import { css } from "@emotion/css";
+import { SimpleOptions } from "types";
 
-interface Props extends StandardEditorProps<string> {}
+interface Props extends StandardEditorProps<string, any, SimpleOptions> {}
 
-export const YamlEditorButton: React.FC<Props> = ({ value, onChange }) => {
+export const YamlEditorButton: React.FC<Props> = ({ value, onChange, context}) => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [isButtonDisabled, setButtonDisabled] = useState(true);
   useEffect(()=>{
@@ -20,7 +21,7 @@ export const YamlEditorButton: React.FC<Props> = ({ value, onChange }) => {
       <Button
         disabled={isButtonDisabled}
         style={{ width: "100%", display: "flex", justifyContent: "center" }}
-        variant="secondary"
+        variant={context.options?.buttonTheme??'primary'}
         onClick={() => setModalOpen(true)}
       >
         <Icon name={'pen'} className={css`margin-right: 6px;`}></Icon><Text>Edit YAML Config</Text>

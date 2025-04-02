@@ -21,6 +21,18 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       },
       defaultValue: 'mermaid',
     }) 
+    .addSelect({
+      path: 'buttonTheme',
+      name: 'Button theme',
+      description: 'Select which theme should be used',
+      settings: {
+        options: [
+          { value: 'primary', label: 'Primary' },
+          { value: 'secondary', label: 'Secondary' },
+        ],
+      },
+      defaultValue: 'primary',
+    })
     .addCustomEditor({
       id: 'yamlFile',
       path: 'yamlConfig',
