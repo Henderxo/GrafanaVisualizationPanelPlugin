@@ -1,11 +1,12 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { StandardEditorProps } from '@grafana/data';
 import { SimpleOptions } from 'types';
-import { Button } from '@grafana/ui';
+import { Button, Icon, Text } from '@grafana/ui';
 import yaml from 'js-yaml';
 import { ElementConfigModal } from 'modals/EditElementModal';
 import { FlowClass, fullMermaidMap, YamlBindRule, YamlStylingRule } from 'types/types';
 import { RuleConfigModal } from 'modals/EditRulesModal';
+import { css } from '@emotion/css';
 
 interface YamlConfig {
   bindingRules: YamlBindRule[];
@@ -57,7 +58,7 @@ export const RuleConfigButton: React.FC<StandardEditorProps<string, any, SimpleO
         onClick={openModal} 
         disabled={!fullMapRef.current}
       >
-        Open Rule Configuration
+        <Icon name={'edit'} className={css`margin-right: 6px;`}></Icon><Text>Open Rule Configuration</Text>
       </Button>
       
       {isModalOpen && fullMapRef.current && options?.diagramElements && (

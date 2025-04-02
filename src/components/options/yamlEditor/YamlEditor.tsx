@@ -4,6 +4,7 @@ import { StandardEditorProps } from "@grafana/data";
 import { css } from "@emotion/css";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { configureMonacoYaml } from "monaco-yaml";
+import { colorToHex } from "utils/TransformationUtils";
 
 interface EditorProps{
   value: string,
@@ -18,6 +19,8 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const theme = useTheme2()
+  const mainColor = theme.colors.background.secondary
+  const opositeMainColor = theme.colors.background.primary
 
   useEffect(()=>{
     setLocalYaml(value)
@@ -25,7 +28,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
 
   useEffect(() => {
     if (!isOpen || !containerRef.current) return;
-    console.log('Idnd tmake it here yet lul')
+
     monaco.languages.register({ id: "yaml" });
 
     configureMonacoYaml(monaco, {
@@ -287,45 +290,21 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
       ],
     });
 
-    monaco.editor.defineTheme('customTheme', {
-      base: 'vs-dark', // Can be 'vs', 'vs-dark', or 'hc-black'
-      inherit: true, // Inherits tokens from the base theme
+      monaco.editor.defineTheme('customTheme', {
+      base: theme.isDark ? 'vs-dark' : 'vs',
+      inherit: true,
       rules: [
-        { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
-        { token: 'keyword', foreground: '569CD6' },
-        { token: 'string', foreground: 'CE9178' },
-        { token: 'number', foreground: 'B5CEA8' },
-        { token: 'regexp', foreground: 'D16969' },
-        { token: 'operator', foreground: 'D4D4D4' },
-        { token: 'namespace', foreground: '4EC9B0' },
-        { token: 'type.identifier', foreground: '4EC9B0' },
-        { token: 'struct', foreground: '4EC9B0' },
-        { token: 'class', foreground: '4EC9B0' },
-        { token: 'interface', foreground: '4EC9B0' },
-        { token: 'enum', foreground: '4EC9B0' },
-        { token: 'function', foreground: 'DCDCAA' },
-        { token: 'member.operator', foreground: 'D4D4D4' },
-        // Add more token rules as needed
       ],
       colors: {
-        // Editor UI colors
-        'editor.background': '#1E1E1E',
-        'editor.foreground': '#D4D4D4',
-        'editor.inactiveSelectionBackground': '#3A3D41',
-        'editor.selectionHighlightBackground': '#ADD6FF26',
-        'editor.selectionBackground': '#264F78',
-        'editor.wordHighlightBackground': '#575757B8',
-        'editor.wordHighlightStrongBackground': '#004972B8',
-        'editor.findMatchBackground': '#515C6A',
-        'editor.findMatchHighlightBackground': '#EA5C0055',
-        'editor.lineHighlightBackground': '#2A2D2E',
-        'editorCursor.foreground': '#AEAFAD',
-        'editorWhitespace.foreground': '#3B3B3B',
-        'editorIndentGuide.background': '#404040',
-        'editorIndentGuide.activeBackground': '#707070',
-        'editor.lineNumberForeground': '#858585',
-        'editorLineNumber.activeForeground': '#C6C6C6',
-        // Add more color rules as needed
+        'editor.background': mainColor,
+        'editor.foreground': mainColor,
+        'editorWidget.background': mainColor,
+        'input.background': mainColor,
+        'input.foreground': mainColor,
+        'editor.lineHighlightBackground': mainColor,
+        'focusBorder': mainColor,
+        'contrastActiveBorder': mainColor,
+        'contrastBorder': mainColor,
       }
     });
 
@@ -428,48 +407,40 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", width: "100%", height: '100%' }}>
+    <>
       {isOpen && (
         <Modal
           className={css`
             width: 1750px;
-            height: 100%;
+            height: auto;
+            display: flex;
+            flex-direction: column;
           `}
           title="Edit YAML Configuration"
           isOpen={isOpen}
           onDismiss={() => onClose()}
         >
-          <div
-            className={css`
-              border-radius: 8px;
-              padding: 10px;
-              display: flex;
-              flex-direction: column;
-            `}
-          >
-            <div ref={containerRef} className={css`
-   .monaco-editor, .monaco-editor-background, .monaco-editor .inputarea.ime-input {
-    background-color: ${theme.colors.background.secondary};
-  }
-   .monaco-editor .margin {
-    background-color: ${theme.colors.background.secondary};
-  }
-  .monaco-editor .line-numbers {
-    color: #858585;
-  }
-`} style={{ height: "625px", width: "100%" , borderColor: 'Background'}} />
-
-            <Modal.ButtonRow>
+            <div ref={containerRef} 
+              className={css`
+              .monaco-editor, .monaco-editor-background, .monaco-editor .inputarea.ime-input {
+                background-color: ${mainColor};
+              }
+              .monaco-editor .margin {
+                background-color: ${mainColor};
+              }
+            `} 
+            style={{flex: 1, minHeight: "600px", height: '60vh', width: "100%", overflow: 'auto', border: 'solid 6px', borderColor: theme.colors.background.secondary, borderRadius: '10px'}} />
+          <Modal.ButtonRow>
+            <Button variant="destructive" onClick={() => onClose()} style={{ marginRight: "10px" }}>
+              Cancel
+            </Button>
             <Button variant="secondary" onClick={handleSave}>
-                Save
-              </Button>
-              <Button variant="destructive" onClick={() => onClose()} style={{ marginRight: "10px" }}>
-                Cancel
-              </Button>
-            </Modal.ButtonRow>
-          </div>
+              Save
+            </Button>
+
+          </Modal.ButtonRow>
         </Modal>
       )}
-    </div>
+    </>
   );
 };

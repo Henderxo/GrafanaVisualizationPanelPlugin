@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StandardEditorProps } from '@grafana/data';
-import { Button, Modal, useTheme2 } from '@grafana/ui';
+import { Button, Icon, Modal, Text, useTheme2 } from '@grafana/ui';
 import { saveAs } from 'file-saver';
 import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
@@ -53,7 +53,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
         onClick={() => setIsModalOpen(true)}
         style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
       >
-        📤 {item.settings?.chartType || "Export File"}
+        <Icon name={'upload'} className={css`margin-right: 6px;`}></Icon><Text>{item.settings?.chartType || "Export File"}</Text> 
       </Button>
 
       {isModalOpen && (

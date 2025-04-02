@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Button, Modal } from "@grafana/ui";
+import { Button, Icon, Modal, Text } from "@grafana/ui";
 import { StandardEditorProps } from "@grafana/data";
 import { YamlEditor } from "./YamlEditor";
+import { css } from "@emotion/css";
 
 interface Props extends StandardEditorProps<string> {}
 
@@ -15,7 +16,7 @@ export const YamlEditorButton: React.FC<Props> = ({ value, onChange }) => {
         variant="primary"
         onClick={() => setModalOpen(true)}
       >
-        Edit YAML Config
+        <Icon name={'pen'} className={css`margin-right: 6px;`}></Icon><Text>Edit YAML Config</Text>
       </Button>
       {isModalOpen &&
         <YamlEditor isOpen={isModalOpen} onClose={()=>setModalOpen(false)} onChange={(value)=>{onChange(value), setModalOpen(false)}} value={value}></YamlEditor>

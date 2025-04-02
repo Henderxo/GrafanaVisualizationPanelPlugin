@@ -10,27 +10,19 @@ import { YamlEditorButton } from 'components/options/yamlEditor/YamlEditorButton
 
 export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions((builder) => {
   return builder
-  .addSelect({
-    path: 'activeView',
-    name: 'Active View',
-    description: 'Select which panel to display',
-    settings: {
-      options: [
-        { value: 'mermaid', label: 'Mermaid Chart' },
-        { value: 'otherView', label: 'Other View' },
-      ],
-    },
-    defaultValue: 'mermaid',
-  }) 
-  .addCustomEditor({
-    id: 'elementConfigButton',
-    path: 'yamlConfig',
-    category: ['YAML Configuration'],
-    name: 'Element Configuration',
-    description: 'Configure elements in the diagram',
-    editor: RuleConfigButton,
-  })
-  .addCustomEditor({
+    .addSelect({
+      path: 'activeView',
+      name: 'Active View',
+      description: 'Select which panel to display',
+      settings: {
+        options: [
+          { value: 'mermaid', label: 'Mermaid Chart' },
+          { value: 'otherView', label: 'Other View' },
+        ],
+      },
+      defaultValue: 'mermaid',
+    }) 
+    .addCustomEditor({
       id: 'yamlFile',
       path: 'yamlConfig',
       category: ['YAML Configuration'],
@@ -51,6 +43,14 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       settings: {
         chartType: 'Export YAML Config'
       }
+    })
+    .addCustomEditor({
+      id: 'elementConfigButton',
+      path: 'yamlConfig',
+      category: ['YAML Configuration'],
+      name: 'Element Configuration',
+      description: 'Configure elements in the diagram',
+      editor: RuleConfigButton,
     })
     .addCustomEditor({
       id: "yamlEditor",

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StandardEditorProps } from '@grafana/data';
-import { Button, Modal, SelectMenuOptions, useTheme2 } from '@grafana/ui';
+import { Button, Icon, Modal, SelectMenuOptions, Text, useTheme2 } from '@grafana/ui';
 import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 
@@ -61,8 +61,8 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-        <Button style={{ width: '100%', display: 'flex', justifyContent: 'center' }} variant="secondary" onClick={() => setIsModalOpen(true)}>
-          📂 Import File
+        <Button style={{ width: '100%', display: 'flex', justifyContent: 'center' }} variant="primary" onClick={() => setIsModalOpen(true)}>
+          <Icon className={css`margin-right: 6px;`} name={'import'}></Icon><Text>Select a File</Text>
         </Button>
       </div>
 
@@ -94,7 +94,7 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
             <div  style={{width: '100%'}}>
               <label htmlFor="fileInput">
               <Button variant="primary" fullWidth={true} onClick={() => fileInputRef.current?.click()}>
-                📂 Select a File
+                <Icon name={'import'} className={css`margin-right: 6px;`}></Icon><Text>Select a File</Text>
               </Button>
               </label>
               <p style={{ color: '#666', marginTop: 10 }}>or drag & drop here</p>

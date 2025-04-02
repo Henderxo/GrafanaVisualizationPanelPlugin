@@ -65,6 +65,25 @@ function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
     });
   }
 
+function colorToHex(color: string): string{
+  console.log(color)
+  if (color.startsWith('#')) {
+    return color.substring(1);
+  }
+  
+  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+  if (match) {
+    const r = parseInt(match[1], 10).toString(16).padStart(2, '0');
+    const g = parseInt(match[2], 10).toString(16).padStart(2, '0');
+    const b = parseInt(match[3], 10).toString(16).padStart(2, '0');
+    console.log(`${r}${g}${b}`)
+    return `${r}${g}${b}`;
+  }
+  
+
+  return 'D4D4D4'; 
+};
+
   function isFlowVertex(obj: any): obj is FlowVertex {
     return (
       obj &&
@@ -147,4 +166,4 @@ function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgra
     return elements;
 };
 
-export{extractTableData, getElementRules, extractMermaidConfigString, getElementTypeInBaseObject, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse, sortByPriority}
+export{extractTableData, colorToHex, getElementRules, extractMermaidConfigString, getElementTypeInBaseObject, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse, sortByPriority}
