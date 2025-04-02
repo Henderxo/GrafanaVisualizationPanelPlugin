@@ -1,12 +1,13 @@
 import { PanelPlugin } from '@grafana/data';
 import { SimpleOptions } from './types';
 import { MainPanel } from 'components/panels/MainPanel';
-import { FileUploadEditor } from 'components/options/FileUpload';
 import { CustomTextEditor } from 'components/options/CustomTextEditor';
-import { FileExport } from 'components/options/FileExport';
+import { FileExport } from 'components/options/fileExport/FileExport';
 import { YamlEditor } from 'components/options/yamlEditor/YamlEditor';
 import { RuleConfigButton } from 'components/options/RuleConfigButton';
 import { YamlEditorButton } from 'components/options/yamlEditor/YamlEditorButton';
+import { FileExportButton } from 'components/options/fileExport/FileExportButton';
+import { FileUploadButton } from 'components/options/fileUpload/FileUploadButton';
 
 export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions((builder) => {
   return builder
@@ -28,7 +29,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       category: ['YAML Configuration'],
       name: 'Upload YAML Config',
       description: 'Upload a YAML file for configuration',
-      editor: FileUploadEditor,
+      editor: FileUploadButton,
       settings:{
         chartType: 'Upload YAML Config'
       }
@@ -39,7 +40,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       category: ['YAML Configuration'],
       name: 'Export YAML Config',
       description: 'Export a YAML file for configuration',
-      editor: FileExport, 
+      editor: FileExportButton, 
       settings: {
         chartType: 'Export YAML Config'
       }
@@ -155,7 +156,7 @@ bindingRules:
       category: ['Mermaid Configuration'],
       name: 'Upload Mermaid Template',
       description: 'Upload a Mermaid (.mmd) file',
-      editor: FileUploadEditor,
+      editor: FileUploadButton,
       settings:{
         chartType: 'Upload Mermaid Template'
       }
@@ -166,7 +167,7 @@ bindingRules:
       category: ['Mermaid Configuration'],
       name: 'Export Mermaid Template',
       description: 'Export a Mermaid file for configuration',
-      editor: FileExport, 
+      editor: FileExportButton, 
       settings: {
         chartType: 'Export Mermaid Template'
       }

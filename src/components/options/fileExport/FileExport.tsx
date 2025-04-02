@@ -5,63 +5,48 @@ import { saveAs } from 'file-saver';
 import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 
-interface FileExportProps extends StandardEditorProps<string, any, { chartType?: string }> {}
+interface FileExportProps {
+  value: string,
+  onChange: (newConfig: string)=>void
+  onClose: ()=>void
+  isOpen: boolean
+  titleString: string
+}
 
-export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose, isOpen, titleString }) => {
   const [valueState, setValueState] = useState(value);
-  const [exportStatus, setExportStatus] = useState('');
   
   const theme = useTheme2();
   
-  const isMermaid = item.settings?.chartType === 'Export Mermaid Template';
+  const isMermaid = titleString === 'Export Mermaid Template';
   const defaultFileName = isMermaid ? 'exported_template.mmd' : 'exported_config.yaml';
 
   useEffect(() => {
     setValueState(value);
   }, [value]);
   
-  useEffect(() => {
-    if (!isModalOpen) {
-      setExportStatus('');
-    }
-  }, [isModalOpen]);
-
   const handleExport = () => {
     if (!valueState) return;
     
     try {
       const blob = new Blob([valueState], { type: 'text/plain' });
-      saveAs(blob, defaultFileName);
-      
-      setExportStatus('File exported successfully!');
-      
+      saveAs(blob, defaultFileName); 
       setTimeout(() => {
-        setIsModalOpen(false);
+        onClose()
       }, 500);
     } catch (error) {
       console.error('Error exporting file:', error);
-      setExportStatus('Error exporting file. Please try again.');
     }
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-      <Button
-        disabled={valueState?.length === 0}
-        variant="secondary"
-        onClick={() => setIsModalOpen(true)}
-        style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
-      >
-        <Icon name={'upload'} className={css`margin-right: 6px;`}></Icon><Text>{item.settings?.chartType || "Export File"}</Text> 
-      </Button>
-
-      {isModalOpen && (
+    <>
+      {isOpen && (
         <Modal 
           className={css`width: 1200px`} 
-          title={item.settings?.chartType || "Export File"} 
-          isOpen={isModalOpen} 
-          onDismiss={() => setIsModalOpen(false)}
+          title={titleString || "Export File"} 
+          isOpen={isOpen} 
+          onDismiss={() => onClose()}
         >
           <div
             className={css`
@@ -98,7 +83,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
             )}
 
             <Modal.ButtonRow>
-              <Button variant="destructive" onClick={() => setIsModalOpen(false)}>
+              <Button variant="destructive" onClick={() => onClose()}>
                 Cancel
               </Button>
               <Button variant="primary" onClick={handleExport}>
@@ -108,6 +93,6 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
           </div>
         </Modal>
       )}
-    </div>
+    </>
   );
 };

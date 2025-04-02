@@ -5,16 +5,17 @@ import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 
 interface FileUploadSettings {
-  chartType?: string;
+  value: string,
+  onChange: (newConfig: string)=>void
+  onClose: ()=>void
+  isOpen: boolean
+  titleString: string
 }
 
-interface FileUploadProps extends StandardEditorProps<string, any, FileUploadSettings> {}
-
-export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, context, item }) => {
+export const FileUpload: React.FC<FileUploadSettings> = ({ value, onChange, onClose, isOpen, titleString }) => {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const theme = useTheme2()
 
@@ -34,16 +35,15 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
   const handleConfirm = () => {
     if (fileContent) {
       onChange(fileContent);
-      setIsModalOpen(false);
       handleCloseModal();
     }
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
     setFileName(null);
     setFileSize(null);
     setFileContent(null);
+    onClose()
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,14 +60,8 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
 
   return (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-        <Button style={{ width: '100%', display: 'flex', justifyContent: 'center' }} variant="secondary" onClick={() => setIsModalOpen(true)}>
-          <Icon className={css`margin-right: 6px;`} name={'import'}></Icon><Text>Select a File</Text>
-        </Button>
-      </div>
-
-      {isModalOpen && (
-        <Modal className={css`width: 1200px`} title="Import File" isOpen={isModalOpen} onDismiss={handleCloseModal} >
+      {isOpen && (
+        <Modal className={css`width: 1200px`} title="Import File" isOpen={isOpen} onDismiss={handleCloseModal} >
           <div
             className={css`
 
@@ -90,7 +84,7 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
               onChange={handleFileSelect}
             />
 
-            <p><strong>{item.settings?.chartType}</strong></p>
+            <p><strong>{titleString}</strong></p>
             <div  style={{width: '100%'}}>
               <label htmlFor="fileInput">
               <Button variant="primary" fullWidth={true} onClick={() => fileInputRef.current?.click()}>
@@ -121,7 +115,7 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
             
             </div>
             <Modal.ButtonRow>
-              <Button variant="destructive" onClick={() => setIsModalOpen(false)}>
+              <Button variant="destructive" onClick={handleCloseModal}>
                 Cancel
               </Button>
               <Button variant="primary" onClick={handleConfirm}>
