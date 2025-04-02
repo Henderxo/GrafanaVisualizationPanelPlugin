@@ -2,8 +2,6 @@ import { PanelPlugin } from '@grafana/data';
 import { SimpleOptions } from './types';
 import { MainPanel } from 'components/panels/MainPanel';
 import { CustomTextEditor } from 'components/options/CustomTextEditor';
-import { FileExport } from 'components/options/fileExport/FileExport';
-import { YamlEditor } from 'components/options/yamlEditor/YamlEditor';
 import { RuleConfigButton } from 'components/options/RuleConfigButton';
 import { YamlEditorButton } from 'components/options/yamlEditor/YamlEditorButton';
 import { FileExportButton } from 'components/options/fileExport/FileExportButton';

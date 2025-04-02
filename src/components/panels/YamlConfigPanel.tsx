@@ -23,8 +23,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const { yamlConfig, template } = options;
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [ diagramConfig, setDiagramConfig] = useState<string>('')
-  const [grafanaVariables, setGrafanaVariables] = useState<TypedVariableModel[] | null>(null);
   const [variableChangeCount, setVariableChangeCount] = useState(0);
   const [selectedElement, setSelectedElement] = useState<BaseObject | null>(null);
   const [allElements, setAllElements] = useState<string[]>([]);
@@ -37,7 +35,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     stylingRules: [],
     parseError: null
   });
-  
+  const grafanaVariablesRef = useRef<TypedVariableModel[]>([])
   const chartRef = useRef<HTMLDivElement>(null);
   const fullMapRef = useRef<fullMermaidMap | null>(null);
   
@@ -83,8 +81,13 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   }, [yamlConfig]);
 
   useEffect(() => {
+    grafanaVariablesRef.current = getTemplateSrv().getVariables()
     const subscription = locationService.getHistory().listen(() => {
-      setVariableChangeCount(prev => prev + 1);
+      const isVariableChange = getTemplateSrv().getVariables()
+      if(JSON.stringify(grafanaVariablesRef.current) !== JSON.stringify(isVariableChange)){
+        setVariableChangeCount(prev => prev + 1);
+      }
+      grafanaVariablesRef.current = isVariableChange;
     });
     
     return () => {
@@ -98,7 +101,6 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     const fullMap = reformatDataFromResponse(res);
     const variables = getTemplateSrv().getVariables();
     fullMapRef.current = fullMap;
-    setGrafanaVariables(variables);
     setAllElements(findAllElementsInMaps(fullMap));
     updateMapValuesWithDefault(fullMap);
     
