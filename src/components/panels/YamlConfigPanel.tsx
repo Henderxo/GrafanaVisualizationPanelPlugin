@@ -12,6 +12,7 @@ import { bindData, bindDataToString } from 'utils/DataBindingUtils';
 import { ElementConfigModal } from '../../modals/EditElementModal';
 import { getTemplateSrv, locationService } from '@grafana/runtime';
 import { NoTemplatesProvidedDisplay } from 'displays/NoTemplatesProvidedDisplay';
+import { ErrorService, ErrorType } from 'services/ErrorService';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;
@@ -26,6 +27,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   const [variableChangeCount, setVariableChangeCount] = useState(0);
   const [selectedElement, setSelectedElement] = useState<BaseObject | null>(null);
   const [allElements, setAllElements] = useState<string[]>([]);
+  const [diagramError, setDiagramError] = useState<string | null>(null);
   const [parsedYamlState, setParsedYamlState] = useState<{
     bindingRules: YamlBindRule[], 
     stylingRules: YamlStylingRule[],
@@ -77,6 +79,11 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
         stylingRules: [],
         parseError: errorMessage
       });
+      ErrorService.displayError(ErrorType.YAML_PARSING, {
+        title: 'YAML Parsing Error',
+        message: 'Failed to parse YAML configuration',
+        error: e as Error
+      });
     }
   }, [yamlConfig]);
 
@@ -96,33 +103,47 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   }, []);
 
   const getDiagram = async (templateStr: string): Promise<string> => {
-    const res = await mermaid.mermaidAPI.getDiagramFromText(templateStr);
-    const config = extractMermaidConfigString(templateStr)
-    const fullMap = reformatDataFromResponse(res);
-    const variables = getTemplateSrv().getVariables();
-    fullMapRef.current = fullMap;
-    setAllElements(findAllElementsInMaps(fullMap));
-    updateMapValuesWithDefault(fullMap);
-    
-    const rows = extractTableData(data) ? mapDataToRows(data) : undefined;
-    
-    if (rows) {
-      applyAllRules(
-        parsedYamlState.bindingRules, 
-        parsedYamlState.stylingRules, 
-        fullMap, 
-        rows, 
-        variables
-      );
+    try {
+      const res = await mermaid.mermaidAPI.getDiagramFromText(templateStr);
+      const config = extractMermaidConfigString(templateStr)
+      const fullMap = reformatDataFromResponse(res);
+      const variables = getTemplateSrv().getVariables();
+      fullMapRef.current = fullMap;
+      setAllElements(findAllElementsInMaps(fullMap));
+      updateMapValuesWithDefault(fullMap);
+      
+      const rows = extractTableData(data) ? mapDataToRows(data) : undefined;
+      
+      if (rows) {
+        applyAllRules(
+          parsedYamlState.bindingRules, 
+          parsedYamlState.stylingRules, 
+          fullMap, 
+          rows, 
+          variables
+        );
+      }
+      
+      onOptionsChange({
+        ...options, 
+        diagramMap: fullMap, 
+        diagramElements: findAllElementsInMaps(fullMap)
+      });
+      
+      setDiagramError(null);
+      return generateDynamicMermaidFlowchart({...fullMap, config: config});
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setDiagramError(errorMessage);
+      
+      ErrorService.displayError(ErrorType.MERMAID_PARSING, {
+        title: 'Mermaid Diagram Error',
+        message: ErrorService.getMermaidErrorMessage(error instanceof Error ? error : new Error(errorMessage)),
+        error: error as Error
+      });
+      
+      throw error;
     }
-    
-    onOptionsChange({
-      ...options, 
-      diagramMap: fullMap, 
-      diagramElements: findAllElementsInMaps(fullMap)
-    });
-    
-    return generateDynamicMermaidFlowchart({...fullMap, config: config});
   };
 
   const updateMapValuesWithDefault = (fullMap: fullMermaidMap) => {
@@ -426,6 +447,12 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     });
   };
 
+  const isValidTemplate = (template: string | undefined): boolean => {
+    if (!template) return false;
+    const trimmedTemplate = template.trim();
+    return trimmedTemplate.length > 0;
+  };
+
   const handleElementDoubleClick = (event: MouseEvent) => {
     if (!fullMapRef.current) return;
     
@@ -472,15 +499,19 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
     onOptionsChange({...options, yamlConfig: newYamlConfig});
   };
 
-  // Main diagram rendering effect
   useEffect(() => {
-    if (!template) return;
+    if (!isValidTemplate(template)) {
+      setIsLoading(false);
+      setDiagramError('Template is empty or contains only whitespace');
+      return;
+    }
+    
     setIsLoading(true);
+    setDiagramError(null);
     
     mermaid.initialize({});
     getDiagram(template)
       .then((rez) => {
-        console.log(rez)
         if (chartRef.current) {
           mermaid.render('graphDiv', rez)
             .then(({ svg }) => {
@@ -498,16 +529,31 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
                   svgElement.addEventListener('dblclick', handleElementDoubleClick);
                 }
                 setIsLoading(false);
+                
+                ErrorService.displaySuccess('Diagram Loaded', 'Mermaid diagram rendered successfully');
               }
             })
             .catch((error) => {
               console.error('Error rendering diagram:', error);
               setIsLoading(false);
+              setDiagramError('Failed to render diagram');
+              
+              ErrorService.displayError(ErrorType.MERMAID_PARSING, {
+                title: 'Diagram Rendering Error',
+                message: 'Failed to render Mermaid diagram',
+                error
+              });
             });
         }
       })
       .catch((error) => {
         console.error('Error fetching diagram data:', error);
+
+        ErrorService.displayError(ErrorType.MERMAID_PARSING, {
+          title: 'Error fetching diagram data',
+          message: 'Failed to fetching Mermaid diagram',
+          error
+        });
         setIsLoading(false);
       });
       
@@ -522,7 +568,7 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, o
   }, [template, variableChangeCount, data, parsedYamlState]);
 
 
-  if (!yamlConfig || !template || parsedYamlState.parseError !== null) {
+  if (!yamlConfig || !isValidTemplate(template) || parsedYamlState.parseError !== null) {
     return (
       <NoTemplatesProvidedDisplay 
         onConfigChanges={(yaml, template) => onOptionsChange({...options, yamlConfig: yaml, template: template})} 
