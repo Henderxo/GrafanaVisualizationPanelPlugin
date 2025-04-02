@@ -29,6 +29,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
         options: [
           { value: 'primary', label: 'Primary' },
           { value: 'secondary', label: 'Secondary' },
+          { value: 'vizBind', label: 'VizBind'}
         ],
       },
       defaultValue: 'primary',

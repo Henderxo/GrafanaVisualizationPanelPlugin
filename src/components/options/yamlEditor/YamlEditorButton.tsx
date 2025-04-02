@@ -4,6 +4,7 @@ import { StandardEditorProps } from "@grafana/data";
 import { YamlEditor } from "./YamlEditor";
 import { css } from "@emotion/css";
 import { SimpleOptions } from "types";
+import ButtonWrapper from "components/wrappers/ButtonWrapper";
 
 interface Props extends StandardEditorProps<string, any, SimpleOptions> {}
 
@@ -18,14 +19,14 @@ export const YamlEditorButton: React.FC<Props> = ({ value, onChange, context}) =
 
   return (
     <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-      <Button
+      <ButtonWrapper
         disabled={isButtonDisabled}
-        style={{ width: "100%", display: "flex", justifyContent: "center" }}
+        className={css`width: 100%; display: flex; justify-content: center;`}
         variant={context.options?.buttonTheme??'primary'}
         onClick={() => setModalOpen(true)}
       >
         <Icon name={'pen'} className={css`margin-right: 6px;`}></Icon><Text>Edit YAML Config</Text>
-      </Button>
+      </ButtonWrapper>
       {isModalOpen &&
         <YamlEditor isOpen={isModalOpen} onClose={()=>setModalOpen(false)} onChange={(value)=>{onChange(value), setModalOpen(false)}} value={value}></YamlEditor>
       }

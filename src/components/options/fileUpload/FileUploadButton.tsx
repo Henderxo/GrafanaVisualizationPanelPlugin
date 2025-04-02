@@ -5,6 +5,7 @@ import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 import { FileUpload } from './FileUpload';
 import { SimpleOptions } from 'types';
+import ButtonWrapper from 'components/wrappers/ButtonWrapper';
 
 interface FileUploadSettings {
   chartType?: string;
@@ -20,9 +21,9 @@ context
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-        <Button style={{ width: '100%', display: 'flex', justifyContent: 'center' }} variant={context.options?.buttonTheme??'primary'} onClick={() => setIsModalOpen(true)}>
+        <ButtonWrapper className={css`width: 100%; display: flex; justify-content: center;`} variant={context.options?.buttonTheme??'primary'} onClick={() => setIsModalOpen(true)}>
           <Icon className={css`margin-right: 6px;`} name={'import'}></Icon><Text>Select a File</Text>
-        </Button>
+        </ButtonWrapper>
       </div>
       {isModalOpen && <FileUpload onClose={()=>{setIsModalOpen(false)}} isOpen={isModalOpen} onChange={onChange} value={value} titleString={item.settings.chartType}></FileUpload>}
     </>

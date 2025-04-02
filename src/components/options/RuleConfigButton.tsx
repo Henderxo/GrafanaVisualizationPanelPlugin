@@ -6,6 +6,7 @@ import yaml from 'js-yaml';
 import { ElementConfigModal } from 'modals/EditElementModal';
 import { FlowClass, fullMermaidMap, YamlBindRule, YamlStylingRule } from 'types/types';
 import { css } from '@emotion/css';
+import ButtonWrapper from 'components/wrappers/ButtonWrapper';
 
 interface YamlConfig {
   bindingRules: YamlBindRule[];
@@ -49,14 +50,14 @@ export const RuleConfigButton: React.FC<StandardEditorProps<string, any, SimpleO
   
   return (
     <div>
-      <Button
+      <ButtonWrapper
         variant={context.options?.buttonTheme??'primary'}
-        style={{ display: "flex", justifyContent: "center", width: "100%" }}
+        className={css`width: 100%; display: flex; justify-content: center;`}
         onClick={openModal} 
         disabled={!fullMapRef.current}
       >
         <Icon name={'edit'} className={css`margin-right: 6px;`}></Icon><Text>Open Rule Configuration</Text>
-      </Button>
+      </ButtonWrapper>
       
       {isModalOpen && fullMapRef.current && options?.diagramElements && (
         <ElementConfigModal
