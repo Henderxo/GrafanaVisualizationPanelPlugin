@@ -595,7 +595,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
       )}
       <ConfirmModal modalClass={css`top: 30%;`} dismissText='Cancel' confirmText='Confirm' body={`Are you sure you want to cancel this objects ${!isEdit?'creation':'edit'}?`} title={`Cancel ${!isEdit?'creation progress':'editing progress'}`} isOpen={isConfirmModalOpen} onDismiss={()=>setIsConfirmModalOpen(false)} onConfirm={()=>{onClose(); setIsConfirmModalOpen(false)}}></ConfirmModal>
       <Modal.ButtonRow>
-        <Button variant={"secondary"} onClick={()=>setIsConfirmModalOpen(true)}>Cancel</Button>
+        <Button variant={"destructive"} onClick={()=>setIsConfirmModalOpen(true)}>Cancel</Button>
         {rule ? (
           <Button onClick={handleSubmit} variant={"primary"}>Update</Button>
         ) : (

@@ -326,6 +326,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
           comments: false,
           strings: true
         },
+        stickyScroll: {enabled: false},
         suggestOnTriggerCharacters: true,
         wordBasedSuggestions: 'currentDocument',
         snippetSuggestions: 'inline',
@@ -429,7 +430,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
                 background-color: ${mainColor};
               }
             `} 
-            style={{flex: 1, minHeight: "600px", height: '60vh', width: "100%", overflow: 'auto', border: 'solid 6px', borderColor: theme.colors.background.secondary, borderRadius: '10px'}} />
+            style={{flex: 1, minHeight: "600px", height: '60vh', width: "100%", overflow: 'auto', border: 'solid 2px', borderColor: theme.colors.border.medium, borderRadius: '10px'}} />
           <Modal.ButtonRow>
             <Button variant="destructive" onClick={() => onClose()} style={{ marginRight: "10px" }}>
               Cancel

@@ -8,12 +8,19 @@ interface Props extends StandardEditorProps<string> {}
 
 export const YamlEditorButton: React.FC<Props> = ({ value, onChange }) => {
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isButtonDisabled, setButtonDisabled] = useState(true);
+  useEffect(()=>{
+    setTimeout(() => {
+      setButtonDisabled(false);
+    }, 1500);
+  }, [])
 
   return (
     <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
       <Button
+        disabled={isButtonDisabled}
         style={{ width: "100%", display: "flex", justifyContent: "center" }}
-        variant="primary"
+        variant="secondary"
         onClick={() => setModalOpen(true)}
       >
         <Icon name={'pen'} className={css`margin-right: 6px;`}></Icon><Text>Edit YAML Config</Text>

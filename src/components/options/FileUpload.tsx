@@ -61,7 +61,7 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-        <Button style={{ width: '100%', display: 'flex', justifyContent: 'center' }} variant="primary" onClick={() => setIsModalOpen(true)}>
+        <Button style={{ width: '100%', display: 'flex', justifyContent: 'center' }} variant="secondary" onClick={() => setIsModalOpen(true)}>
           <Icon className={css`margin-right: 6px;`} name={'import'}></Icon><Text>Select a File</Text>
         </Button>
       </div>
@@ -121,7 +121,7 @@ export const FileUploadEditor: React.FC<FileUploadProps> = ({ value, onChange, c
             
             </div>
             <Modal.ButtonRow>
-              <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+              <Button variant="destructive" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
               <Button variant="primary" onClick={handleConfirm}>

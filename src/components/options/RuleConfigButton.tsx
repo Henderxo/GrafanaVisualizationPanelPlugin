@@ -54,6 +54,7 @@ export const RuleConfigButton: React.FC<StandardEditorProps<string, any, SimpleO
   return (
     <div>
       <Button
+        variant='secondary'
         style={{ display: "flex", justifyContent: "center", width: "100%" }}
         onClick={openModal} 
         disabled={!fullMapRef.current}

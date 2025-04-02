@@ -49,7 +49,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
     <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
       <Button
         disabled={valueState?.length === 0}
-        variant="primary"
+        variant="secondary"
         onClick={() => setIsModalOpen(true)}
         style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
       >
@@ -98,7 +98,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, item }) => {
             )}
 
             <Modal.ButtonRow>
-              <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+              <Button variant="destructive" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
               <Button variant="primary" onClick={handleExport}>
