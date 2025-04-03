@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Badge, MenuGroup, Text, useTheme2 } from '@grafana/ui';
-import { customHtmlBase } from 'types/types';
+import { customHtmlBase } from '../types';
 
 interface StringListProps extends customHtmlBase{
   label: string;

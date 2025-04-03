@@ -3,7 +3,7 @@ import { StandardEditorProps } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import { Icon, Text } from '@grafana/ui';
 import { RulesConfig } from 'modals/RulesConfig';
-import { FlowClass, fullMermaidMap, YamlParsedConfig } from 'types/types';
+import { FlowClass, fullMermaidMap, YamlParsedConfig } from '../../types';
 import { css } from '@emotion/css';
 import ButtonWrapper from 'components/wrappers/ButtonWrapper';
 import { parseYamlConfig } from 'utils/YamlUtils';

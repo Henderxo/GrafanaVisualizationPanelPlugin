@@ -1,5 +1,5 @@
 import React, {  useState } from "react";
-import {  customHtmlBase, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from "types/types";
+import {  customHtmlBase, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from '../types';
 import StringList from "./StringListDisplay";
 import { useTheme2, Text, Divider, PageToolbar, ToolbarButton, ConfirmModal } from '@grafana/ui';
 import FunctionList from "./FunctionDisplay";

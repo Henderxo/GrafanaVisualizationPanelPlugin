@@ -9,7 +9,7 @@ import {
   Field,
   Select
 } from '@grafana/ui';
-import { Action, FlowClass, FlowVertexTypeParam } from 'types/types';
+import { Action, FlowClass, FlowVertexTypeParam } from '../../types';
 import RuleInputWrapper from '../wrappers/RuleInputWrapper';
 import { css } from '@emotion/css';
 

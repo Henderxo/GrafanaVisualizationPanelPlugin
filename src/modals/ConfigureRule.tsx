@@ -13,7 +13,7 @@ import {
   ConfirmModal
 } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
-import { Action, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from 'types/types';
+import { Action, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from '../types';
 import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 import { FunctionInput } from 'components/inputs/FunctionInput';

@@ -1,5 +1,5 @@
 import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
-import { ConditionElement, FlowVertex, fullMermaidMap, YamlBindRule, YamlStylingRule } from "types/types";
+import { ConditionElement, FlowVertex, fullMermaidMap, YamlBindRule, YamlStylingRule } from '../types';
 import { findElementInMaps, getElementsFromRule, sortByPriority } from "./TransformationUtils";
 import { addActions } from "./ActionUtils";
 import { ErrorService, ErrorType } from "services/ErrorService";

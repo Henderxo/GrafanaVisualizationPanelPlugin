@@ -1,6 +1,6 @@
 import { Box, Text, useTheme2 } from "@grafana/ui";
 import React from "react";
-import { Action, ActionNames, TextSize } from "types/types";
+import { Action, ActionNames, TextSize } from '../types';
 import { SingleActionDisplay } from "./SingleActionDisplay";
 
 export const ACTION_EMPTY_TEXT = {

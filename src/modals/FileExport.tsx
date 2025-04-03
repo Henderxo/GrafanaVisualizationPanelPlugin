@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StandardEditorProps } from '@grafana/data';
-import { Button, Icon, Modal, Text, useTheme2 } from '@grafana/ui';
+import { Button, Modal, useTheme2 } from '@grafana/ui';
 import { saveAs } from 'file-saver';
 import { css } from '@emotion/css';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';

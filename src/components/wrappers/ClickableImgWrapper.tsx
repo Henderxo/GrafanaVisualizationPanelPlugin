@@ -1,6 +1,6 @@
-import { Box, Divider, Text, useTheme2 } from "@grafana/ui";
+import { Text, useTheme2 } from "@grafana/ui";
 import React, { ReactNode, useState } from "react";
-import { customHtmlBase } from "types/types";
+import { customHtmlBase } from '../../types';
 
 interface ClickableImgWrapperProps extends customHtmlBase {
     children: ReactNode

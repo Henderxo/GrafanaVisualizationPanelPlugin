@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, TabsBar, Tab, LoadingBar, useSplitter, Text, IconButton } from '@grafana/ui';
-import { YamlBindRule, YamlStylingRule, BaseObject, FlowClass, YamlParsedConfig } from 'types/types';
+import { YamlBindRule, YamlStylingRule, BaseObject, FlowClass, YamlParsedConfig } from '../types';
 import { RuleDisplay } from '../displays/RuleDisplay';
 import { css } from '@emotion/css';
 import { getElementRules } from 'utils/TransformationUtils';

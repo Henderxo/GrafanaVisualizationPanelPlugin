@@ -4,7 +4,7 @@ import {
   Text, 
   Badge
 } from '@grafana/ui';
-import { FunctionElement,YamlBindRule, YamlStylingRule, customHtmlBase } from 'types/types';
+import { FunctionElement,YamlBindRule, YamlStylingRule, customHtmlBase } from '../types';
 import { ConditionDisplay } from './ConditionDisplay';
 
 interface FunctionDisplayProps extends customHtmlBase{

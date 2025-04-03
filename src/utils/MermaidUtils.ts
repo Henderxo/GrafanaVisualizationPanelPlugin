@@ -1,4 +1,4 @@
-import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } from "types/types";
+import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } from '../types';
 
   export const VALID_SHAPES = new Set<FlowVertexTypeParam>([
     'square', 'doublecircle', 'circle', 'ellipse', 'stadium', 'subroutine',

@@ -1,7 +1,7 @@
-import { Box, Divider, Text, useTheme2 } from "@grafana/ui";
+import { Divider } from "@grafana/ui";
 import { ClickableImgWrapper } from "components/wrappers/ClickableImgWrapper";
 import React, { useState } from "react";
-import { customHtmlBase } from "types/types";
+import { customHtmlBase } from '../types';
 import logo from "img/logo.svg"
 import { YamlEditor } from "modals/YamlEditor";
 
@@ -12,9 +12,7 @@ interface NoTemplatesProvidedDisplayProps extends customHtmlBase {
 }
 export const NoTemplatesProvidedDisplay: React.FC<NoTemplatesProvidedDisplayProps> = ({bgColor, hover, color, yamlConfig, template, onConfigChanges }) =>{
     const [isYamlEditorOpen, setYamlEditorOpen] = useState(false);
-    const [isMermaidEditorOpen, setMermaidEditorOpen] = useState(false);
     const handleYamlConfigClick = () =>{
-        console.log(yamlConfig)
         setYamlEditorOpen(true)
     }
 

@@ -1,4 +1,4 @@
-import { Action, BaseObject, FlowVertex, FlowVertexTypeParam, YamlBindRule, YamlStylingRule } from "types/types";
+import { Action, BaseObject, FlowVertex, FlowVertexTypeParam, YamlBindRule, YamlStylingRule } from '../types';
 import { bindDataToString } from "./DataBindingUtils";
 import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
 import { isValidShape } from "./MermaidUtils";

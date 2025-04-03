@@ -1,7 +1,7 @@
 import { css } from "@emotion/css";
 import { Badge, Box, Icon, Text } from "@grafana/ui";
 import React from "react";
-import { Action, ActionNames, TextSize } from "types/types";
+import { Action, ActionNames, TextSize } from '../types';
 
 export const SingleActionDisplay: React.FC<{ 
   label: string, 

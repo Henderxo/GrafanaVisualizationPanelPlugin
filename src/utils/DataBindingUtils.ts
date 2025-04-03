@@ -1,5 +1,5 @@
   
-import { BaseObject, FlowSubGraph, FlowVertex, fullMermaidMap } from "types/types";
+import { BaseObject, FlowSubGraph, FlowVertex, fullMermaidMap } from'../types';
 import { findAllElementsInMaps, findElementInMaps } from "./TransformationUtils";
   
 const bindData = (fullMap: fullMermaidMap) => {

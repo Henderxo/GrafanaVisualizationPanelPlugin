@@ -1,5 +1,5 @@
 import React, { ReactNode, useState } from 'react';
-import { Button, IconButton, IconName, useTheme2 } from '@grafana/ui';
+import { IconButton, IconName, useTheme2 } from '@grafana/ui';
 import { css } from '@emotion/css';
 
 interface RuleInputWrapperProps {

@@ -3,7 +3,7 @@ import mermaid from 'mermaid';
 import { PanelData, TypedVariableModel } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
-import {fullMermaidMap, BaseObject, FlowClass, YamlParsedConfig } from 'types/types';
+import {fullMermaidMap, BaseObject, FlowClass, YamlParsedConfig } from '../../types';
 import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
 import { extractMermaidConfigString, extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';

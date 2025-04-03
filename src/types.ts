@@ -1,4 +1,7 @@
-import { fullMermaidMap } from "types/types";
+export * from "./types/customHtml"
+export * from "./types/mermaid"
+export * from "./types/rules"
+import { fullMermaidMap } from "types/mermaid";
 
 type SeriesSize = 'sm' | 'md' | 'lg';
 

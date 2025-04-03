@@ -3,7 +3,7 @@ import {
     FunctionElement, 
     YamlBindRule, 
     YamlStylingRule 
-} from "types/types"
+} from '../../types'
 import { Icon, Text } from '@grafana/ui'
 import { css } from '@emotion/css'
 import ButtonWrapper from 'components/wrappers/ButtonWrapper'

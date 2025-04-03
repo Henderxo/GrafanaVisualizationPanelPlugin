@@ -7,7 +7,7 @@ import {
   useTheme2,
   LoadingPlaceholder
 } from '@grafana/ui';
-import { FlowClass, FunctionElement } from 'types/types';
+import { FlowClass, FunctionElement } from '../../types';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 import { ActionInput } from './ActionInput';
 

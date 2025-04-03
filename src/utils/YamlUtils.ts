@@ -1,6 +1,6 @@
 import yaml from 'js-yaml';
 import { ErrorService, ErrorType } from 'services/ErrorService';
-import { YamlBindRule, YamlStylingRule } from 'types/types';
+import { YamlBindRule, YamlStylingRule } from '../types';
 
  function convertToYaml (jsonObject: any): string {
     try {
