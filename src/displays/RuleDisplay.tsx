@@ -2,7 +2,7 @@ import React, {  useState } from "react";
 import {  customHtmlBase, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from "types/types";
 import StringList from "./StringListDisplay";
 import { useTheme2, Text, Divider, PageToolbar, ToolbarButton, ConfirmModal } from '@grafana/ui';
-import FunctionList from "./FunctionListDisplay";
+import FunctionList from "./FunctionDisplay";
 import { css } from '@emotion/css';
 import { ConfigureRule } from "modals/ConfigureRule";
 import RuleInputWrapper from "components/wrappers/RuleInputWrapper";

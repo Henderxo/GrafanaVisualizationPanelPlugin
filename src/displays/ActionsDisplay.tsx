@@ -34,10 +34,9 @@ export const ActionsDisplay: React.FC<{
   customEmptyText,
   customLabels
 }) => {
-  console.log(action)
   const theme = useTheme2();
   const actionNames = Object.keys(action);
-  console.log(action)
+
   const getEmptyTextForAction = (actionName: string): string => {
     if (customEmptyText) {
       return customEmptyText;

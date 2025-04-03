@@ -1,6 +1,13 @@
-import { MermaidConfig } from "mermaid";
-import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex } from "types/types";
+import { useMemo } from "react";
+import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } from "types/types";
 
+  const validShapes = useMemo(() => new Set<FlowVertexTypeParam>([
+    'square', 'doublecircle', 'circle', 'ellipse', 'stadium', 'subroutine', 
+    'rect', 'cylinder', 'round', 'diamond', 'hexagon', 'odd', 
+    'trapezoid', 'inv_trapezoid', 'lean_right', 'lean_left',
+  ]), []);
+
+  export const isValidShape = (shape: any): shape is FlowVertexTypeParam => validShapes.has(shape);
 
 export function generateDynamicMermaidFlowchart(data: {
     nodes: Map<string, FlowVertex>,

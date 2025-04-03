@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Badge, MenuGroup, Text, useTheme2 } from '@grafana/ui';
 import { customHtmlBase } from 'types/types';
-import { css } from '@emotion/css';
 
 interface StringListProps extends customHtmlBase{
   label: string;
@@ -13,16 +12,14 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
   const [visibleStrings, setVisibleStrings] = useState<string[]>([]); 
   const [remainingCount, setRemainingCount] = useState<number>(0);
 
-  // Helper function to calculate text width
   const getTextWidth = (text: string): number => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     if (!context) return 0;
     context.font = '14px Arial';
-    return context.measureText(text).width + 20; // Add padding for divs
+    return context.measureText(text).width + 20; 
   };
 
-  // Function to calculate visible strings based on container width
   const calculateVisibleStrings = () => {
     if (!containerRef.current) return;
 
@@ -31,8 +28,7 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
     let visible: string[] = [];
     let remaining = 0;
 
-    // Account for the "+X more" element's width
-    const moreItemWidth = 80; // Approximate width for "+X more" element
+    const moreItemWidth = 80;
     const availableWidth = containerWidth - moreItemWidth;
     if(content!==undefined){
       if(content.length === 0){
@@ -41,17 +37,16 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
   
         if (totalWidth + strWidth <= availableWidth) {
           visible.push(str);
-          totalWidth += strWidth + 5; // Add gap width (5px)
+          totalWidth += strWidth + 5;
         }
       }else{
         for (let i = 0; i < content.length; i++) {
           const str = content[i];
           const strWidth = getTextWidth(str);
           
-          // Check if this string would fit
           if (totalWidth + strWidth <= availableWidth) {
             visible.push(str);
-            totalWidth += strWidth + 5; // Add gap width (5px)
+            totalWidth += strWidth + 5;
           } else {
             remaining = content.length - i;
             break;
@@ -64,27 +59,20 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
 
       if (totalWidth + strWidth <= availableWidth) {
         visible.push(str);
-        totalWidth += strWidth + 5; // Add gap width (5px)
+        totalWidth += strWidth + 5;
       }
     }
     
-    
-
     setVisibleStrings(visible);
     setRemainingCount(remaining);
   };
 
-  // Initial calculation
   useEffect(() => {
     calculateVisibleStrings();
-    // Add resize listener
     const handleResize = () => {
       calculateVisibleStrings();
     };
-    
     window.addEventListener('resize', handleResize);
-    
-    // Clean up
     return () => {
       window.removeEventListener('resize', handleResize);
     };

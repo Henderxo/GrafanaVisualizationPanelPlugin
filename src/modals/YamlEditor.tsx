@@ -302,7 +302,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
     monaco.editor.onDidChangeMarkers((e) => {
       const model = editor.getModel();
       const markers = monaco.editor.getModelMarkers({ model });
-      console.log("Validation Errors:", markers); // You should see validation errors here
+      console.log("Validation Errors:", markers); 
     });
 
     const editor = monaco.editor.create(containerRef.current, {

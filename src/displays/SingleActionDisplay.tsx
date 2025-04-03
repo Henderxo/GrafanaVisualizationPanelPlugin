@@ -9,7 +9,7 @@ export const SingleActionDisplay: React.FC<{
   isEmptyText: string, 
   textSize: TextSize 
 }> = ({ label, actionData, isEmptyText, textSize }) => {
-    console.log(actionData)
+
   const singleAction = actionData.action[actionData.actionName];
   
   return (
