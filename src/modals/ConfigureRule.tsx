@@ -83,7 +83,7 @@ export const ConfigureRule: React.FC<ConfigureRuleModalProps> = ({
     const [generalActionsAdded, setGeneralActionsAdded] = useState<boolean>(false);
     //General
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false)
-    const [isFunctionLoaded, setIsFunctionLoaded] = useState<boolean>(false)
+    const [, setIsFunctionLoaded] = useState<boolean>(false)
     const [activeTab, setActiveTab] = useState<'if' | 'else_if' | 'else'>('if');
     const  [ElementList, setElementList] = useState<SelectableValue[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
