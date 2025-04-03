@@ -84,16 +84,18 @@ export const FileUpload: React.FC<FileUploadSettings> = ({ value, onChange, onCl
               onChange={handleFileSelect}
             />
 
-            <p><strong>{titleString}</strong></p>
-            <div  style={{width: '100%'}}>
-              <label htmlFor="fileInput">
-              <Button variant="primary" fullWidth={true} onClick={() => fileInputRef.current?.click()}>
-                <Icon name={'import'} className={css`margin-right: 6px;`}></Icon><Text>Select a File</Text>
-              </Button>
-              </label>
-              <p style={{ color: '#666', marginTop: 10 }}>or drag & drop here</p>
+            <div style={{width: '100%', border: 'dashed 3px', paddingTop: '12px', borderColor: theme.colors.border.strong}}>
+              <p><strong>{titleString}</strong></p>
+              <div  style={{width: '100%'}}>
+                <label htmlFor="fileInput">
+                <Button variant="primary" fullWidth={true} onClick={() => fileInputRef.current?.click()}>
+                  <Icon name={'import'} className={css`margin-right: 6px;`}></Icon><Text>Select a File</Text>
+                </Button>
+                </label>
+                <p style={{ color: '#666', marginTop: 10 }}>or drag & drop here</p>
+              </div>
             </div>
-
+           
             {(fileName || fileContent) && <RuleInputWrapper isIcon={false} backgroundColor={theme.colors.background.primary}>
               {fileName && (
                 <div style={{ marginTop: 15, fontSize: '16px', color: 'white' }}>

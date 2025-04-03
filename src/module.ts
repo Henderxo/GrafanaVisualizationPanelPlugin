@@ -2,10 +2,10 @@ import { PanelPlugin } from '@grafana/data';
 import { SimpleOptions } from './types';
 import { MainPanel } from 'components/panels/MainPanel';
 import { CustomTextEditor } from 'components/options/CustomTextEditor';
-import { RuleConfigButton } from 'components/options/RuleConfigButton';
-import { YamlEditorButton } from 'components/options/yamlEditor/YamlEditorButton';
-import { FileExportButton } from 'components/options/fileExport/FileExportButton';
-import { FileUploadButton } from 'components/options/fileUpload/FileUploadButton';
+import { RulesConfigButton } from 'components/options/RulesConfigButton';
+import { YamlEditorButton } from 'components/options/YamlEditorButton';
+import { FileExportButton } from 'components/options/FileExportButton';
+import { FileUploadButton } from 'components/options/FileUploadButton';
 
 export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions((builder) => {
   return builder
@@ -62,7 +62,7 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       category: ['YAML Configuration'],
       name: 'Element Configuration',
       description: 'Configure elements in the diagram',
-      editor: RuleConfigButton,
+      editor: RulesConfigButton,
     })
     .addCustomEditor({
       id: "yamlEditor",

@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Action, customHtmlBase, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from "types/types";
+import React, {  useState } from "react";
+import {  customHtmlBase, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from "types/types";
 import StringList from "./StringListDisplay";
-import { useTheme2, Text, Divider, TabsBar, Tab, PageToolbar, ToolbarButton, ConfirmModal } from '@grafana/ui';
-import FunctionList, { ActionDisplay } from "./FunctionListDisplay";
+import { useTheme2, Text, Divider, PageToolbar, ToolbarButton, ConfirmModal } from '@grafana/ui';
+import FunctionList from "./FunctionListDisplay";
 import { css } from '@emotion/css';
-import { CreateRuleModal } from "modals/CreateRule";
+import { ConfigureRule } from "modals/ConfigureRule";
 import RuleInputWrapper from "components/wrappers/RuleInputWrapper";
+import { ActionsDisplay } from "./ActionsDisplay";
 
 interface RuleDisplayProps extends customHtmlBase {
   rule: YamlBindRule | YamlStylingRule;
@@ -49,7 +50,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       onMouseEnter={() => setIsHovered(hover)} 
       onMouseLeave={() => setIsHovered(false)} 
     >
-      {isEditModalOpen && <CreateRuleModal
+      {isEditModalOpen && <ConfigureRule
       isEdit={true} 
       possibleClasses={possibleClasses}
       rule={rule}
@@ -100,7 +101,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
             rule={rule} 
             func={rule.function as FunctionElement}
         /></RuleInputWrapper>} 
-        {rule.getActions().areActions && <RuleInputWrapper isIcon={false}><ActionDisplay label="General Actions:" textSize={textSize} action={rule.getActions().Action}></ActionDisplay></RuleInputWrapper>}
+        {rule.getActions().areActions && <RuleInputWrapper isIcon={false}><ActionsDisplay label="General Actions:" textSize={textSize} action={rule.getActions().Action}></ActionsDisplay></RuleInputWrapper>}
 
       </div>
     </div>

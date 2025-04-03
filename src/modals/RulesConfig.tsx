@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, TabsBar, Tab, Grid, LoadingPlaceholder, LoadingBar, useSplitter, Text, Icon, IconButton, Label, Drawer } from '@grafana/ui';
-import { YamlBindRule, YamlStylingRule, BaseObject, FlowClass } from 'types/types';
+import { Modal, TabsBar, Tab, LoadingBar, useSplitter, Text, IconButton } from '@grafana/ui';
+import { YamlBindRule, YamlStylingRule, BaseObject, FlowClass, YamlParsedConfig } from 'types/types';
 import { RuleDisplay } from '../displays/RuleDisplay';
 import { css } from '@emotion/css';
-import * as yaml from 'js-yaml';
-import { getElementRules, getElementTypeInBaseObject } from 'utils/TransformationUtils';
-import { CreateRuleModal } from './CreateRule';
+import { getElementRules } from 'utils/TransformationUtils';
+import { convertToYaml } from 'utils/YamlUtils';
+import { ConfigureRule } from './ConfigureRule';
 
-interface ElementConfigModalProps {
+interface RulesConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
   element?: BaseObject | null;
   elements: string[]
   possibleClasses: Map<string, FlowClass>
-  yamlConfig: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]};
+  yamlConfig: YamlParsedConfig;
   onYamlConfigChange: (newYamlConfig: string) => void;
 }
 
-export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
+export const RulesConfig: React.FC<RulesConfigModalProps> = ({
   isOpen,
   onClose,
   element,
@@ -122,23 +122,6 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
     setIsLoading(false)
   };
 
-  const convertToYaml = (jsonObject: any): string => {
-    try {
-      const cleanObject = JSON.parse(JSON.stringify(jsonObject));
-      
-      const yamlString = yaml.dump(cleanObject, {
-        indent: 2,
-        lineWidth: -1,
-        noArrayIndent: false
-      });
-  
-      return yamlString;
-    } catch (error) {
-      console.error('Error converting to YAML:', error);
-      return '';
-    }
-  };
-
   useEffect(() => {
     try {
       setParsedYaml({
@@ -221,7 +204,7 @@ export const ElementConfigModal: React.FC<ElementConfigModalProps> = ({
           onClick={CreateRule}
         />
       </div>
-      {isModalOpen && <CreateRuleModal
+      {isModalOpen && <ConfigureRule
         possibleClasses={possibleClasses}
         totalRuleCount={parsedYaml.bindingRules.length + parsedYaml.stylingRules.length}
         elements={elements}

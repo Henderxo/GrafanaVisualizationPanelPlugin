@@ -1,4 +1,4 @@
-import { PanelData } from "@grafana/data";
+import { PanelData, SelectableValue } from "@grafana/data";
 import { Diagram } from "mermaid/dist/Diagram";
 import { BaseObject, DiagramDBResponse, FlowClass, FlowEdge, FlowSubGraph, FlowVertex, fullMermaidMap, YamlBindRule, YamlStylingRule } from "types/types";
 
@@ -17,6 +17,37 @@ function mapDataToRows(data: PanelData): Record<string, any>[]{
       return acc;
     }, {} as Record<string, any>))
 }
+
+  const mapToSelectableValues = (values: string[], addOptions?: string[]): SelectableValue[] => {
+    let valueCopy: string[] = JSON.parse(JSON.stringify(values))
+    if(addOptions){
+        addOptions.reverse().forEach(option=>{
+            valueCopy.unshift(option)
+        })
+    }
+    return valueCopy.map(value => ({
+      label: value,
+      value: value
+    }));
+  };
+
+const getElementsFromRule = (rule: YamlBindRule | YamlStylingRule, map: fullMermaidMap): string[] => {
+  let elementList: string[] = [];
+  if (rule.elements) {
+    rule.elements.forEach(element => {
+      if (element === 'all' || element === 'nodes' || element === 'subgraphs') {
+        const elementsFromMap = findAllElementsInMaps(map, element);
+        elementList.push(...elementsFromMap);
+      }
+      elementList.push(element);
+    });
+  } else {
+    const elementsFromMap = findAllElementsInMaps(map);
+    elementList.push(...elementsFromMap);
+  }
+  elementList = [...new Set(elementList)];
+  return elementList;
+};
 
 function reformatDataFromResponse(rez: Diagram): {
     nodes: Map<string, FlowVertex>,
@@ -164,4 +195,4 @@ function findAllElementsInMaps (map: fullMermaidMap, options?: 'nodes' | 'subgra
     return elements;
 };
 
-export{extractTableData, colorToHex, getElementRules, extractMermaidConfigString, getElementTypeInBaseObject, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse, sortByPriority}
+export{extractTableData, mapToSelectableValues, colorToHex,getElementsFromRule, getElementRules, extractMermaidConfigString, getElementTypeInBaseObject, mapDataToRows, findElementInMaps, findAllElementsInMaps, reformatDataFromResponse, sortByPriority}

@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { StandardEditorProps } from '@grafana/data';
-import { Button, Icon, Modal, SelectMenuOptions, Text, useTheme2 } from '@grafana/ui';
+import { Icon, Text} from '@grafana/ui';
 import { css } from '@emotion/css';
-import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
-import { FileUpload } from './FileUpload';
-import { SimpleOptions } from 'types';
+import { FileUpload } from '../../modals/FileUpload';
 import ButtonWrapper from 'components/wrappers/ButtonWrapper';
 
 interface FileUploadSettings {

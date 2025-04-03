@@ -5,6 +5,16 @@ import { DiagramDB } from "mermaid/dist/diagram-api/types";
     priority: number;
   }
 
+  export interface YamlParsedConfig {
+    bindingRules: YamlBindRule[], 
+    stylingRules: YamlStylingRule[],
+    parseError: string | null
+  }
+
+  export type ActionNames = 'applyClass'|'bindData'|'applyStyle'|'applyShape'|'applyText'
+
+  export type TextSize = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'span' | 'p' 
+
   export abstract class RuleBase<T extends RuleBase<T>> {
     id: string;
     elements?: string[];

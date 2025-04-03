@@ -1,10 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Button, Modal, useTheme2 } from "@grafana/ui";
-import { StandardEditorProps } from "@grafana/data";
 import { css } from "@emotion/css";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { configureMonacoYaml } from "monaco-yaml";
-import { colorToHex } from "utils/TransformationUtils";
 
 interface EditorProps{
   value: string,
@@ -20,7 +18,6 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
   const containerRef = useRef<HTMLDivElement | null>(null);
   const theme = useTheme2()
   const mainColor = theme.colors.background.secondary
-  const opositeMainColor = theme.colors.background.primary
 
   useEffect(()=>{
     setLocalYaml(value)

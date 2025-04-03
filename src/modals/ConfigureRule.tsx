@@ -10,8 +10,6 @@ import {
   useTheme2,
   LoadingPlaceholder,
   Field,
-  FieldValidationMessage,
-  FormsOnSubmit,
   ConfirmModal
 } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
@@ -21,9 +19,11 @@ import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 import { FunctionInput } from 'components/inputs/FunctionInput';
 import { ActionInput } from 'components/inputs/ActionInput';
 import { RuleCreateActionBar } from 'components/inputs/RuleCreateActionBar';
+import { getGeneralRuleActions } from 'utils/ActionUtils';
+import { mapToSelectableValues } from 'utils/TransformationUtils';
 
 
-interface CreateRuleModalProps {
+interface ConfigureRuleModalProps {
   isOpen: boolean;
   isEdit?: boolean;
   onClose: () => void;
@@ -54,7 +54,7 @@ interface RuleUIState {
   ruleType: SelectableValue
 }
 
-export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({ 
+export const ConfigureRule: React.FC<ConfigureRuleModalProps> = ({ 
   isOpen,
   isEdit = false, 
   onClose, 
@@ -152,76 +152,9 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
         errors.id = 'Rule ID is required';
       }
 
-      // if (priorityActionAdded) {
-      //   if (newRuleRef.current.priority === undefined || newRuleRef.current.priority === null) {
-      //     errors.priority = 'Priority is required';
-      //   } else if (newRuleRef.current.priority < 0) {
-      //     errors.priority = 'Priority must be a non-negative number';
-      //   }
-      // }
-
-      // if (elementsActionAdded) {
-      //   if (!newRuleRef.current.elements || newRuleRef.current.elements.length === 0) {
-      //     errors.elements = 'At least one element must be selected';
-      //   }
-      // }
-
-      // if (functionActionAdded) {
-      //   const func = newRuleRef.current.function;
-      //   if (!func) {
-      //     errors.function = 'Function details are required';
-      //   }
-      // }
-
-      // if (generalActionsAdded && ruleType.value === 'binding') {
-      //   const bindRule = newRuleRef.current as YamlBindRule;
-      //   if (!bindRule.bindData) {
-      //     errors.generalActions = 'Binding data is required';
-      //   }
-      // }
-
-      // if (generalActionsAdded && ruleType.value === 'styling') {
-      //   const stylingRule = newRuleRef.current as YamlStylingRule;
-      //   if (!stylingRule.applyClass && !stylingRule.applyStyle && 
-      //       !stylingRule.applyShape && !stylingRule.applyText) {
-      //     errors.generalActions = 'At least one styling action is required';
-      //   }
-      // }
-
       setValidationErrors(errors);
 
       return Object.keys(errors).length === 0;
-    };
-
-
-
-    const getGeneralActions = (): Action => {
-      let tempAction: Action = {};
-      
-      if (ruleType.value === 'binding') {
-        let tempRule = { ...(newRuleRef.current as YamlBindRule) };
-        
-        if (tempRule.bindData !== undefined) {
-          tempAction.bindData = tempRule.bindData;
-        }
-      } else {
-        let tempRule = { ...(newRuleRef.current as YamlStylingRule) };
-    
-        if (tempRule.applyClass !== undefined) {
-          tempAction.applyClass = tempRule.applyClass;
-        }
-        if (tempRule.applyStyle !== undefined) {
-          tempAction.applyStyle = tempRule.applyStyle;
-        }
-        if (tempRule.applyShape !== undefined) {
-          tempAction.applyShape = tempRule.applyShape;
-        }
-        if (tempRule.applyText !== undefined) {
-          tempAction.applyText = tempRule.applyText;
-        }
-      }
-    
-      return tempAction;
     };
 
     const handleRuleTypeChange = (selectedType: SelectableValue) => {
@@ -402,23 +335,11 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
   });
 
 
-  const mapToSelectableValues = (values: string[], addOptions?: string[]): SelectableValue[] => {
-    let valueCopy: string[] = JSON.parse(JSON.stringify(values))
-    if(addOptions){
-        addOptions.reverse().forEach(option=>{
-            valueCopy.unshift(option)
-        })
-    }
-    return valueCopy.map(value => ({
-      label: value,
-      value: value
-    }));
-  };
 
   return (
     <Modal
       isOpen={isOpen}
-      onDismiss={onClose}
+      onDismiss={()=>setIsConfirmModalOpen(true)}
       title={`${isEdit?'Edit Rule':'Create New Rule'}`}
       className={css`
         width: 900px;
@@ -572,7 +493,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
             <RuleInputWrapper onDelete={handleGeneralRuleDelete}>
               <ActionInput
               possibleClasses={possibleClasses}
-              action={getGeneralActions()}
+              action={getGeneralRuleActions(newRuleRef.current)}
               onChange={handleGeneralRuleChange}
               type={ruleType.value}>
               </ActionInput>
@@ -593,7 +514,7 @@ export const CreateRuleModal: React.FC<CreateRuleModalProps> = ({
           </div>
         </div>
       )}
-      <ConfirmModal modalClass={css`top: 30%;`} dismissText='Cancel' confirmText='Confirm' body={`Are you sure you want to cancel this objects ${!isEdit?'creation':'edit'}?`} title={`Cancel ${!isEdit?'creation progress':'editing progress'}`} isOpen={isConfirmModalOpen} onDismiss={()=>setIsConfirmModalOpen(false)} onConfirm={()=>{onClose(); setIsConfirmModalOpen(false)}}></ConfirmModal>
+      <ConfirmModal modalClass={css`top: 30%;`} dismissText='Cancel' confirmText='Confirm' body={`Are you sure you want to cancel this object's ${!isEdit?'creation':'edit'}?`} title={`Cancel ${!isEdit?'creation progress':'editing progress'}`} isOpen={isConfirmModalOpen} onDismiss={()=>setIsConfirmModalOpen(false)} onConfirm={()=>{onClose(); setIsConfirmModalOpen(false)}}></ConfirmModal>
       <Modal.ButtonRow>
         <Button variant={"destructive"} onClick={()=>setIsConfirmModalOpen(true)}>Cancel</Button>
         {rule ? (

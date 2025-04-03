@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Input, 
   Text, 
-  Select, 
   TabsBar, 
   Tab, 
   useTheme2,
@@ -37,7 +36,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   const theme = useTheme2()
   const [isLoaded, setisLoaded] = useState<boolean>(false)
 
-  const handleConditionChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'if' | 'else_if' = 'if', index?: number) => {
+  const handleConditionChange = (e: React.FormEvent<HTMLInputElement>, type: 'if' | 'else_if' = 'if', index?: number) => {
     if (functionData && typeof functionData !== 'string') {
       const updatedFunction = { ...functionData };
 
@@ -184,7 +183,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                         <Input 
                             placeholder="Condition" 
                             value={elseIfCondition.condition || ''} 
-                            onChange={(e) => handleConditionChange(e, 'else_if', index)}
+                            onChange={(e) => handleConditionChange(e , 'else_if', index)}
                             className="mb-2"
                         />
                     </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}

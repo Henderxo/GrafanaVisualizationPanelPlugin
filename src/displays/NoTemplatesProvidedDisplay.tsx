@@ -3,7 +3,7 @@ import { ClickableImgWrapper } from "components/wrappers/ClickableImgWrapper";
 import React, { useState } from "react";
 import { customHtmlBase } from "types/types";
 import logo from "img/logo.svg"
-import { YamlEditor } from "components/options/yamlEditor/YamlEditor";
+import { YamlEditor } from "modals/YamlEditor";
 
 interface NoTemplatesProvidedDisplayProps extends customHtmlBase {
     yamlConfig: string,

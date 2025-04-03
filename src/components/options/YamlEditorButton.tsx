@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Button, Icon, Modal, Text } from "@grafana/ui";
+import React, { useEffect, useState } from "react";
+import {  Icon, Text } from "@grafana/ui";
 import { StandardEditorProps } from "@grafana/data";
-import { YamlEditor } from "./YamlEditor";
+import { YamlEditor } from "../../modals/YamlEditor";
 import { css } from "@emotion/css";
 import { SimpleOptions } from "types";
 import ButtonWrapper from "components/wrappers/ButtonWrapper";

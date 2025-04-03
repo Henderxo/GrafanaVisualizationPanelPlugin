@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StandardEditorProps } from '@grafana/data';
-import { Button, Icon, Modal, Text, useTheme2 } from '@grafana/ui';
+import { Icon, Text } from '@grafana/ui';
 import { css } from '@emotion/css';
-import { FileExport } from './FileExport';
-import { SimpleOptions } from 'types';
+import { FileExport } from '../../modals/FileExport';
 import ButtonWrapper from 'components/wrappers/ButtonWrapper';
 
 interface FileExportButtonProps extends StandardEditorProps<string, any, {buttonTheme: 'primary'|'secondary', chartType?: string }> {}
