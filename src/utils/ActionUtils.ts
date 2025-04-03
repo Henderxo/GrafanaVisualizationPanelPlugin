@@ -3,7 +3,7 @@ import { bindDataToString } from "./DataBindingUtils";
 import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
 import { isValidShape } from "./MermaidUtils";
 
-    const applyClassAction = (Action: Action, Element: BaseObject) => {
+    function applyClassAction(Action: Action, Element: BaseObject){
     if (Action.applyClass) 
       Action.applyClass.forEach((className: string) => {
         const classIndex = Element.classes.indexOf(className);
@@ -15,7 +15,7 @@ import { isValidShape } from "./MermaidUtils";
     }
 
   
-    const applyStyleAction = (Action: Action, Element: BaseObject) => {
+    function applyStyleAction (Action: Action, Element: BaseObject){
         if (Action.applyStyle) {
         Action.applyStyle.forEach((styleName: string) => {
             const [property] = styleName.split(':');
@@ -29,7 +29,7 @@ import { isValidShape } from "./MermaidUtils";
         }
     };
 
-    const applyTextAction = (Action: Action, Element: BaseObject) => {
+    function applyTextAction  (Action: Action, Element: BaseObject){
         if (Action.applyText) {
         const text = bindDataToString(Action.applyText, Element);
         if ('title' in Element) {

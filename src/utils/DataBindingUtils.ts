@@ -1,11 +1,11 @@
   
 import { BaseObject, FlowSubGraph, FlowVertex, fullMermaidMap } from'../types';
-import { findAllElementsInMaps, findElementInMaps } from "./TransformationUtils";
+import { findAllElementsInMaps, findElementInMaps } from './DiagramMapUtils';
   
 const bindData = (fullMap: fullMermaidMap) => {
     const elementsFromMap = findAllElementsInMaps(fullMap);
     if(elementsFromMap){
-      elementsFromMap.forEach((element)=>{
+      elementsFromMap.forEach((element: any)=>{
         let mapElement = findElementInMaps(element, fullMap) as FlowSubGraph | FlowVertex
         let elementData = mapElement.data??null
         if(elementData && Object.keys(elementData).length > 0){

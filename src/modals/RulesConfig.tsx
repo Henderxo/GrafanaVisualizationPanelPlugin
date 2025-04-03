@@ -3,9 +3,10 @@ import { Modal, TabsBar, Tab, LoadingBar, useSplitter, Text, IconButton } from '
 import { YamlBindRule, YamlStylingRule, BaseObject, FlowClass, YamlParsedConfig } from '../types';
 import { RuleDisplay } from '../displays/RuleDisplay';
 import { css } from '@emotion/css';
-import { getElementRules } from 'utils/TransformationUtils';
+
 import { convertToYaml } from 'utils/YamlUtils';
 import { ConfigureRule } from './ConfigureRule';
+import { getElementRules } from 'utils/RuleUtils';
 
 interface RulesConfigModalProps {
   isOpen: boolean;

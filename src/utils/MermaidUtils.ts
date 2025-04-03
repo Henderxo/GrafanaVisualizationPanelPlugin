@@ -1,15 +1,48 @@
 import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } from '../types';
 
-  export const VALID_SHAPES = new Set<FlowVertexTypeParam>([
+   const VALID_SHAPES = new Set<FlowVertexTypeParam>([
     'square', 'doublecircle', 'circle', 'ellipse', 'stadium', 'subroutine',
     'rect', 'cylinder', 'round', 'diamond', 'hexagon', 'odd',
     'trapezoid', 'inv_trapezoid', 'lean_right', 'lean_left',
   ]);
 
-  export const isValidShape = (shape: any): shape is FlowVertexTypeParam => 
+   const isValidShape = (shape: any): shape is FlowVertexTypeParam => 
     VALID_SHAPES.has(shape);
 
-export function generateDynamicMermaidFlowchart(data: {
+
+   function extractMermaidConfigString(template: string): string | undefined {
+      const initRegex = /%%\{init:\s*(.*?)\s*\}%%/;
+      const match = template.match(initRegex);
+      
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+      
+      return undefined;
+    }
+
+   function isFlowVertex(obj: any): obj is FlowVertex {
+    return (
+      obj &&
+      Array.isArray(obj.classes) &&
+      typeof obj.id === 'string' &&
+      typeof obj.domId === 'string' &&
+      obj.labelType === 'text' &&
+      Array.isArray(obj.styles)
+    );
+  }
+  
+   function isFlowSubGraph(obj: any): obj is FlowSubGraph {
+    return (
+      obj &&
+      Array.isArray(obj.classes) &&
+      typeof obj.id === 'string' &&
+      typeof obj.title === 'string' &&
+      Array.isArray(obj.nodes)
+    );
+  }
+
+ function generateDynamicMermaidFlowchart(data: {
     nodes: Map<string, FlowVertex>,
     edges: FlowEdge[],
     classes: Map<string, FlowClass>,
@@ -29,7 +62,7 @@ export function generateDynamicMermaidFlowchart(data: {
     
     // Process subgraphs first if they exist
     if (data.subGraphs.size > 0) {
-      for (const [subgraphId, subgraph] of data.subGraphs) {
+      for (const [, subgraph] of data.subGraphs) {
         mermaidString += `  subgraph ${subgraph.id} [${subgraph.title}]\n`;
         
         // Add nodes to subgraph
@@ -319,3 +352,6 @@ export function generateDynamicMermaidFlowchart(data: {
       return '-->';
     }
   }
+
+
+  export {generateDynamicMermaidFlowchart, getLineStyle, isValidShape, extractMermaidConfigString, isFlowVertex, isFlowSubGraph}

@@ -4,8 +4,8 @@ import { PanelData, TypedVariableModel } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
 import {fullMermaidMap, BaseObject, FlowClass, YamlParsedConfig } from '../../types';
-import { generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
-import { extractMermaidConfigString, extractTableData, findAllElementsInMaps, findElementInMaps, reformatDataFromResponse, } from 'utils/TransformationUtils';
+import { extractMermaidConfigString, generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
+import { extractTableData, reformatDataFromResponse, } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { RulesConfig } from '../../modals/RulesConfig';
 import { getTemplateSrv, locationService } from '@grafana/runtime';
@@ -13,6 +13,7 @@ import { NoTemplatesProvidedDisplay } from 'displays/NoTemplatesProvidedDisplay'
 import { ErrorService, ErrorType } from 'services/ErrorService';
 import { parseYamlConfig } from 'utils/YamlUtils';
 import { applyAllRules } from 'utils/RuleUtils';
+import { findAllElementsInMaps, findElementInMaps } from 'utils/DiagramMapUtils';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;

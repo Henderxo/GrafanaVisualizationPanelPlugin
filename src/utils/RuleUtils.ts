@@ -1,17 +1,18 @@
 import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
-import { ConditionElement, FlowVertex, fullMermaidMap, YamlBindRule, YamlStylingRule } from '../types';
-import { findElementInMaps, getElementsFromRule, sortByPriority } from "./TransformationUtils";
+import { BaseObject, ConditionElement, FlowVertex, fullMermaidMap, YamlBindRule, YamlStylingRule } from '../types';
+import { sortByPriority } from "./TransformationUtils";
 import { addActions } from "./ActionUtils";
 import { ErrorService, ErrorType } from "services/ErrorService";
 import { bindData } from "./DataBindingUtils";
+import { findAllElementsInMaps, findElementInMaps, getElementTypeInBaseObject } from "./DiagramMapUtils";
 
-    const applyAllRules = (
+    function applyAllRules (
         bindingRules: YamlBindRule[], 
         stylingRules: YamlStylingRule[], 
         fullMap: fullMermaidMap, 
         rows: Record<string, any>[], 
         grafanaVariables: TypedVariableModel[] | null
-    ) => {
+    ) {
         const sortedBindingRules = sortByPriority(bindingRules);
         const sortedStylingRules = sortByPriority(stylingRules);
         
@@ -45,12 +46,12 @@ import { bindData } from "./DataBindingUtils";
         });
     };
 
-  const findAndApplyBindings = (
+  function findAndApplyBindings (
     map: fullMermaidMap, 
     rule: YamlBindRule, 
     rows: Record<string, any>[], 
     grafanaVariables: TypedVariableModel[] | null
-  ) => {
+  ) {
     rows.some((row) => {
       const actionDataList = determineAction(rule, row, grafanaVariables);
       if (actionDataList) {
@@ -72,11 +73,11 @@ import { bindData } from "./DataBindingUtils";
     });
   };
 
-  const findAndApplyStyling = (
+  function findAndApplyStyling (
     fullMap: fullMermaidMap, 
     rule: YamlStylingRule, 
     grafanaVariables: TypedVariableModel[] | null
-  ) => {
+  ) {
     let elementList: string[] = getElementsFromRule(rule, fullMap);
     elementList.forEach(object => {
       let mapElement = findElementInMaps(object, fullMap);
@@ -94,11 +95,11 @@ import { bindData } from "./DataBindingUtils";
     });
   };
 
-  const evaluateCondition = (
+  function evaluateCondition(
       condition: string, 
       row: Record<string, any> | undefined, 
       grafanaVariables: TypedVariableModel[] | null
-    ): boolean => {
+    ): boolean{
       try {
         if (!row) {
           return false;
@@ -128,11 +129,11 @@ import { bindData } from "./DataBindingUtils";
       }
     };
 
-  const determineAction = (
+  function determineAction(
       rule: YamlBindRule | YamlStylingRule, 
       row: Record<string, any> | undefined, 
       grafanaVariables: TypedVariableModel[] | null
-    ): ConditionElement[] | null => {
+    ): ConditionElement[] | null{
       let matchedAction: ConditionElement[] = [];
       let func = rule.function;
       
@@ -163,4 +164,49 @@ import { bindData } from "./DataBindingUtils";
       return matchedAction.length > 0 ? matchedAction : null;
     };
 
-    export {applyAllRules}
+    function getElementRules(element: BaseObject, rules: [YamlBindRule[]?, YamlStylingRule[]?]){
+        const [bindRules, stylingRules] = rules;
+        let elementRules: {bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]} = {bindingRules: [], stylingRules: []}
+    
+        const elementType = getElementTypeInBaseObject(element)
+        const elementId = element.id || '';
+    
+        if (bindRules && element.id) {
+          elementRules.bindingRules = bindRules.filter((rule) =>{
+            return !rule.elements || rule.elements?.includes('all')  
+            ||rule.elements?.includes('nodes') && elementType === 'node' 
+            || rule.elements?.includes('subgraphs') && elementType === 'subgraph'
+            || rule.elements?.includes(elementId)
+          })
+        }
+        if (stylingRules) {
+          elementRules.stylingRules = stylingRules.filter((rule) =>{
+            return !rule.elements || rule.elements?.includes('all')  
+            ||rule.elements?.includes('nodes') && elementType === 'node' 
+            || rule.elements?.includes('subgraphs') && elementType === 'subgraph'
+            || rule.elements?.includes(elementId)
+          })
+        }
+    
+        return elementRules
+      }
+
+    const getElementsFromRule = (rule: YamlBindRule | YamlStylingRule, map: fullMermaidMap): string[] => {
+    let elementList: string[] = [];
+    if (rule.elements) {
+        rule.elements.forEach(element => {
+        if (element === 'all' || element === 'nodes' || element === 'subgraphs') {
+            const elementsFromMap = findAllElementsInMaps(map, element);
+            elementList.push(...elementsFromMap);
+        }
+        elementList.push(element);
+        });
+    } else {
+        const elementsFromMap = findAllElementsInMaps(map);
+        elementList.push(...elementsFromMap);
+    }
+    elementList = [...new Set(elementList)];
+    return elementList;
+    };
+
+    export {applyAllRules, getElementRules, getElementsFromRule}
