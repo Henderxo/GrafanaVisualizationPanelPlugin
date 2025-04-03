@@ -21,7 +21,7 @@ import { YamlBindRule, YamlStylingRule } from '../types';
 
 function parseYamlConfig(yamlConfig: string) {
     try {
-      const parsed = yaml.load(yamlConfig);
+      const parsed = yaml.load(yamlConfig) as any
       
       return {
         bindingRules: Array.isArray(parsed.bindingRules) 

@@ -1,6 +1,6 @@
 import { PanelData, SelectableValue } from "@grafana/data";
 import { Diagram } from "mermaid/dist/Diagram";
-import { DiagramDBResponse, FlowClass, FlowEdge, FlowSubGraph, FlowVertex, fullMermaidMap, YamlBindRule, YamlStylingRule } from '../types';
+import { DiagramDBResponse, FlowClass, FlowEdge, FlowSubGraph, FlowVertex} from '../types';
 
 function extractTableData(data: PanelData): Record<string, any[]>{
     return data.series[0]?.fields.reduce((acc, field) => {
