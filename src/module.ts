@@ -17,11 +17,10 @@ export const plugin = new PanelPlugin<SimpleOptions>(MainPanel).setPanelOptions(
       description: 'Select which panel to display',
       settings: {
         options: [
-          { value: 'mermaid', label: 'Mermaid Chart' },
-          { value: 'otherView', label: 'Other View' },
+          { value: 'mainDiagram', label: 'Main Diagram' }
         ],
       },
-      defaultValue: 'mermaid',
+      defaultValue: 'mainDiagram',
     }) 
     .addSelect({
       path: 'buttonTheme',

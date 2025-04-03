@@ -15,13 +15,13 @@ import { parseYamlConfig } from 'utils/YamlUtils';
 import { applyAllRules } from 'utils/RuleUtils';
 import { findAllElementsInMaps, findElementInMaps } from 'utils/DiagramMapUtils';
 
-interface OtherViewPanelProps {
+interface MainDiagramPanelProps {
   options: SimpleOptions;
   data: PanelData;
   onOptionsChange: (options: SimpleOptions) => void;
 }
 
-export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data, onOptionsChange }) => {
+export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, data, onOptionsChange }) => {
   const { yamlConfig, template } = options;
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
