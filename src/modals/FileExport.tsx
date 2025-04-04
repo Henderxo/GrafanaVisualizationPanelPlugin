@@ -42,7 +42,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
     <>
       {isOpen && (
         <Modal 
-          className={css`width: 1200px`} 
+          className={css`width: 70vw`} 
           title={titleString || "Export File"} 
           isOpen={isOpen} 
           onDismiss={() => onClose()}

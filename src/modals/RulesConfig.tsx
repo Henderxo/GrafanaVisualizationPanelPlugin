@@ -38,6 +38,14 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
     bindingRules: [],
     stylingRules: [],
   });
+
+  const rulesToDisplay = activeTab === 'bindingRules' 
+  ? elementRules.bindingRules 
+  : elementRules.stylingRules;
+
+const activeRule = activeTab === 'bindingRules' 
+  ? activeBindRule 
+  : activeStyleRule;
   
   const { containerProps, primaryProps, secondaryProps, splitterProps } = useSplitter({
     direction: 'row',
@@ -123,6 +131,7 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
   };
 
   useEffect(() => {
+    setIsLoading(true)
     try {
       setParsedYaml({
         bindingRules: yamlConfig.bindingRules || [],
@@ -131,6 +140,7 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
     } catch (e) {
       console.error('Error parsing YAML:', e);
     }
+    setIsLoading(false)
   }, [yamlConfig]);
 
   useEffect(() => {
@@ -147,18 +157,11 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
     setActiveTab('bindingRules')
     setActiveBindRule(null)
     setActiveStyleRule(null)
+    setElementRules({bindingRules: [], stylingRules: []})
     onClose(); 
   };
 
   if (!isOpen) return null;
-
-  const rulesToDisplay = activeTab === 'bindingRules' 
-    ? elementRules.bindingRules 
-    : elementRules.stylingRules;
-  
-  const activeRule = activeTab === 'bindingRules' 
-    ? activeBindRule 
-    : activeStyleRule;
 
   const setActiveRule = (rule: YamlBindRule | YamlStylingRule) => {
     if (rule instanceof YamlBindRule) {
@@ -173,8 +176,8 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
   return (
     <Modal
       className={css`
-        width: 80vw;
-        height: 80vh;
+        width: 70vw;
+        height: auto;
         display: flex;
         flex-direction: column;
       `}
@@ -236,7 +239,7 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
           marginTop: "3px",
           flex: 1,
           display: "flex",
-          height: '57vh',
+          height: '60vh',
           flexDirection: "column",
         }}
       >
@@ -252,7 +255,7 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
             <LoadingBar width={500} />
           </div>
         ) : (
-          <div style={{height: '57vh'}}>
+          <div style={{height: '60vh'}}>
             <div
               {...containerProps}
               className={css`

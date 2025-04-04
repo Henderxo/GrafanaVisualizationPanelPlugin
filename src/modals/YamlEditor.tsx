@@ -159,17 +159,19 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
       {isOpen && (
         <Modal
           className={css`
-            width: 1750px;
+            width: 70vw;
             height: auto;
             display: flex;
+            padding: 10px;
             flex-direction: column;
           `}
           title="Edit YAML Configuration"
           isOpen={isOpen}
           onDismiss={() => onClose()}
         >
-            <div ref={containerRef} 
+            <div  ref={containerRef} 
               className={css`
+                
               .monaco-editor, .monaco-editor-background, .monaco-editor .inputarea.ime-input {
                 background-color: ${mainColor};
               }
@@ -182,7 +184,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
             <Button variant="destructive" onClick={() => onClose()} style={{ marginRight: "10px" }}>
               Cancel
             </Button>
-            <Button variant="secondary" onClick={handleSave}>
+            <Button variant="primary" onClick={handleSave}>
               Save
             </Button>
 

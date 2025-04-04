@@ -249,7 +249,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
       {isLoading && <div className="loading-indicator">Loading diagram...</div>}
       <div ref={chartRef} className={isLoading ? "hidden" : ""} />
       
-      <RulesConfig
+      {isModalOpen && <RulesConfig
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         element={selectedElement}
@@ -257,7 +257,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
         possibleClasses={fullMapRef.current?.classes as Map<string, FlowClass>}
         yamlConfig={parsedYamlState}
         onYamlConfigChange={handleYamlConfigChange}
-      />
+      />}
     </div>
   );
 };
