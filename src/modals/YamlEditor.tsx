@@ -169,17 +169,20 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
           isOpen={isOpen}
           onDismiss={() => onClose()}
         >
+          <div style={{ margin: '10px'}}>
             <div  ref={containerRef} 
-              className={css`
-                
-              .monaco-editor, .monaco-editor-background, .monaco-editor .inputarea.ime-input {
-                background-color: ${mainColor};
-              }
-              .monaco-editor .margin {
-                background-color: ${mainColor};
-              }
-            `} 
-            style={{flex: 1, minHeight: "600px", height: '60vh', width: "100%", overflow: 'auto', border: 'solid 2px', borderColor: theme.colors.border.medium, borderRadius: '10px'}} />
+                className={css`
+                  
+                .monaco-editor, .monaco-editor-background, .monaco-editor .inputarea.ime-input {
+                  background-color: ${mainColor};
+                }
+                .monaco-editor .margin {
+                  background-color: ${mainColor};
+                }
+              `} 
+              style={{flex: 1, minHeight: "600px", height: '60vh', width: "100%", overflow: 'auto', border: 'solid 2px', borderColor: theme.colors.border.medium, borderRadius: '10px'}} />
+          </div>
+            
           <Modal.ButtonRow>
             <Button variant="destructive" onClick={() => onClose()} style={{ marginRight: "10px" }}>
               Cancel
