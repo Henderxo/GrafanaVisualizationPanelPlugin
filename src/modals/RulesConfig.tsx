@@ -173,8 +173,8 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
   return (
     <Modal
       className={css`
-        width: 900px;
-        height: 700px;
+        width: 80vw;
+        height: 80vh;
         display: flex;
         flex-direction: column;
       `}
@@ -236,6 +236,7 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
           marginTop: "3px",
           flex: 1,
           display: "flex",
+          height: '57vh',
           flexDirection: "column",
         }}
       >
@@ -251,14 +252,14 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
             <LoadingBar width={500} />
           </div>
         ) : (
-          <div>
+          <div style={{height: '57vh'}}>
             <div
               {...containerProps}
               className={css`
                 display: flex;
                 flex-direction: row;
                 width: 100%;
-                height: 500px;
+                height: 100%;
               `}
             >
               <div
