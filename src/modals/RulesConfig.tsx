@@ -3,10 +3,9 @@ import { Modal, TabsBar, Tab, LoadingBar, useSplitter, Text, IconButton } from '
 import { YamlBindRule, YamlStylingRule, BaseObject, FlowClass, YamlParsedConfig } from '../types';
 import { RuleDisplay } from '../displays/RuleDisplay';
 import { css } from '@emotion/css';
-
 import { convertToYaml } from 'utils/YamlUtils';
-import { ConfigureRule } from './ConfigureRule';
 import { getElementRules } from 'utils/RuleUtils';
+import { ConfigureRulenew } from './configureRuleModal/ConfigureRuleNew';
 
 interface RulesConfigModalProps {
   isOpen: boolean;
@@ -205,7 +204,7 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
           onClick={CreateRule}
         />
       </div>
-      {isModalOpen && <ConfigureRule
+      {isModalOpen && <ConfigureRulenew
         possibleClasses={possibleClasses}
         totalRuleCount={parsedYaml.bindingRules.length + parsedYaml.stylingRules.length}
         elements={elements}
