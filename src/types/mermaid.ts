@@ -70,7 +70,6 @@ export interface FlowEdge {
     constraint?: 'on' | 'off';
   }
 
-
   export type ArrowTypes =
   | undefined
   | 'square'

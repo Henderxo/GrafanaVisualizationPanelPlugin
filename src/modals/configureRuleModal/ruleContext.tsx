@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { SelectableValue } from '@grafana/data';
 import { Action, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from '../../types';
 import { RuleUIState, useRuleUIState } from 'modals/configureRuleModal/useRuleState';
@@ -52,7 +52,7 @@ interface RuleStateContextType {
   handleGeneralRuleChange: (action: Action) => void;
   handleGeneralRuleDelete: () => void;
   handleFunctionChange: (updatedFunction: FunctionElement | undefined, deletedTab?: string) => void;
-  handleRuleInputDelete: (type: 'priority' | 'elements') => void;
+  handleRuleInputDelete: (type: 'elements') => void;
   resetRule: (rule?: YamlBindRule | YamlStylingRule) => void;
   reconfigureEditor: (rule: YamlBindRule | YamlStylingRule) => void;
 }
@@ -95,10 +95,10 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
       : new YamlBindRule({id: `Rule_${totalRuleCount}`})
     )
   );
+  console.log(initialRule)
   
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   
-
   const ruleUIState = useRuleUIState();
   
   const maxHistoryLength = 10;
@@ -224,17 +224,10 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
     forceUpdate();
   };
 
-  const handleRuleInputDelete = (type: 'priority' | 'elements') => {
+  const handleRuleInputDelete = (type: 'elements') => {
     if (newRuleRef.current) {
       saveStateToHistory(newRuleRef.current);
       switch (type) {
-        case 'priority':
-          if (newRuleRef.current.priority) {
-            delete newRuleRef.current.priority;
-            ruleUIState.setPriorityActionAdded(false);
-            forceUpdate();
-          }
-          break;
         case 'elements':
           if (newRuleRef.current.elements) {
             delete newRuleRef.current.elements;
@@ -250,7 +243,6 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
     ruleUIState.resetUIState();
     ruleUIState.setRuleType(ruleTypeOptions.find(obj => obj.value === rule.getRuleType()) ?? { label: 'Binding Rule', value: 'binding' });
 
-    rule.priority && ruleUIState.setPriorityActionAdded(true);
     rule.elements && ruleUIState.setElementsActionAdded(true);
 
     if (rule.function) {
@@ -286,9 +278,10 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   };
 
   const resetRule = (rule?: YamlBindRule | YamlStylingRule) => {
-    if (rule) {
-      newRuleRef.current = rule.clone();
-      reconfigureEditor(rule);
+    let tempRule = rule??initialRule
+    if (tempRule) {
+      newRuleRef.current = tempRule.clone();
+      reconfigureEditor(tempRule);
     } else {
       newRuleRef.current = element 
         ? new YamlBindRule({id: `${element}_Rule_${totalRuleCount}`, elements: [element]})
@@ -344,7 +337,6 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   );
 };
 
-// Custom hook to use the RuleStateContext
 export const useRuleStateContext = () => {
   const context = useContext(RuleStateContext);
   if (context === undefined) {

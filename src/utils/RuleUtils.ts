@@ -1,6 +1,5 @@
 import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
 import { BaseObject, ConditionElement, FlowVertex, fullMermaidMap, YamlBindRule, YamlStylingRule } from '../types';
-import { sortByPriority } from "./TransformationUtils";
 import { addActions } from "./ActionUtils";
 import { ErrorService, ErrorType } from "services/ErrorService";
 import { bindData } from "./DataBindingUtils";
@@ -13,10 +12,7 @@ import { findAllElementsInMaps, findElementInMaps, getElementTypeInBaseObject } 
         rows: Record<string, any>[], 
         grafanaVariables: TypedVariableModel[] | null
     ) {
-        const sortedBindingRules = sortByPriority(bindingRules);
-        const sortedStylingRules = sortByPriority(stylingRules);
-        
-        sortedBindingRules.forEach(rule => {
+        bindingRules.forEach(rule => {
         if (rule.function) {
             findAndApplyBindings(fullMap, rule, rows, grafanaVariables);
         } else if (rule.bindData) {
@@ -31,7 +27,7 @@ import { findAllElementsInMaps, findElementInMaps, getElementTypeInBaseObject } 
         
         bindData(fullMap);
         
-        sortedStylingRules.forEach(rule => {
+        stylingRules.forEach(rule => {
         if (rule.function) {
             findAndApplyStyling(fullMap, rule, grafanaVariables);
         } else if (rule.applyClass||rule.applyShape||rule.applyStyle||rule.applyText) {

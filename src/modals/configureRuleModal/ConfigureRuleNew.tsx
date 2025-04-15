@@ -57,6 +57,7 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
   onSubmit,
   elements,
   possibleClasses,
+  rule,
 }) => {
   const { 
     // State
@@ -242,26 +243,6 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
                 />
               </Field>
             </RuleInputWrapper>
-  
-            {priorityActionAdded && (
-              <RuleInputWrapper
-                onDelete={() => handleRuleInputDelete("priority")}
-              >
-                <Text>Priority:</Text>
-                <Field className={css`margin: 0px;`}>
-                  <Input
-                    placeholder="Priority"
-                    value={newRuleRef.current.priority}
-                    type="number"
-                    onChange={(e) => {
-                      newRuleRef.current.priority = parseInt(e.currentTarget.value)
-                      forceUpdate();
-                    }}
-                    className="mb-2"
-                  />
-                </Field>
-              </RuleInputWrapper>
-            )}
   
             {elementsActionAdded && !areElementsLoading && (
               <RuleInputWrapper

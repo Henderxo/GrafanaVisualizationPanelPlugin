@@ -1,11 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, TabsBar, Tab, LoadingBar, useSplitter, Text, IconButton } from '@grafana/ui';
+import { Modal, TabsBar, Tab, LoadingBar, useSplitter, Text, IconButton, Button } from '@grafana/ui';
 import { YamlBindRule, YamlStylingRule, BaseObject, FlowClass, YamlParsedConfig } from '../types';
 import { RuleDisplay } from '../displays/RuleDisplay';
 import { css } from '@emotion/css';
 import { convertToYaml } from 'utils/YamlUtils';
 import { getElementRules } from 'utils/RuleUtils';
 import { ConfigureRulenew } from './configureRuleModal/ConfigureRuleNew';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SortableTabWrapper } from 'components/wrappers/SortabletabWrappe';
+
 
 interface RulesConfigModalProps {
   isOpen: boolean;
@@ -18,8 +36,8 @@ interface RulesConfigModalProps {
 }
 
 export const RulesConfig: React.FC<RulesConfigModalProps> = ({
-  isOpen,
   onClose,
+  isOpen,
   element,
   possibleClasses,
   yamlConfig,
@@ -27,7 +45,6 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
   onYamlConfigChange,
 }) => {
   const [activeTab, setActiveTab] = useState<'bindingRules' | 'stylingRules'>('bindingRules');
-  const [parsedYaml, setParsedYaml] = useState<{bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[]}>({bindingRules: [], stylingRules: []});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   const [activeBindRule, setActiveBindRule] = useState<YamlBindRule | null>(null);
@@ -39,8 +56,14 @@ export const RulesConfig: React.FC<RulesConfigModalProps> = ({
     stylingRules: [],
   });
 
+  const [workingConfig, setWorkingConfig] = useState<YamlParsedConfig>({bindingRules: [], stylingRules: []});
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const [orderedBindingRules, setOrderedBindingRules] = useState<YamlBindRule[]>([]);
+  const [orderedStylingRules, setOrderedStylingRules] = useState<YamlStylingRule[]>([]);
+
   const rulesToDisplay = activeTab === 'bindingRules' 
-  ? elementRules.bindingRules 
+  ? elementRules.bindingRules
   : elementRules.stylingRules;
 
 const activeRule = activeTab === 'bindingRules' 
@@ -53,105 +76,205 @@ const activeRule = activeTab === 'bindingRules'
     dragPosition: 'start',
   });
 
-  const CreateRule = () => {
-    setIsModalOpen(true);
-  };
+  // Draggable functions
+    const sensors = useSensors(
+      useSensor(PointerSensor, {
+        activationConstraint: {
+          distance: 5,
+        },
+      }),
+      useSensor(KeyboardSensor, {
+        coordinateGetter: sortableKeyboardCoordinates,
+      })
+    );
 
+    const handleDragEnd = (event: DragEndEvent) => {
+      if (!workingConfig) return;
+      
+      const { active, over } = event;
+      
+      if (!over || active.id === over.id) {
+        return;
+      }
+      
+      const activeId = String(active.id);
+      const overId = String(over.id);
+      
+      if (activeTab === 'bindingRules') {
+        const oldIndex = orderedBindingRules.findIndex(rule => rule.id === activeId);
+        const newIndex = orderedBindingRules.findIndex(rule => rule.id === overId);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newOrderedRules = arrayMove(orderedBindingRules, oldIndex, newIndex);
+          setOrderedBindingRules(newOrderedRules);
+          
+          const updatedWorkingConfig = { ...workingConfig };
+          updatedWorkingConfig.bindingRules = newOrderedRules;
+          setWorkingConfig(updatedWorkingConfig);
+          setHasChanges(true);
+        }
+      } else {
+        const oldIndex = orderedStylingRules.findIndex(rule => rule.id === activeId);
+        const newIndex = orderedStylingRules.findIndex(rule => rule.id === overId);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newOrderedRules = arrayMove(orderedStylingRules, oldIndex, newIndex);
+          setOrderedStylingRules(newOrderedRules);
+          
+          const updatedWorkingConfig = { ...workingConfig };
+          updatedWorkingConfig.stylingRules = newOrderedRules;
+          setWorkingConfig(updatedWorkingConfig);
+          setHasChanges(true);
+        }
+      }
+    };
+
+
+  // Rule Editing functions
   const handleRuleDelete = (rule: YamlBindRule | YamlStylingRule) => {
-    setIsLoading(true)
-    const updatedYamlConfig = { ...yamlConfig };
+    if (!workingConfig) return;
+    
+    setIsLoading(true);
+    const updatedWorkingConfig = { ...workingConfig };
     
     if (rule instanceof YamlBindRule) {
-      updatedYamlConfig.bindingRules = updatedYamlConfig.bindingRules.filter(r => r.id !== rule.id)
-      setActiveBindRule(null)
+      updatedWorkingConfig.bindingRules = updatedWorkingConfig.bindingRules.filter(r => r.id !== rule.id);
+      setActiveBindRule(null);
       setActiveTab('bindingRules');
     } else if (rule instanceof YamlStylingRule) {
-      updatedYamlConfig.stylingRules = updatedYamlConfig.stylingRules.filter(r => r.id !== rule.id);
-      setActiveStyleRule(null)
+      updatedWorkingConfig.stylingRules = updatedWorkingConfig.stylingRules.filter(r => r.id !== rule.id);
+      setActiveStyleRule(null);
       setActiveTab('stylingRules');
     }
     
-    const newYamlConfigString = convertToYaml(updatedYamlConfig);
-    setIsLoading(false)
-    onYamlConfigChange(newYamlConfigString);
+    setWorkingConfig(updatedWorkingConfig);
+    setHasChanges(true);
+    setIsLoading(false);
   };
 
   const handleRuleSubmit = (rule: YamlBindRule | YamlStylingRule) => {
-    setIsLoading(true)
-    const updatedYamlConfig = { ...yamlConfig };
+    if (!workingConfig) return;
+    
+    setIsLoading(true);
+    const updatedWorkingConfig = { ...workingConfig };
 
     if (rule instanceof YamlBindRule) {
-      updatedYamlConfig.bindingRules.push(rule);
-      setActiveBindRule(rule)
+      updatedWorkingConfig.bindingRules = [...updatedWorkingConfig.bindingRules, rule];
+      setActiveBindRule(rule);
       setActiveTab('bindingRules');
     } else if (rule instanceof YamlStylingRule) {
-      updatedYamlConfig.stylingRules.push(rule);
-      setActiveStyleRule(rule)
+      updatedWorkingConfig.stylingRules = [...updatedWorkingConfig.stylingRules, rule];
+      setActiveStyleRule(rule);
       setActiveTab('stylingRules');
     }
-    const newYamlConfigString = convertToYaml(updatedYamlConfig)
-    setIsLoading(false)
-    onYamlConfigChange(newYamlConfigString);
+    
+    setWorkingConfig(updatedWorkingConfig);
+    setHasChanges(true);
+    setIsLoading(false);
   };
 
   const handleRuleEdit = (rule: YamlBindRule | YamlStylingRule, oldRuleId: string) => {
-    setIsLoading(true)
-    const updatedYamlConfig = { ...yamlConfig };
+    if (!workingConfig) return;
+    
+    setIsLoading(true);
+    const updatedWorkingConfig = { ...workingConfig };
   
     if (rule instanceof YamlBindRule) {
-      const ruleIndex = updatedYamlConfig.bindingRules.findIndex(r => r.id === oldRuleId);
+      const ruleIndex = updatedWorkingConfig.bindingRules.findIndex(r => r.id === oldRuleId);
       
       if (ruleIndex !== -1) {
-        updatedYamlConfig.bindingRules[ruleIndex] = rule;
+        updatedWorkingConfig.bindingRules[ruleIndex] = rule;
       }
+      
       if(element){
-        rule.elements&&rule.elements.includes(element.id??'')?setActiveBindRule(rule):setActiveBindRule(null)
-      }else{
-        setActiveBindRule(rule)
+        rule.elements && rule.elements.includes(element.id ?? '') ? setActiveBindRule(rule) : setActiveBindRule(null);
+      } else {
+        setActiveBindRule(rule);
       }
       setActiveTab('bindingRules');
 
     } else if (rule instanceof YamlStylingRule) {
-      const ruleIndex = updatedYamlConfig.stylingRules.findIndex(r => r.id === oldRuleId);
+      const ruleIndex = updatedWorkingConfig.stylingRules.findIndex(r => r.id === oldRuleId);
       
       if (ruleIndex !== -1) {
-        updatedYamlConfig.stylingRules[ruleIndex] = rule;
+        updatedWorkingConfig.stylingRules[ruleIndex] = rule;
       }
   
       if(element){ 
-        rule.elements&&rule.elements.includes(element.id??'')?setActiveStyleRule(rule):setActiveStyleRule(null)
-      }else{
-        setActiveStyleRule(rule)
+        rule.elements && rule.elements.includes(element.id ?? '') ? setActiveStyleRule(rule) : setActiveStyleRule(null);
+      } else {
+        setActiveStyleRule(rule);
       }
       setActiveTab('stylingRules');
     }
-    const newYamlConfigString = convertToYaml(updatedYamlConfig);
-    onYamlConfigChange(newYamlConfigString);
-    setIsLoading(false)
+    
+    setWorkingConfig(updatedWorkingConfig);
+    setHasChanges(true);
+    setIsLoading(false);
   };
 
-  useEffect(() => {
-    setIsLoading(true)
+  const updateElementRules = (config: YamlParsedConfig | null) => {
+    if (!config) return;
+    
+    setIsLoading(true);
+    let filteredRules;
+    
+    if (element) {
+      filteredRules = getElementRules(element, [
+        config.bindingRules || [],
+        config.stylingRules || []
+      ]);
+    } else {
+      filteredRules = {
+        bindingRules: config.bindingRules || [],
+        stylingRules: config.stylingRules || []
+      };
+    }
+    
+    setElementRules({
+      bindingRules: filteredRules.bindingRules.map(rule => new YamlBindRule(rule)),
+      stylingRules: filteredRules.stylingRules.map(rule => new YamlStylingRule(rule))
+    });
+    setIsLoading(false);
+  };
+
+  const initializeFromConfig = (config: YamlParsedConfig) => {
     try {
-      setParsedYaml({
-        bindingRules: yamlConfig.bindingRules || [],
-        stylingRules: yamlConfig.stylingRules || [],
-      });
+      const parsedData = {
+        bindingRules: config.bindingRules || [],
+        stylingRules: config.stylingRules || [],
+      };
+      
+      setWorkingConfig({...config, bindingRules: parsedData.bindingRules, stylingRules: parsedData.stylingRules});
     } catch (e) {
       console.error('Error parsing YAML:', e);
     }
-    setIsLoading(false)
-  }, [yamlConfig]);
+  };
+
+  const saveChanges = () => {
+    if (workingConfig && hasChanges) {
+      const newYamlConfigString = convertToYaml(workingConfig);
+      onYamlConfigChange(newYamlConfigString);
+      setHasChanges(false);
+      handleClose()
+    }
+  };
 
   useEffect(() => {
-    setIsLoading(true)
-    const elementRuless = element?getElementRules(element, [parsedYaml.bindingRules, parsedYaml.stylingRules]):parsedYaml
-    setElementRules({
-      bindingRules: elementRuless.bindingRules.map(rule => new YamlBindRule(rule)),
-      stylingRules: elementRuless.stylingRules.map(rule => new YamlStylingRule(rule))
-    });
-    setIsLoading(false)
-  }, [element, parsedYaml]);
+    setIsLoading(true);
+    const configCopy = JSON.parse(JSON.stringify(yamlConfig));
+    initializeFromConfig(configCopy);
+    setHasChanges(false);
+    setIsLoading(false);
+  }, [yamlConfig]);
+
+  useEffect(()=>{
+    updateElementRules(workingConfig)
+  }, [workingConfig])
+
+  useEffect(() => {
+    setOrderedBindingRules(elementRules.bindingRules);
+    setOrderedStylingRules(elementRules.stylingRules);
+  }, [elementRules]);
 
   const handleClose = () => {
     setActiveTab('bindingRules')
@@ -204,12 +327,12 @@ const activeRule = activeTab === 'bindingRules'
           size={`xl`}
           aria-label="newRule" 
           variant="secondary" 
-          onClick={CreateRule}
+          onClick={()=>setIsModalOpen(true)}
         />
       </div>
       {isModalOpen && <ConfigureRulenew
         possibleClasses={possibleClasses}
-        totalRuleCount={parsedYaml.bindingRules.length + parsedYaml.stylingRules.length}
+        totalRuleCount={workingConfig.bindingRules.length + workingConfig.stylingRules.length}
         elements={elements}
         isOpen={isModalOpen}
         element={element?.id??undefined}
@@ -239,7 +362,7 @@ const activeRule = activeTab === 'bindingRules'
           marginTop: "3px",
           flex: 1,
           display: "flex",
-          height: '60vh',
+          height: '50vh',
           flexDirection: "column",
         }}
       >
@@ -272,18 +395,29 @@ const activeRule = activeTab === 'bindingRules'
                   flex-direction: column;
                   width: 125px;
                   overflow-y: auto;
+                  overflow-x: hidden;
                 `}
               >
-                {rulesToDisplay.map((rule) => (
-                  <Tab
-                    key={rule.id}
-                    label={rule.id}
-                    active={JSON.stringify(activeRule) === JSON.stringify(rule)}
-                    onChangeTab={() => {
-                      setActiveRule(rule);
-                    }}
-                  />
-                ))}
+                <DndContext 
+                  modifiers={[restrictToVerticalAxis]}
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={rulesToDisplay.map(rule => rule.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {rulesToDisplay.map(rule => (
+                      <SortableTabWrapper
+                        key={rule.id}
+                        rule={rule}
+                        activeRule={activeRule}
+                        onActivate={() => setActiveRule(rule)}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               </div>
               
               <div {...splitterProps}></div>
@@ -310,6 +444,10 @@ const activeRule = activeTab === 'bindingRules'
           </div>
         )}
       </div>
+      <Modal.ButtonRow>
+        <Button onClick={handleClose} variant='destructive'>Cancel</Button>
+        <Button onClick={saveChanges} variant='primary'>Save</Button>
+      </Modal.ButtonRow>
     </Modal>
   );
 };

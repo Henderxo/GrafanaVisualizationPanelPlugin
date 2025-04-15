@@ -34,7 +34,6 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
     forceUpdate,
     saveStateToHistory,
     newRuleRef,
-    setPriorityActionAdded,
     setElementsActionAdded,
     setFunctionActionAdded,
     setIfActionAdded,
@@ -102,19 +101,6 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
         setIfActionAdded(true);
     }
 
-    const createPriorityInput = () => {
-        saveStateToHistory(newRuleRef.current)
-        newRuleRef.current = new (newRuleRef.current.constructor as
-            | typeof YamlBindRule
-            | typeof YamlStylingRule)({
-            ...newRuleRef.current,
-            priority: -1,
-        });
-        forceUpdate();
-        setPriorityActionAdded(true);
-    }
-
-
     const createElementsInput = () => {
         saveStateToHistory(newRuleRef.current)
         newRuleRef.current = new (newRuleRef.current.constructor as
@@ -152,11 +138,6 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
                     `}
                 >
                     <Text>Scope Actions:</Text>
-                    {!priorityActionAdded && (
-                        <ButtonWrapper onClick={() => createPriorityInput()}>
-                            Add Priority
-                        </ButtonWrapper>
-                    )}
                     {!elementsActionAdded && (
                         <ButtonWrapper onClick={() => createElementsInput()}>
                             Add Elements

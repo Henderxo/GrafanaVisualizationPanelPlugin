@@ -1,7 +1,7 @@
  export interface YamlParsedConfig {
     bindingRules: YamlBindRule[], 
     stylingRules: YamlStylingRule[],
-    parseError: string | null
+    parseError?: string | null
   }
 
   export type ActionNames = 'applyClass'|'bindData'|'applyStyle'|'applyShape'|'applyText'
@@ -9,18 +9,16 @@
   export abstract class RuleBase<T extends RuleBase<T>> {
     id: string;
     elements?: string[];
-    priority?: number;
+
     function?: FunctionElement
   
     constructor(data: {
       id: string;
       elements?: string[];
-      priority?: number;
       function?: FunctionElement
     }) {
       this.id = data.id;
       this.elements = data.elements;
-      this.priority = data.priority;
       this.function = data.function;
     }
 
@@ -34,7 +32,6 @@
       const baseCloneData = {
         id: this.id,
         elements: this.elements ? [...this.elements] : undefined,
-        priority: this.priority,
         function: this.function 
           ? (typeof this.function === 'string' 
               ? this.function 
@@ -54,7 +51,6 @@ export class YamlBindRule extends RuleBase<YamlBindRule> {
     constructor(data: {
       id: string;
       elements?: string[];
-      priority?: number;
       function?: FunctionElement
       bindData?: string[];
     }) {
@@ -122,7 +118,6 @@ export class YamlStylingRule extends RuleBase<YamlStylingRule> {
       };
     }
 
-
     clone(): YamlStylingRule {
       const baseClone = super.clone();
       return new YamlStylingRule({
@@ -133,9 +128,6 @@ export class YamlStylingRule extends RuleBase<YamlStylingRule> {
         applyShape: this.applyShape
       });
     }
-
-
-    
 }
 
 export interface FunctionElement {

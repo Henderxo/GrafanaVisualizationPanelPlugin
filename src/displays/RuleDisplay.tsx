@@ -4,9 +4,9 @@ import StringList from "./StringListDisplay";
 import { useTheme2, Text, Divider, PageToolbar, ToolbarButton, ConfirmModal } from '@grafana/ui';
 import FunctionList from "./FunctionDisplay";
 import { css } from '@emotion/css';
-import { ConfigureRule } from "modals/ConfigureRule";
 import RuleInputWrapper from "components/wrappers/RuleInputWrapper";
 import { ActionsDisplay } from "./ActionsDisplay";
+import { ConfigureRulenew } from "modals/configureRuleModal/ConfigureRuleNew";
 
 interface RuleDisplayProps extends customHtmlBase {
   rule: YamlBindRule | YamlStylingRule;
@@ -50,7 +50,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       onMouseEnter={() => setIsHovered(hover)} 
       onMouseLeave={() => setIsHovered(false)} 
     >
-      {isEditModalOpen && <ConfigureRule
+      {isEditModalOpen && <ConfigureRulenew
       isEdit={true} 
       possibleClasses={possibleClasses}
       rule={rule}
@@ -80,7 +80,6 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
      </PageToolbar>
       <Divider/>
       <div className={css`flex: 1;`}>
-        <RuleInputWrapper isIcon={false}><Text truncate={true} element={textSize}>Priority: {rule?.priority ? rule?.priority : '-1'}</Text></RuleInputWrapper>
         <RuleInputWrapper isIcon={false}><div className={css`margin-top: 4px; margin-bottom: 8px;`}>
           <StringList 
             label="Elements:" 
