@@ -19,19 +19,18 @@ import { YamlBindRule, YamlStylingRule } from '../types';
     }
   };
 
-function parseYamlConfig(yamlConfig: string) {
+  function parseYamlConfig(yamlConfig: string): [{ bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[] }, string | null] {
     try {
-      const parsed = yaml.load(yamlConfig) as any
+      const parsed = yaml.load(yamlConfig) as any;
       
-      return {
+      return [{
         bindingRules: Array.isArray(parsed.bindingRules) 
           ? parsed.bindingRules.map((rule: any) => new YamlBindRule(rule)) 
           : [],
         stylingRules: Array.isArray(parsed.stylingRules) 
           ? parsed.stylingRules.map((rule: any) => new YamlStylingRule(rule)) 
-          : [],
-        parseError: null
-      };
+          : []
+      }, null];
     } catch (e) {
       let errorMessage = 'An unknown error occurred';
       if (e instanceof Error) {
@@ -43,11 +42,10 @@ function parseYamlConfig(yamlConfig: string) {
         error: (e as Error).message
       });
       
-      return {
+      return [{
         bindingRules: [],
-        stylingRules: [],
-        parseError: errorMessage
-      };
+        stylingRules: []
+      }, errorMessage];
     }
   }
 

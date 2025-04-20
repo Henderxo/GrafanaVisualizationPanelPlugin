@@ -95,7 +95,6 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
       : new YamlBindRule({id: `Rule_${totalRuleCount}`})
     )
   );
-  console.log(initialRule)
   
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   
@@ -202,7 +201,7 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   };
 
   const handleFunctionChange = (updatedFunction: FunctionElement | undefined, deletedTab?: string) => {
-    saveStateToHistory(newRuleRef.current.clone());
+    updatedFunction&&saveStateToHistory(newRuleRef.current.clone());
     if (updatedFunction) {
       newRuleRef.current.function = updatedFunction;
       if (deletedTab) {
@@ -278,6 +277,7 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   };
 
   const resetRule = (rule?: YamlBindRule | YamlStylingRule) => {
+    saveStateToHistory(newRuleRef.current)
     let tempRule = rule??initialRule
     if (tempRule) {
       newRuleRef.current = tempRule.clone();

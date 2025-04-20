@@ -147,6 +147,7 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
       `}
       trapFocus={false}
     >
+      {(JSON.stringify(newRuleRef.current))}
       {isLoading ? (
         <div
           className={css`

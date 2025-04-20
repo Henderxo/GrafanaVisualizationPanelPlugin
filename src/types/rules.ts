@@ -1,7 +1,6 @@
  export interface YamlParsedConfig {
     bindingRules: YamlBindRule[], 
-    stylingRules: YamlStylingRule[],
-    parseError?: string | null
+    stylingRules: YamlStylingRule[]
   }
 
   export type ActionNames = 'applyClass'|'bindData'|'applyStyle'|'applyShape'|'applyText'

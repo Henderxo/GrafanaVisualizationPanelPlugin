@@ -1,5 +1,5 @@
 import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
-import { BaseObject, ConditionElement, FlowVertex, fullMermaidMap, YamlBindRule, YamlStylingRule } from '../types';
+import { BaseObject, ConditionElement, FlowVertex, fullMermaidMap, RuleBase, YamlBindRule, YamlStylingRule } from '../types';
 import { addActions } from "./ActionUtils";
 import { ErrorService, ErrorType } from "services/ErrorService";
 import { bindData } from "./DataBindingUtils";
@@ -205,4 +205,32 @@ import { findAllElementsInMaps, findElementInMaps, getElementTypeInBaseObject } 
     return elementList;
     };
 
-    export {applyAllRules, getElementRules, getElementsFromRule}
+
+    const ruleHasElement = (rule: RuleBase<any>, element: BaseObject): boolean => {
+      const elementType = getElementTypeInBaseObject(element);
+      const elementId = element.id || '';
+      
+      if (!Array.isArray(rule.elements) || rule.elements.length === 0) {
+        return false;
+      }
+      
+      if (rule.elements.includes(elementId)) {
+        return true;
+      }
+      
+      if (rule.elements.includes('all')) {
+        return true;
+      }
+      
+      if (rule.elements.includes('nodes') && elementType === 'node') {
+        return true;
+      }
+      
+      if (rule.elements.includes('subgraphs') && elementType === 'subgraph') {
+        return true;
+      }
+      
+      return false;
+    };
+
+    export {applyAllRules, getElementRules, getElementsFromRule, ruleHasElement}

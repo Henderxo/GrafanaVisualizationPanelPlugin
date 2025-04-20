@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import { PanelData, TypedVariableModel } from '@grafana/data';
-import { SimpleOptions } from 'types';
+import { DiagramDBResponse, SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
 import {fullMermaidMap, BaseObject, FlowClass, YamlParsedConfig } from '../../types';
-import { extractMermaidConfigString, generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
+import { extractMermaidConfigString, extractMermaidDiagramType, generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
 import { extractTableData, reformatDataFromResponse, } from 'utils/TransformationUtils';
 import { mapDataToRows } from 'utils/TransformationUtils';
 import { RulesConfig } from '../../modals/RulesConfig';
@@ -30,9 +30,9 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
   const [allElements, setAllElements] = useState<string[]>([]);
   const [parsedYamlState, setParsedYamlState] = useState<YamlParsedConfig>({
     bindingRules: [],
-    stylingRules: [],
-    parseError: null
+    stylingRules: []
   });
+  const [parseError, setParsedYamlError] = useState<null | string>(null);
   const grafanaVariablesRef = useRef<TypedVariableModel[]>([])
   const chartRef = useRef<HTMLDivElement>(null);
   const fullMapRef = useRef<fullMermaidMap | null>(null);
@@ -41,13 +41,13 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     if (!yamlConfig) {
       setParsedYamlState({
         bindingRules: [],
-        stylingRules: [],
-        parseError: null
+        stylingRules: []
       });
       return;
     }
 
-    const parsedYamlConfig = parseYamlConfig(yamlConfig)
+    const [parsedYamlConfig, parsedYamlError] = parseYamlConfig(yamlConfig)
+    setParsedYamlError(parsedYamlError)
     setParsedYamlState(parsedYamlConfig)
   }, [yamlConfig]);
 
@@ -70,6 +70,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     try {
       const res = await mermaid.mermaidAPI.getDiagramFromText(templateStr);
       const config = extractMermaidConfigString(templateStr)
+      const type = extractMermaidDiagramType(templateStr)
       const fullMap = reformatDataFromResponse(res);
       const variables = getTemplateSrv().getVariables();
       fullMapRef.current = fullMap;
@@ -94,7 +95,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
         diagramElements: findAllElementsInMaps(fullMap)
       });
       
-      return generateDynamicMermaidFlowchart({...fullMap, config: config});
+      return generateDynamicMermaidFlowchart({...fullMap, config: config, type: type});
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
@@ -230,7 +231,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
   }, [template, variableChangeCount, data, parsedYamlState]);
 
 
-  if (!yamlConfig || !isValidTemplate(template) || parsedYamlState.parseError !== null) {
+  if (!yamlConfig || !isValidTemplate(template) || parseError !== null) {
     return (
       <NoTemplatesProvidedDisplay 
         onConfigChanges={(yaml, template) => onOptionsChange({...options, yamlConfig: yaml, template: template})} 
@@ -240,8 +241,8 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     );
   }
 
-  if (parsedYamlState.parseError) {
-    return <div>Error parsing YAML: {parsedYamlState.parseError}</div>;
+  if (parseError) {
+    return <div>Error parsing YAML: {parseError}</div>;
   }
 
   return (

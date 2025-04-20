@@ -130,7 +130,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
                 </ButtonWrapper>
             </div>
   
-            {(!priorityActionAdded || !elementsActionAdded) && (
+            {(!elementsActionAdded) && (
                 <div
                     className={css`
                         display: flex;

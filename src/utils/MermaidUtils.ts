@@ -9,7 +9,21 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
    const isValidShape = (shape: any): shape is FlowVertexTypeParam => 
     VALID_SHAPES.has(shape);
 
-
+   function extractMermaidDiagramType(mermaidCode: string): string {
+    const normalizedCode = mermaidCode.trim().replace(/^graph\b/i, 'flowchart');
+  
+    const regex = /^(flowchart)(?:\s+(TD|TB|BT|LR|RL))?|^(sequenceDiagram|gantt|classDiagram|stateDiagram|pie|erDiagram|journey)\b/i;
+    const match = normalizedCode.match(regex);
+  
+    if (!match) return "Unknown diagram type";
+  
+    if (match[1]) {
+      return `flowchart ${match[2]?.toUpperCase() || ""}`.trim();
+    }
+  
+    return match[3] || "Unknown diagram type";
+  }
+  
    function extractMermaidConfigString(template: string): string | undefined {
       const initRegex = /%%\{init:\s*(.*?)\s*\}%%/;
       const match = template.match(initRegex);
@@ -48,6 +62,7 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
     classes: Map<string, FlowClass>,
     subGraphs: Map<string, FlowSubGraph>,
     config?: string
+    type: string
   }): string {
 
     let mermaidString = "";
@@ -55,7 +70,7 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       mermaidString += `%%{init: ${data.config}}%%\n`;
     }
     // Start building the Mermaid flowchart string
-    mermaidString += "graph TB\n";
+    mermaidString += `${data.type}\n`;
     
     // Track nodes that are part of subgraphs
     const nodesInSubgraphs = new Set<string>();
@@ -354,4 +369,4 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
   }
 
 
-  export {generateDynamicMermaidFlowchart, getLineStyle, isValidShape, extractMermaidConfigString, isFlowVertex, isFlowSubGraph}
+  export {generateDynamicMermaidFlowchart, getLineStyle, isValidShape, extractMermaidConfigString, isFlowVertex, isFlowSubGraph, extractMermaidDiagramType}

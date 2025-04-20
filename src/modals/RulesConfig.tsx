@@ -4,7 +4,7 @@ import { YamlBindRule, YamlStylingRule, BaseObject, FlowClass, YamlParsedConfig 
 import { RuleDisplay } from '../displays/RuleDisplay';
 import { css } from '@emotion/css';
 import { convertToYaml } from 'utils/YamlUtils';
-import { getElementRules } from 'utils/RuleUtils';
+import { getElementRules, ruleHasElement } from 'utils/RuleUtils';
 import { ConfigureRulenew } from './configureRuleModal/ConfigureRuleNew';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
@@ -186,7 +186,7 @@ const activeRule = activeTab === 'bindingRules'
       }
       
       if(element){
-        rule.elements && rule.elements.includes(element.id ?? '') ? setActiveBindRule(rule) : setActiveBindRule(null);
+        ruleHasElement(rule, element) ? setActiveBindRule(rule) : setActiveBindRule(null);
       } else {
         setActiveBindRule(rule);
       }
@@ -200,7 +200,7 @@ const activeRule = activeTab === 'bindingRules'
       }
   
       if(element){ 
-        rule.elements && rule.elements.includes(element.id ?? '') ? setActiveStyleRule(rule) : setActiveStyleRule(null);
+        ruleHasElement(rule, element) ? setActiveStyleRule(rule) : setActiveStyleRule(null);
       } else {
         setActiveStyleRule(rule);
       }

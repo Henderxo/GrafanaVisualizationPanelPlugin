@@ -135,7 +135,7 @@ export interface FlowEdge {
     exists(allSgs: object, _id: string): boolean;
     getAccDescription(): string;
     getAccTitle(): string;
-    getData(): object;
+    getData(): {config: {er: {layoutDirection: string}}};
     getDepthFirstPos(pos: number): number;
     getDiagramTitle(): string;
     getDirection(): string;
