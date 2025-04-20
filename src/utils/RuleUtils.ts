@@ -2,8 +2,8 @@ import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
 import { BaseObject, ConditionElement, FlowVertex, fullMermaidMap, RuleBase, YamlBindRule, YamlStylingRule } from '../types';
 import { addActions } from "./ActionUtils";
 import { ErrorService, ErrorType } from "services/ErrorService";
-import { bindData } from "./DataBindingUtils";
 import { findAllElementsInMaps, findElementInMaps, getElementTypeInBaseObject } from "./DiagramMapUtils";
+import { bindDataToAllMapStrings } from "./DataBindingUtils";
 
     function applyAllRules (
         bindingRules: YamlBindRule[], 
@@ -12,35 +12,49 @@ import { findAllElementsInMaps, findElementInMaps, getElementTypeInBaseObject } 
         rows: Record<string, any>[], 
         grafanaVariables: TypedVariableModel[] | null
     ) {
-        bindingRules.forEach(rule => {
-        if (rule.function) {
-            findAndApplyBindings(fullMap, rule, rows, grafanaVariables);
-        } else if (rule.bindData) {
-            getElementsFromRule(rule, fullMap).forEach(element => {
-            let mapElement = findElementInMaps(element, fullMap);
-            if (mapElement) {
-                addActions({bindData: rule.bindData}, mapElement);
-            }
-            });
-        }
-        });
-        
-        bindData(fullMap);
-        
-        stylingRules.forEach(rule => {
-        if (rule.function) {
-            findAndApplyStyling(fullMap, rule, grafanaVariables);
-        } else if (rule.applyClass||rule.applyShape||rule.applyStyle||rule.applyText) {
-            getElementsFromRule(rule, fullMap).forEach(element => {
-            let mapElement = findElementInMaps(element, fullMap);
-            if (mapElement) {
-                const action = rule.getActions().Action
-                addActions(action, mapElement);
-            }
-            });
-        }
-        });
+      applyBindings(bindingRules, fullMap, rows, grafanaVariables)
+      bindDataToAllMapStrings(fullMap);
+      applyStylings(stylingRules, fullMap, grafanaVariables)
     };
+
+  function applyBindings (
+    bindingRules: YamlBindRule[], 
+    fullMap: fullMermaidMap, 
+    rows: Record<string, any>[], 
+    grafanaVariables: TypedVariableModel[] | null) {
+    bindingRules.forEach(rule => {
+      if (rule.function) {
+          findAndApplyBindings(fullMap, rule, rows, grafanaVariables);
+      } else if (rule.bindData) {
+          getElementsFromRule(rule, fullMap).forEach(element => {
+          let mapElement = findElementInMaps(element, fullMap);
+          if (mapElement) {
+              addActions({bindData: rule.bindData}, mapElement);
+          }
+          });
+      }
+      });
+  }
+
+  function applyStylings (
+    stylingRules: YamlStylingRule[], 
+    fullMap: fullMermaidMap, 
+    grafanaVariables: TypedVariableModel[] | null
+  ){
+    stylingRules.forEach(rule => {
+      if (rule.function) {
+          findAndApplyStyling(fullMap, rule, grafanaVariables);
+      } else if (rule.applyClass||rule.applyShape||rule.applyStyle||rule.applyText) {
+          getElementsFromRule(rule, fullMap).forEach(element => {
+          let mapElement = findElementInMaps(element, fullMap);
+          if (mapElement) {
+              const action = rule.getActions().Action
+              addActions(action, mapElement);
+          }
+          });
+      }
+      });
+  }
 
   function findAndApplyBindings (
     map: fullMermaidMap, 

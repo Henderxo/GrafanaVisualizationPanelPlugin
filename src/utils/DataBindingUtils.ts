@@ -2,7 +2,7 @@
 import { BaseObject, FlowSubGraph, FlowVertex, fullMermaidMap } from'../types';
 import { findAllElementsInMaps, findElementInMaps } from './DiagramMapUtils';
   
-const bindData = (fullMap: fullMermaidMap) => {
+const bindDataToAllMapStrings = (fullMap: fullMermaidMap) => {
     const elementsFromMap = findAllElementsInMaps(fullMap);
     if(elementsFromMap){
       elementsFromMap.forEach((element: any)=>{
@@ -40,4 +40,4 @@ const bindDataToString = (inputString: string, element: BaseObject): string => {
       return elementData[variable] !== undefined ? String(elementData[variable]) : match;
     });
   };
-export { bindData, bindDataToString }
+export { bindDataToAllMapStrings, bindDataToString }
