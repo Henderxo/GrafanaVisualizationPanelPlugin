@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import { PanelData, TypedVariableModel } from '@grafana/data';
-import { DiagramDBResponse, SimpleOptions } from 'types';
+import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
 import {fullMermaidMap, BaseObject, FlowClass, YamlParsedConfig } from '../../types';
 import { extractMermaidConfigString, extractMermaidDiagramType, generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
@@ -32,7 +32,8 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     bindingRules: [],
     stylingRules: []
   });
-  const [parseError, setParsedYamlError] = useState<null | string>(null);
+  const [isYamlError, setYamlError] = useState<null | string>(null);
+  const [isMermaidError, setMermaidError] = useState<null | string>(null);
   const grafanaVariablesRef = useRef<TypedVariableModel[]>([])
   const chartRef = useRef<HTMLDivElement>(null);
   const fullMapRef = useRef<fullMermaidMap | null>(null);
@@ -47,7 +48,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     }
 
     const [parsedYamlConfig, parsedYamlError] = parseYamlConfig(yamlConfig)
-    setParsedYamlError(parsedYamlError)
+    setYamlError(parsedYamlError)
     setParsedYamlState(parsedYamlConfig)
   }, [yamlConfig]);
 
@@ -170,13 +171,12 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
   };
 
   useEffect(() => {
+    setMermaidError(null)
     if (!isValidTemplate(template)) {
       setIsLoading(false);
       return;
     }
-    
     setIsLoading(true);
-    
     mermaid.initialize({});
     getDiagram(template)
       .then((rez) => {
@@ -185,7 +185,6 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
             .then(({ svg }) => {
               if (chartRef.current) {
                 chartRef.current.innerHTML = svg;
-                
                 const svgElement = chartRef.current.querySelector('svg');
                 if (svgElement) {
                   createPanZoom(svgElement, {
@@ -202,7 +201,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
             })
             .catch((error) => {
               setIsLoading(false);
-              
+              setMermaidError(error)
               ErrorService.displayError(ErrorType.MERMAID_PARSING, {
                 title: 'Diagram Rendering Error',
                 message: 'Failed to render Mermaid diagram',
@@ -212,6 +211,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
         }
       })
       .catch((error) => {
+        setMermaidError(error)
         ErrorService.displayError(ErrorType.MERMAID_PARSING, {
           title: 'Error fetching diagram data',
           message: 'Failed to fetching Mermaid diagram',
@@ -219,46 +219,48 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
         });
         setIsLoading(false);
       });
-      
-    return () => {
+    
       if (chartRef.current) {
+        chartRef.current.innerHTML = '';
         const svgElement = chartRef.current.querySelector('svg');
         if (svgElement) {
           svgElement.removeEventListener('dblclick', handleElementDoubleClick);
         }
       }
-    };
   }, [template, variableChangeCount, data, parsedYamlState]);
 
 
-  if (!yamlConfig || !isValidTemplate(template) || parseError !== null) {
-    return (
-      <NoTemplatesProvidedDisplay 
-        onConfigChanges={(yaml, template) => onOptionsChange({...options, yamlConfig: yaml, template: template})} 
-        yamlConfig={yamlConfig} 
-        template={template} 
-      />
-    );
-  }
-
-  if (parseError) {
-    return <div>Error parsing YAML: {parseError}</div>;
-  }
-
   return (
     <div>
+      <div
+        ref={chartRef}
+        className={(!isLoading && isMermaidError === null && isYamlError === null) ? "" : "hidden"}
+      />
+  
       {isLoading && <div className="loading-indicator">Loading diagram...</div>}
-      <div ref={chartRef} className={isLoading ? "hidden" : ""} />
-      
-      {isModalOpen && <RulesConfig
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        element={selectedElement}
-        elements={allElements}
-        possibleClasses={fullMapRef.current?.classes as Map<string, FlowClass>}
-        yamlConfig={parsedYamlState}
-        onYamlConfigChange={handleYamlConfigChange}
-      />}
+  
+      {(isMermaidError !== null || isYamlError !== null || !yamlConfig || !isValidTemplate(template)) && (
+        <NoTemplatesProvidedDisplay
+          onConfigChanges={(yaml, template) =>
+            onOptionsChange({ ...options, yamlConfig: yaml, template })
+          }
+          yamlConfig={yamlConfig}
+          template={template}
+        />
+      )}
+  
+      {isModalOpen && (
+        <RulesConfig
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          element={selectedElement}
+          elements={allElements}
+          possibleClasses={fullMapRef.current?.classes as Map<string, FlowClass>}
+          yamlConfig={parsedYamlState}
+          onYamlConfigChange={handleYamlConfigChange}
+        />
+      )}
     </div>
   );
+  
 };
