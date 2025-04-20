@@ -91,8 +91,8 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   const newRuleRef = useRef<YamlBindRule | YamlStylingRule>(
     initialRule || 
     (element 
-      ? new YamlBindRule({id: `${element}_Rule_${totalRuleCount}`, elements: [element]})
-      : new YamlBindRule({id: `Rule_${totalRuleCount}`})
+      ? new YamlBindRule({name: `${element}_Rule_${totalRuleCount}`, elements: [element]})
+      : new YamlBindRule({name: `Rule_${totalRuleCount}`})
     )
   );
   
@@ -138,8 +138,8 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   const validateRule = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!newRuleRef.current.id || newRuleRef.current.id.trim() === '') {
-      errors.id = 'Rule ID is required';
+    if (!newRuleRef.current.name || newRuleRef.current.name.trim() === '') {
+      errors.id = 'Rule Name is required';
     }
 
     setValidationErrors(errors);
@@ -150,8 +150,8 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   const handleRuleTypeChange = (selectedType: SelectableValue) => {
     handleFunctionChange(undefined);
     newRuleRef.current = selectedType.value === 'binding' 
-      ? new YamlBindRule({...newRuleRef.current, id: newRuleRef.current.id})
-      : new YamlStylingRule({...newRuleRef.current, id: newRuleRef.current.id});
+      ? new YamlBindRule({...newRuleRef.current, name: newRuleRef.current.name})
+      : new YamlStylingRule({...newRuleRef.current, name: newRuleRef.current.name});
     resetRule(newRuleRef.current);
   };
 
@@ -284,8 +284,8 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
       reconfigureEditor(tempRule);
     } else {
       newRuleRef.current = element 
-        ? new YamlBindRule({id: `${element}_Rule_${totalRuleCount}`, elements: [element]})
-        : new YamlBindRule({id: `Rule_${totalRuleCount}`});
+        ? new YamlBindRule({name: `${element}_Rule_${totalRuleCount}`, elements: [element]})
+        : new YamlBindRule({name: `Rule_${totalRuleCount}`});
       reconfigureEditor(newRuleRef.current);
     }
     forceUpdate();

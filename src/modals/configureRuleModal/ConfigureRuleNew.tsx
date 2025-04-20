@@ -231,13 +231,13 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
             </RuleInputWrapper>}
                   
             <RuleInputWrapper isIcon={false}>
-              <Text>Rule ID:</Text>
-              <Field invalid={newRuleRef.current.id==='' || validationErrors.id?true:false} className={css`margin: 0px;`} error={'Rule ID is required'}>
+              <Text>Rule Name:</Text>
+              <Field invalid={newRuleRef.current.name==='' || validationErrors.id?true:false} className={css`margin: 0px;`} error={'Rule Name is required'}>
                 <Input 
-                  placeholder="Rule ID"
-                  value={newRuleRef.current.id}
+                  placeholder="Rule Name"
+                  value={newRuleRef.current.name}
                   onChange={(e) => {
-                    newRuleRef.current.id = e.currentTarget.value;
+                    newRuleRef.current.name = e.currentTarget.value;
                     forceUpdate();
                   }}
                   className="mb-2"

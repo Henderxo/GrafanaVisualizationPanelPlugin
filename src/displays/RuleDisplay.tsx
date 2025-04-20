@@ -57,11 +57,11 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       elements={elements}
       isOpen={isEditModalOpen}
       onClose={() => setIsEditModalOpen(false)}
-      onSubmit={(newRule) =>onEditSubmit(newRule, rule.id)}/>}
+      onSubmit={(newRule) =>onEditSubmit(newRule, rule.name)}/>}
       <ConfirmModal 
         modalClass={css`top: 30%;`}
         isOpen={isDeleteModalOpen} 
-        title={`Delete Rule: ${rule.id}`} 
+        title={`Delete Rule: ${rule.name}`} 
         body={
           <div>
             <Text element="p">Are you sure you want to delete this rule?</Text>
@@ -74,7 +74,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
         onConfirm={() => {onDelete(rule); setIsDeleteModalOpen(false);}} 
         onDismiss={() => setIsDeleteModalOpen(false)}
       />
-     <PageToolbar className={css`background: ${isHovered ? bgHoverColor : bgColor}; padding: 1px; padding-top: 3px; padding-bottom: 3px;`} title={`${rule.id}`} >
+     <PageToolbar className={css`background: ${isHovered ? bgHoverColor : bgColor}; padding: 1px; padding-top: 3px; padding-bottom: 3px;`} title={`${rule.name}`} >
       <ToolbarButton onClick={()=>setIsEditModalOpen(true)} iconSize="lg" className={css`&:hover{ background-color: ${theme.colors.background.primary}}`} icon="edit">Edit</ToolbarButton>
       <ToolbarButton onClick={()=>setIsDeleteModalOpen(true)} iconSize="lg" className={css`&:hover{ background-color: ${theme.colors.background.primary}}`} icon="trash-alt"></ToolbarButton>
      </PageToolbar>

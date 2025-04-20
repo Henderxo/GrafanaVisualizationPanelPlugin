@@ -10,12 +10,12 @@ interface SortableTabWrapperProps<T> {
   onActivate: (rule: T) => void;
 }
 
-export const SortableTabWrapper = <T extends { id: string }>({
+export const SortableTabWrapper = <T extends { name: string }>({
   rule,
   activeRule,
   onActivate,
 }: SortableTabWrapperProps<T>) => {
-  const { id } = rule;
+  const { name } = rule;
   const isActive = activeRule ? JSON.stringify(activeRule) === JSON.stringify(rule) : false;
   
   const {
@@ -24,7 +24,7 @@ export const SortableTabWrapper = <T extends { id: string }>({
     setNodeRef,
     transform,
     transition,
-  } = useSortable({ id });
+  } = useSortable({ id: name });
   
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -66,7 +66,7 @@ export const SortableTabWrapper = <T extends { id: string }>({
       `}
     >
       <Tab
-        label={rule.id}
+        label={rule.name}
         active={isActive}
         onChangeTab={handleActivate}
       />

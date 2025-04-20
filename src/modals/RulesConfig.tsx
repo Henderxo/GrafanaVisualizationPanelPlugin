@@ -101,8 +101,8 @@ const activeRule = activeTab === 'bindingRules'
       const overId = String(over.id);
       
       if (activeTab === 'bindingRules') {
-        const oldIndex = orderedBindingRules.findIndex(rule => rule.id === activeId);
-        const newIndex = orderedBindingRules.findIndex(rule => rule.id === overId);
+        const oldIndex = orderedBindingRules.findIndex(rule => rule.name === activeId);
+        const newIndex = orderedBindingRules.findIndex(rule => rule.name === overId);
         if (oldIndex !== -1 && newIndex !== -1) {
           const newOrderedRules = arrayMove(orderedBindingRules, oldIndex, newIndex);
           setOrderedBindingRules(newOrderedRules);
@@ -113,8 +113,8 @@ const activeRule = activeTab === 'bindingRules'
           setHasChanges(true);
         }
       } else {
-        const oldIndex = orderedStylingRules.findIndex(rule => rule.id === activeId);
-        const newIndex = orderedStylingRules.findIndex(rule => rule.id === overId);
+        const oldIndex = orderedStylingRules.findIndex(rule => rule.name === activeId);
+        const newIndex = orderedStylingRules.findIndex(rule => rule.name === overId);
         
         if (oldIndex !== -1 && newIndex !== -1) {
           const newOrderedRules = arrayMove(orderedStylingRules, oldIndex, newIndex);
@@ -137,11 +137,11 @@ const activeRule = activeTab === 'bindingRules'
     const updatedWorkingConfig = { ...workingConfig };
     
     if (rule instanceof YamlBindRule) {
-      updatedWorkingConfig.bindingRules = updatedWorkingConfig.bindingRules.filter(r => r.id !== rule.id);
+      updatedWorkingConfig.bindingRules = updatedWorkingConfig.bindingRules.filter(r => r.name !== rule.name);
       setActiveBindRule(null);
       setActiveTab('bindingRules');
     } else if (rule instanceof YamlStylingRule) {
-      updatedWorkingConfig.stylingRules = updatedWorkingConfig.stylingRules.filter(r => r.id !== rule.id);
+      updatedWorkingConfig.stylingRules = updatedWorkingConfig.stylingRules.filter(r => r.name !== rule.name);
       setActiveStyleRule(null);
       setActiveTab('stylingRules');
     }
@@ -172,14 +172,14 @@ const activeRule = activeTab === 'bindingRules'
     setIsLoading(false);
   };
 
-  const handleRuleEdit = (rule: YamlBindRule | YamlStylingRule, oldRuleId: string) => {
+  const handleRuleEdit = (rule: YamlBindRule | YamlStylingRule, oldRuleName: string) => {
     if (!workingConfig) return;
     
     setIsLoading(true);
     const updatedWorkingConfig = { ...workingConfig };
   
     if (rule instanceof YamlBindRule) {
-      const ruleIndex = updatedWorkingConfig.bindingRules.findIndex(r => r.id === oldRuleId);
+      const ruleIndex = updatedWorkingConfig.bindingRules.findIndex(r => r.name === oldRuleName);
       
       if (ruleIndex !== -1) {
         updatedWorkingConfig.bindingRules[ruleIndex] = rule;
@@ -193,7 +193,7 @@ const activeRule = activeTab === 'bindingRules'
       setActiveTab('bindingRules');
 
     } else if (rule instanceof YamlStylingRule) {
-      const ruleIndex = updatedWorkingConfig.stylingRules.findIndex(r => r.id === oldRuleId);
+      const ruleIndex = updatedWorkingConfig.stylingRules.findIndex(r => r.name === oldRuleName);
       
       if (ruleIndex !== -1) {
         updatedWorkingConfig.stylingRules[ruleIndex] = rule;
@@ -405,12 +405,12 @@ const activeRule = activeTab === 'bindingRules'
                   onDragEnd={handleDragEnd}
                 >
                   <SortableContext
-                    items={rulesToDisplay.map(rule => rule.id)}
+                    items={rulesToDisplay.map(rule => rule.name)}
                     strategy={verticalListSortingStrategy}
                   >
                     {rulesToDisplay.map(rule => (
                       <SortableTabWrapper
-                        key={rule.id}
+                        key={rule.name}
                         rule={rule}
                         activeRule={activeRule}
                         onActivate={() => setActiveRule(rule)}

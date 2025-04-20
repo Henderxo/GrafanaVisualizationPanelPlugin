@@ -16,14 +16,14 @@ export const RulesConfigButton: React.FC<StandardEditorProps<string, any, Simple
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { options } = context;
   const fullMapRef = useRef<fullMermaidMap | null>(null);
-  const [parsedYaml, setParsedYaml] = useState<YamlParsedConfig>({bindingRules: [], stylingRules: [], parseError: null});
+  const [parsedYaml, setParsedYaml] = useState<YamlParsedConfig>({bindingRules: [], stylingRules: []});
   
   if (options?.diagramMap) {
     fullMapRef.current = options.diagramMap;
   }
 
   const openModal = () => {
-    const parsedYamlConfig = parseYamlConfig(value)
+    const [parsedYamlConfig,] = parseYamlConfig(value)
     setParsedYaml(parsedYamlConfig)
     setIsModalOpen(true);
   };

@@ -6,17 +6,17 @@
   export type ActionNames = 'applyClass'|'bindData'|'applyStyle'|'applyShape'|'applyText'
 
   export abstract class RuleBase<T extends RuleBase<T>> {
-    id: string;
+    name: string;
     elements?: string[];
 
     function?: FunctionElement
   
     constructor(data: {
-      id: string;
+      name: string;
       elements?: string[];
       function?: FunctionElement
     }) {
-      this.id = data.id;
+      this.name = data.name;
       this.elements = data.elements;
       this.function = data.function;
     }
@@ -29,7 +29,7 @@
 
     clone(): T {
       const baseCloneData = {
-        id: this.id,
+        name: this.name,
         elements: this.elements ? [...this.elements] : undefined,
         function: this.function 
           ? (typeof this.function === 'string' 
@@ -48,7 +48,7 @@ export class YamlBindRule extends RuleBase<YamlBindRule> {
     bindData?: string[];
   
     constructor(data: {
-      id: string;
+      name: string;
       elements?: string[];
       function?: FunctionElement
       bindData?: string[];
@@ -86,7 +86,7 @@ export class YamlStylingRule extends RuleBase<YamlStylingRule> {
     applyShape?: string;
   
     constructor(data: {
-      id: string;
+      name: string;
       elements?: string[];
       priority?: number;
       function?: FunctionElement
