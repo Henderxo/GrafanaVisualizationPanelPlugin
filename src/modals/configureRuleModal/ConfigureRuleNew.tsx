@@ -179,26 +179,7 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
               overflow-y: auto;
             `}
           >
-            <RuleCreateActionBar 
-              forceUpdate={forceUpdate}
-              saveStateToHistory={saveStateToHistory}
-              newRuleRef={newRuleRef}
-              setPriorityActionAdded={setPriorityActionAdded}
-              setElementsActionAdded={setElementsActionAdded}
-              setFunctionActionAdded={setFunctionActionAdded}
-              setIfActionAdded={setIfActionAdded}
-              setElseIfActionAdded={setElseIfActionAdded}
-              setelseActionAdded={setElseActionAdded}
-              setGeneralActionsAdded={setGeneralActionsAdded}
-              resetRule={resetRule}
-              handleUndo={handleUndo}
-              generalActionsAdded={generalActionsAdded}
-              elseActionAdded={false}
-              priorityActionAdded={priorityActionAdded}
-              elementsActionAdded={elementsActionAdded}
-              functionActionAdded={functionActionAdded}
-              ifActionAdded={ifActionAdded}
-            />
+            <RuleCreateActionBar/>
           </div>
           <div {...splitterProps}></div>
           <div

@@ -4,52 +4,36 @@ import {
     YamlBindRule, 
     YamlStylingRule 
 } from '../../types'
-import { Icon, Text } from '@grafana/ui'
+import { Field, Icon, Text } from '@grafana/ui'
 import { css } from '@emotion/css'
 import ButtonWrapper from 'components/wrappers/ButtonWrapper'
+import { useRuleStateContext } from "modals/configureRuleModal/ruleContext"
 
-interface RuleCreateActionBarProps {
-    forceUpdate: () => void
-    saveStateToHistory: (state: YamlBindRule | YamlStylingRule) => void
-    newRuleRef: React.MutableRefObject<YamlBindRule | YamlStylingRule>
-    setPriorityActionAdded: (added: boolean) => void
-    setElementsActionAdded: (added: boolean) => void
-    setFunctionActionAdded: (added: boolean) => void
-    setIfActionAdded: (added: boolean) => void
-    setElseIfActionAdded: (added: boolean) => void
-    setelseActionAdded: (added: boolean) => void
-    setGeneralActionsAdded: (added: boolean) => void
-    resetRule: (rule?: YamlBindRule | YamlStylingRule) => void
-    handleUndo: () => void
-    rule?: YamlBindRule | YamlStylingRule
-    priorityActionAdded: boolean
-    elementsActionAdded: boolean
-    functionActionAdded: boolean
-    ifActionAdded: boolean
-    elseActionAdded: boolean
-    generalActionsAdded: boolean
-}
+interface RuleCreateActionBarProps {}
 
-export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({ 
-    forceUpdate,
-    saveStateToHistory,
-    newRuleRef,
-    setElementsActionAdded,
-    setFunctionActionAdded,
-    setIfActionAdded,
-    setElseIfActionAdded,
-    setelseActionAdded,
-    setGeneralActionsAdded,
-    resetRule,
-    handleUndo,
-    rule,
-    priorityActionAdded,
-    elementsActionAdded,
-    functionActionAdded,
-    elseActionAdded,
-    ifActionAdded,
-    generalActionsAdded
-}) => {
+export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = () => {
+    const 
+    { 
+        forceUpdate,
+        saveStateToHistory,
+        newRuleRef,
+        setElementsActionAdded,
+        setFunctionActionAdded,
+        setIfActionAdded,
+        setElseIfActionAdded,
+        setElseActionAdded,
+        setGeneralActionsAdded,
+        resetRule,
+        handleUndo,
+        elementsActionAdded,
+        functionActionAdded,
+        elseActionAdded,
+        ifActionAdded,
+        generalActionsAdded,
+        validationErrors,
+
+    } = useRuleStateContext()
+    
     const createElseInput = () => {
         saveStateToHistory(newRuleRef.current.clone())
         if (
@@ -61,10 +45,11 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
             };
         }
         forceUpdate()
-        setelseActionAdded(true);
+        setElseActionAdded(true);
     }
 
     const createActionInputs = () =>{
+        validationErrors.action&&delete validationErrors.action
         saveStateToHistory(newRuleRef.current)
         setGeneralActionsAdded(true);
     }
@@ -88,6 +73,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
     }
 
     const createIfInput = () => {
+        validationErrors.action&&delete validationErrors.action
         saveStateToHistory(newRuleRef.current)
         newRuleRef.current = new (newRuleRef.current.constructor as
             | typeof YamlBindRule
@@ -122,7 +108,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
                 `}
             >
                 <Text>Creation Actions:</Text>
-                <ButtonWrapper onClick={() => resetRule(rule)}>
+                <ButtonWrapper onClick={() => resetRule()}>
                     <Icon size={'lg'} name={'history-alt'} className={css`margin-right: 3px;`}></Icon><Text>Reset</Text>
                 </ButtonWrapper>
                 <ButtonWrapper onClick={() => handleUndo()}>
@@ -147,19 +133,23 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
             )}
 
             {!functionActionAdded && !generalActionsAdded && (
-                <div 
-                className={css`
-                    display: flex;
-                    flex-direction: column;`} >
-                    <div>
-                        <Text>Possible Actions:</Text>
-                    </div>
-                    <ButtonWrapper onClick={() => createActionInputs()}>   
-                        Add General Action
-                    </ButtonWrapper>
-                    <ButtonWrapper onClick={() => createIfInput()}>   
-                        Add Function
-                    </ButtonWrapper>
+                <div>
+                    <Field  invalid={validationErrors.action?true:false} error={validationErrors.action}>
+                        <div className={css`
+                            display: flex;
+                            flex-direction: column;`} >
+                            <div>
+                            <Text>Possible Actions:</Text>
+                            </div>
+                            <ButtonWrapper onClick={() => createActionInputs()}>   
+                                Add Global Action
+                            </ButtonWrapper>
+                            <ButtonWrapper onClick={() => createIfInput()}>   
+                                Add Function
+                            </ButtonWrapper>
+                        </div>
+                    </Field>
+                    
                 </div>   
             )}
             {functionActionAdded && (
@@ -167,8 +157,9 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
                         display: flex;
                         flex-direction: column;
                     `}>
+                    
                     <div>
-                        <Text>Function Actions:</Text>
+                    <Text>Function Actions:</Text>
                     </div>
                     {ifActionAdded && (
                         <ButtonWrapper onClick={() => createElseIfInput()}>
@@ -180,6 +171,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = ({
                             Add Else
                         </ButtonWrapper>
                     )}
+                    
                 </div>
             )}
         </>

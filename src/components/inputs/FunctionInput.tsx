@@ -46,13 +46,13 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
       const updatedFunction = { ...functionData };
 
       if (type === 'if') {
-        delete validationErrors['function.if.condition']
+        validationErrors['function.if.condition']&&delete validationErrors['function.if.condition']
         if (updatedFunction.if) {
           updatedFunction.if.condition = e.currentTarget.value;
         }
       } else if (type === 'else_if' && updatedFunction.else_if) {
         if (index !== undefined && index >= 0) {
-          delete validationErrors[`function.else_if[${index}].condition`]
+          validationErrors[`function.else_if[${index}].condition`]&&delete validationErrors[`function.else_if[${index}].condition`]
           updatedFunction.else_if[index].condition = e.currentTarget.value;
         }
       }

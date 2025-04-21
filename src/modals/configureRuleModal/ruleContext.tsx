@@ -110,7 +110,7 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   const saveStateToHistory = (state?: YamlBindRule | YamlStylingRule) => {
     setStateHistory(prevHistory => {
       const clonedState = state ? state.clone() : newRuleRef.current.clone()
-
+      
       const newHistory = [
         ...prevHistory, 
         { 
