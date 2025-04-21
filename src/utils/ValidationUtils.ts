@@ -1,4 +1,4 @@
-import { Action, ConditionElement, FunctionElement, RuleBase, YamlBindRule, YamlStylingRule } from "types";
+import { Action, ConditionElement, FunctionElement, RuleBase, } from "types";
 
 export interface ValidationError {
   field: string;
@@ -88,7 +88,7 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
   const results: ValidationResult[] = [];
 
   if (isDefined(action.bindData)) {
-    if (!Array.isArray(action.bindData) || !action.bindData.every(isNonEmptyString)) {
+    if (!Array.isArray(action.bindData) || action.bindData.length === 0) {
       results.push(createError(
         `${fieldPrefix}bindData`, 
         "bindData must be a non-empty array of strings"
@@ -98,7 +98,7 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
   }
 
   if (isDefined(action.applyClass)) {
-    if (!Array.isArray(action.applyClass) || !action.applyClass.every(isNonEmptyString)) {
+    if (!Array.isArray(action.applyClass) ||  action.applyClass.length === 0) {
       results.push(createError(
         `${fieldPrefix}applyClass`, 
         "applyClass must be a non-empty array of strings"
@@ -116,7 +116,7 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
   }
 
   if (isDefined(action.applyStyle)) {
-    if (!Array.isArray(action.applyStyle) || !action.applyStyle.every(isNonEmptyString)) {
+    if (!Array.isArray(action.applyStyle) || action.applyStyle.length === 0) {
       results.push(createError(
         `${fieldPrefix}applyStyle`, 
         "applyStyle must be a non-empty array of strings"
@@ -125,7 +125,7 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
     }
   }
 
-  if (isDefined(action.applyShape) && !isNonEmptyString(action.applyShape)) {
+  if (isDefined(action.applyShape) && action.applyShape.length === 0) {
     results.push(createError(
       `${fieldPrefix}applyShape`, 
       "applyShape must be a non-empty string"
@@ -140,6 +140,7 @@ function validateConditionElement(
   conditionElement: ConditionElement,
   options: ValidationOptions,
   fieldPrefix: string = "",
+  ruleType: 'binding' | 'styling',
   elseFlag?: boolean
 ): ValidationResult {
   const results: ValidationResult[] = [];
@@ -154,7 +155,7 @@ function validateConditionElement(
     }
   }
 
-  if (!isDefined(conditionElement.action)) {
+  if (!isDefined(conditionElement.action) || (Object.keys(conditionElement.action).length === 0 && ruleType === 'styling') ) {
     results.push(createError(
       `${fieldPrefix}action`, 
       "Action is required for condition"
@@ -169,14 +170,14 @@ function validateConditionElement(
   return mergeResults(options, ...results);
 }
 
-function validateFunction(func: FunctionElement, options: ValidationOptions): ValidationResult {
+function validateFunction(func: FunctionElement, options: ValidationOptions, ruleType: 'binding' | 'styling'): ValidationResult {
   const results: ValidationResult[] = [];
 
   if (!isDefined(func.if)) {
     results.push(createError("function.if", "Function requires an 'if' block"));
     if (!options.collectAllErrors) return mergeResults(options, ...results);
   } else {
-    const ifResult = validateConditionElement(func.if as ConditionElement, options, "function.if.");
+    const ifResult = validateConditionElement(func.if as ConditionElement, options, "function.if.", ruleType);
     results.push(ifResult);
     if (!options.collectAllErrors && !ifResult.isValid) return mergeResults(options, ...results);
   }
@@ -190,7 +191,8 @@ function validateFunction(func: FunctionElement, options: ValidationOptions): Va
         const result = validateConditionElement(
           func.else_if[i], 
           options,
-          `function.else_if[${i}].`
+          `function.else_if[${i}].`,
+          ruleType
         );
         results.push(result);
         if (!options.collectAllErrors && !result.isValid) return mergeResults(options, ...results);
@@ -202,7 +204,8 @@ function validateFunction(func: FunctionElement, options: ValidationOptions): Va
     const result = validateConditionElement(
       func.else as ConditionElement, 
       options,
-      "function.else.", 
+      "function.else.",
+      ruleType,
       true
     );
     results.push(result);
@@ -214,11 +217,10 @@ function validateFunction(func: FunctionElement, options: ValidationOptions): Va
 
 function validateGlobalActions(rule: RuleBase<any>, options: ValidationOptions): ValidationResult {
   const actionData = rule.getActions();
-  if (!actionData.areActions) {
+  if(!actionData.areActions){
     return createError("action", "Rule requires either global actions or a function block");
   }
-
-  return validateActions(actionData.Action, options, "action.");
+  return validateActions(actionData.areActions?actionData.Action:{}, options);
 }
 
 export function validateRuleBase(
@@ -237,7 +239,7 @@ export function validateRuleBase(
   if (!options.collectAllErrors && !elementsResult.isValid) return mergeResults(options, ...results);
 
   if (rule.function && isDefined(rule.function) && isObject(rule.function)) {
-    const funcResult = validateFunction(rule.function as FunctionElement, options);
+    const funcResult = validateFunction(rule.function, options, rule.getRuleType());
     results.push(funcResult);
     if (!options.collectAllErrors && !funcResult.isValid) return mergeResults(options, ...results);
   } else {

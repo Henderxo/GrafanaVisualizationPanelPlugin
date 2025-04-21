@@ -175,6 +175,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                         setisLoaded(status)
                         onLoaded(status)
                       }}
+                      validationPrefix='function.if.'
                   />
               </div>
           </RuleInputWrapper>
@@ -209,6 +210,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                               setisLoaded(status)
                               onLoaded(status)
                             }}
+                            validationPrefix={`function.else_if[${index}].`}
                         />
                     </div>
                 </RuleInputWrapper>
@@ -230,6 +232,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                 setisLoaded(status)
                 onLoaded(status)
               }}
+              validationPrefix={`function.else.`}
             />
             {!isLoaded && <LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>}
           </RuleInputWrapper>

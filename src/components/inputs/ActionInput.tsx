@@ -22,6 +22,7 @@ interface ActionInputProps {
   actionBackgroundColor?: string
   possibleClasses: Map<string, FlowClass>
   onLoaded?: (status: boolean) => void;
+  validationPrefix?: string;
 }
 
 export const ActionInput: React.FC<ActionInputProps> = ({ 
@@ -31,7 +32,8 @@ export const ActionInput: React.FC<ActionInputProps> = ({
   possibleClasses,
   label = 'Currently added actions:',
   actionBackgroundColor,
-  onLoaded
+  onLoaded,
+  validationPrefix
 }) => {
   const actionTypes: Array<keyof Action> = type === 'binding' 
     ? ['bindData'] 
@@ -80,7 +82,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
   }, [action, type])
 
   const handleAddAction = (actionType: keyof Action) => {
-
+    validationErrors.action&&delete validationErrors.action
     const isAllowedAction = type === 'binding' 
       ? actionType === 'bindData' 
       : actionType !== 'bindData';
@@ -120,67 +122,73 @@ export const ActionInput: React.FC<ActionInputProps> = ({
         return (
           <>
             <Text>{actionType}</Text>
-            <MultiSelect
-              label={actionType}
-              placeholder={`Select ${actionType}`}
-              value={action[actionType] || []}
-              onChange={(selected) => {
-                const values = selected.map(s => s.value).filter((v): v is string => v !== undefined);
-                onChange({...action, [actionType]: values});
-              }}
-              options={(action[actionType] || []).map(value => ({
-                label: value,
-                value: value
-              }))}
-              allowCustomValue
-            />
+            <Field invalid={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}bindData`]?true:false} error={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}bindData`]}>
+              <MultiSelect
+                label={actionType}
+                placeholder={`Select ${actionType} `}
+                value={action[actionType] || []}
+                onChange={(selected) => {
+                  const values = selected.map(s => s.value).filter((v): v is string => v !== undefined);
+                  onChange({...action, [actionType]: values});
+                }}
+                options={(action[actionType] || []).map(value => ({
+                  label: value,
+                  value: value
+                }))}
+                allowCustomValue
+              />
+            </Field>
           </>
         );
       case 'applyClass':
         return (
           <>
             <Text>{actionType}</Text>
-            <MultiSelect
-              label={actionType}
-              placeholder={`Select ${actionType}`}
-              value={action.applyClass || []}
-              onChange={(selected) => {
-                const values = selected.map(s => s.value).filter((v): v is string => v !== undefined);
-                onChange({...action, applyClass: values});
-              }}
-              options={Array.from(possibleClasses.keys()).map(className => ({
-                label: className,
-                value: className
-              }))}
-              allowCustomValue
-            />
+            <Field invalid={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}applyClass`]?true:false} error={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}applyClass`]}>
+              <MultiSelect
+                label={actionType}
+                placeholder={`Select ${actionType}`}
+                value={action.applyClass || []}
+                onChange={(selected) => {
+                  const values = selected.map(s => s.value).filter((v): v is string => v !== undefined);
+                  onChange({...action, applyClass: values});
+                }}
+                options={Array.from(possibleClasses.keys()).map(className => ({
+                  label: className,
+                  value: className
+                }))}
+                allowCustomValue
+              />
+            </Field>
           </>
         );
       case 'applyStyle':
         return (
           <>
             <Text>{actionType}</Text>
-            <MultiSelect
-              label={actionType}
-              placeholder={`Select ${actionType}`}
-              value={action[actionType] || []}
-              onChange={(selected) => {
-                const values = selected.map(s => s.value).filter((v): v is string => v !== undefined);
-                onChange({...action, [actionType]: values});
-              }}
-              options={(action[actionType] || []).map(value => ({
-                label: value,
-                value: value
-              }))}
-              allowCustomValue
-            />
+            <Field invalid={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}applyStyle`]?true:false} error={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}applyStyle`]}>
+              <MultiSelect
+                label={actionType}
+                placeholder={`Select ${actionType}`}
+                value={action[actionType] || []}
+                onChange={(selected) => {
+                  const values = selected.map(s => s.value).filter((v): v is string => v !== undefined);
+                  onChange({...action, [actionType]: values});
+                }}
+                options={(action[actionType] || []).map(value => ({
+                  label: value,
+                  value: value
+                }))}
+                allowCustomValue
+              />
+            </Field>
           </>
         );
       case 'applyText':
         return (
           <>
             <Text>{actionType}</Text>
-            <Field className={css`margin: 0px;`}>
+            <Field invalid={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}applyText`]?true:false} error={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}applyText`]} className={css`margin: 0px;`}>
               <Input
                 label={actionType}
                 placeholder={`Enter ${actionType}`}
@@ -194,15 +202,17 @@ export const ActionInput: React.FC<ActionInputProps> = ({
         return (
           <>
             <Text>{actionType}</Text>
-            <Select
-              label={actionType}
-              placeholder={`Select ${actionType}`}
-              value={action.applyShape || ''}
-              onChange={(selected) => {
-                onChange({...action, applyShape: selected.value});
-              }}
-              options={shapeOptions}
-            />
+            <Field invalid={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}applyShape`]?true:false} error={validationErrors[`${validationPrefix?`${validationPrefix}action.`:''}bindData`]}>
+              <Select
+                label={actionType}
+                placeholder={`Select ${actionType}`}
+                value={action.applyShape || ''}
+                onChange={(selected) => {
+                  onChange({...action, applyShape: selected.value});
+                }}
+                options={shapeOptions}
+              />
+            </Field>
           </>
         );
       default:
@@ -212,7 +222,9 @@ export const ActionInput: React.FC<ActionInputProps> = ({
 
   return (
     <Box>
-      {!isLoading &&<div 
+      {!isLoading && actionTypes.length !== activeActions.length &&
+      <Field invalid={validationErrors[`${validationPrefix?`${validationPrefix}`:''}action`]?true:false} error={validationErrors[`${validationPrefix?`${validationPrefix}`:''}action`]}>
+        <div 
           className={css`
             display: flex; 
             gap: 2px; 
@@ -222,7 +234,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
             width: 100%;
           `}
       >
-      {JSON.stringify(actionTypes) !== JSON.stringify(activeActions) && <Text>Possible actions:</Text>}
+      <Text>Possible actions:</Text>
       {actionTypes.map(actionType => (
         !activeActions.includes(actionType)  && (
             <Badge 
@@ -240,7 +252,8 @@ export const ActionInput: React.FC<ActionInputProps> = ({
             </Badge>
         )
       ))}
-    </div>}
+    </div></Field>
+    }
       {activeActions.length > 0 && <Text>{label}</Text>}
       {activeActions.map(actionType => (
         <div style={{width: '100%'}}>
