@@ -5,11 +5,13 @@ import {
   TabsBar, 
   Tab, 
   useTheme2,
-  LoadingPlaceholder
+  LoadingPlaceholder,
+  Field
 } from '@grafana/ui';
 import { FlowClass, FunctionElement } from '../../types';
 import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 import { ActionInput } from './ActionInput';
+import { useRuleStateContext } from 'modals/configureRuleModal/ruleContext';
 
 
 interface FunctionInputProps {
@@ -36,16 +38,21 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   const theme = useTheme2()
   const [isLoaded, setisLoaded] = useState<boolean>(false)
 
+  const {validationErrors} = useRuleStateContext()
+
   const handleConditionChange = (e: React.FormEvent<HTMLInputElement>, type: 'if' | 'else_if' = 'if', index?: number) => {
     if (functionData && typeof functionData !== 'string') {
+
       const updatedFunction = { ...functionData };
 
       if (type === 'if') {
+        delete validationErrors['function.if.condition']
         if (updatedFunction.if) {
           updatedFunction.if.condition = e.currentTarget.value;
         }
       } else if (type === 'else_if' && updatedFunction.else_if) {
         if (index !== undefined && index >= 0) {
+          delete validationErrors[`function.else_if[${index}].condition`]
           updatedFunction.else_if[index].condition = e.currentTarget.value;
         }
       }
@@ -148,12 +155,14 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
           <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
               {isLoaded ? (<div style={{marginTop: '5px', marginBottom: '10px'}}>
                   <Text>Condition:</Text>
-                  <Input 
-                      placeholder="Condition" 
-                      value={functionData.if.condition || ''} 
-                      onChange={(e) => handleConditionChange(e)}
-                      className="mb-2"
-                  />
+                  <Field invalid={validationErrors[`function.if.condition`]?true:false} error={validationErrors[`function.if.condition`]}>
+                    <Input 
+                        placeholder="Condition" 
+                        value={functionData.if.condition || ''} 
+                        onChange={(e) => handleConditionChange(e)}
+                        className="mb-2"
+                    />
+                  </Field>
               </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
               <div style={{marginTop: '5px', marginBottom: '5px'}}>
                   <ActionInput 
@@ -180,12 +189,14 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
                 <RuleInputWrapper onDelete={()=>handleActionDelete(index)} backgroundColor={theme.colors.background.secondary} icon={'x'} isIcon={functionData.else_if && functionData.else_if?.length>1}>
                     {isLoaded ? (<div style={{ marginBottom: '10px'}}>
                         <Text>Condition:</Text>
-                        <Input 
-                            placeholder="Condition" 
-                            value={elseIfCondition.condition || ''} 
-                            onChange={(e) => handleConditionChange(e , 'else_if', index)}
-                            className="mb-2"
-                        />
+                        <Field invalid={validationErrors[`function.else_if[${index}].condition`]?true:false} error={validationErrors[`function.else_if[${index}].condition`]}>
+                          <Input 
+                              placeholder="Condition" 
+                              value={elseIfCondition.condition || ''} 
+                              onChange={(e) => handleConditionChange(e , 'else_if', index)}
+                              className="mb-2"
+                          />
+                        </Field>
                     </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
                     <div style={{ marginTop: '5px'}}>                     
                         <ActionInput

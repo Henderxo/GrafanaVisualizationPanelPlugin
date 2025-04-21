@@ -12,6 +12,7 @@ import {
 import { Action, FlowClass, FlowVertexTypeParam } from '../../types';
 import RuleInputWrapper from '../wrappers/RuleInputWrapper';
 import { css } from '@emotion/css';
+import { useRuleStateContext } from 'modals/configureRuleModal/ruleContext';
 
 interface ActionInputProps {
   action?: Action;
@@ -58,6 +59,8 @@ export const ActionInput: React.FC<ActionInputProps> = ({
   const [activeActions, setActiveActions] = useState<Array<keyof Action>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const theme = useTheme2()
+
+  const {validationErrors} = useRuleStateContext()
 
   useEffect(()=>{
     setIsLoading(true)

@@ -232,7 +232,7 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
                   
             <RuleInputWrapper isIcon={false}>
               <Text>Rule Name:</Text>
-              <Field invalid={newRuleRef.current.name==='' || validationErrors.id?true:false} className={css`margin: 0px;`} error={'Rule Name is required'}>
+              <Field invalid={newRuleRef.current.name==='' || validationErrors.name?true:false} className={css`margin: 0px;`} error={validationErrors.name}>
                 <Input 
                   placeholder="Rule Name"
                   value={newRuleRef.current.name}
@@ -249,14 +249,15 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
               <RuleInputWrapper
                 onDelete={() => handleRuleInputDelete("elements")}
               >
-                <Text>Elements</Text>
-                <Field className={css`margin: 0px;`}>
+                <Text>Elements:</Text>
+                <Field invalid={validationErrors.elements?true:false} error={validationErrors.elements} className={css`margin: 0px;`}>
                   <MultiSelect
                     label="Elements"
                     placeholder="Select Elements"
                     value={newRuleRef.current.elements}
                     options={elementList}
                     onChange={(selected) => {
+                      validationErrors.elements&&delete validationErrors.elements
                       let tempList: string[] = [];
                       selected.forEach((value) => {
                         tempList.push(value.value);

@@ -1,5 +1,19 @@
 import { Action, ConditionElement, FunctionElement, RuleBase, YamlBindRule, YamlStylingRule } from "types";
 
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: ValidationError[];
+}
+
+export interface ValidationOptions {
+  collectAllErrors: boolean;
+}
+
 function isNonEmptyString(value: any): boolean {
   return typeof value === 'string' && value.trim() !== '';
 }
@@ -24,132 +38,220 @@ function isObject(value: any): value is Record<string, any> {
   );
 }
 
-type ValidationResult = [boolean, string | null];
+function createValidResult(): ValidationResult {
+  return { isValid: true, errors: [] };
+}
+
+function createError(field: string, message: string, ): ValidationResult {
+  return {
+    isValid: false,
+    errors: [{ field, message }]
+  };
+}
+
+function mergeResults(options: ValidationOptions, ...results: ValidationResult[]): ValidationResult {
+  const merged: ValidationResult = { isValid: true, errors: [] };
+  
+  for (const result of results) {
+    if (!result.isValid) {
+      merged.isValid = false;
+      merged.errors = [...merged.errors, ...result.errors];
+      
+      if (!options.collectAllErrors && merged.errors.length > 0) {
+        return merged;
+      }
+    }
+  }
+  
+  return merged;
+}
 
 function validateName(rule: RuleBase<any>): ValidationResult {
   if (!isDefined(rule.name) || isEmpty(rule.name)) {
-    return [false, "Rule name is missing or empty"];
+    return createError("name", "Rule name is required");
   }
-  return [true, null];
+  return createValidResult();
 }
 
 function validateElements(rule: RuleBase<any>): ValidationResult {
   if (isDefined(rule.elements) && !isNonEmptyArray(rule.elements)) {
-    return [false, "Rule elements are defined but empty or invalid"];
+    return createError("elements", "Elements must be a non-empty array");
   }
-  return [true, null];
+  return createValidResult();
 }
 
-function validateActions(action: Action): ValidationResult {
-  if (!isObject(action)) return [false, "Action is not an object"];
-
-  if (
-    isDefined(action.bindData) &&
-    (!Array.isArray(action.bindData) || !action.bindData.every(isNonEmptyString))
-  ) {
-    return [false, "bindData should be a non-empty array of strings"];
+function validateActions(action: Action, options: ValidationOptions, fieldPrefix: string = ""): ValidationResult {
+  if (!isObject(action)) {
+    return createError(`${fieldPrefix}action`, "Action must be an object");
   }
 
-  if (
-    isDefined(action.applyClass) &&
-    (!Array.isArray(action.applyClass) || !action.applyClass.every(isNonEmptyString))
-  ) {
-    return [false, "applyClass should be a non-empty array of strings"];
+  const results: ValidationResult[] = [];
+
+  if (isDefined(action.bindData)) {
+    if (!Array.isArray(action.bindData) || !action.bindData.every(isNonEmptyString)) {
+      results.push(createError(
+        `${fieldPrefix}bindData`, 
+        "bindData must be a non-empty array of strings"
+      ));
+      if (!options.collectAllErrors) return mergeResults(options, ...results);
+    }
+  }
+
+  if (isDefined(action.applyClass)) {
+    if (!Array.isArray(action.applyClass) || !action.applyClass.every(isNonEmptyString)) {
+      results.push(createError(
+        `${fieldPrefix}applyClass`, 
+        "applyClass must be a non-empty array of strings"
+      ));
+      if (!options.collectAllErrors) return mergeResults(options, ...results);
+    }
   }
 
   if (isDefined(action.applyText) && !isNonEmptyString(action.applyText)) {
-    return [false, "applyText should be a non-empty string"];
+    results.push(createError(
+      `${fieldPrefix}applyText`, 
+      "applyText must be a non-empty string"
+    ));
+    if (!options.collectAllErrors) return mergeResults(options, ...results);
   }
 
-  if (
-    isDefined(action.applyStyle) &&
-    (!Array.isArray(action.applyStyle) || !action.applyStyle.every(isNonEmptyString))
-  ) {
-    return [false, "applyStyle should be a non-empty array of strings"];
+  if (isDefined(action.applyStyle)) {
+    if (!Array.isArray(action.applyStyle) || !action.applyStyle.every(isNonEmptyString)) {
+      results.push(createError(
+        `${fieldPrefix}applyStyle`, 
+        "applyStyle must be a non-empty array of strings"
+      ));
+      if (!options.collectAllErrors) return mergeResults(options, ...results);
+    }
   }
 
   if (isDefined(action.applyShape) && !isNonEmptyString(action.applyShape)) {
-    return [false, "applyShape should be a non-empty string"];
+    results.push(createError(
+      `${fieldPrefix}applyShape`, 
+      "applyShape must be a non-empty string"
+    ));
+    if (!options.collectAllErrors) return mergeResults(options, ...results);
   }
 
-  return [true, null];
+  return mergeResults(options, ...results);
 }
 
 function validateConditionElement(
   conditionElement: ConditionElement,
+  options: ValidationOptions,
+  fieldPrefix: string = "",
   elseFlag?: boolean
 ): ValidationResult {
-  if (
-    !elseFlag &&
-    (!isDefined(conditionElement.condition) ||
-      !isNonEmptyString(conditionElement.condition))
-  ) {
-    return [false, "ConditionElement has an invalid or missing condition"];
+  const results: ValidationResult[] = [];
+
+  if (!elseFlag) {
+    if (!isDefined(conditionElement.condition) || !isNonEmptyString(conditionElement.condition)) {
+      results.push(createError(
+        `${fieldPrefix}condition`, 
+        "Condition expression is required"
+      ));
+      if (!options.collectAllErrors) return mergeResults(options, ...results);
+    }
   }
 
   if (!isDefined(conditionElement.action)) {
-    return [false, "ConditionElement is missing an action"];
+    results.push(createError(
+      `${fieldPrefix}action`, 
+      "Action is required for condition"
+    ));
+    if (!options.collectAllErrors) return mergeResults(options, ...results);
+  } else {
+    const actionResult = validateActions(conditionElement.action, options, `${fieldPrefix}action.`);
+    results.push(actionResult);
+    if (!options.collectAllErrors && !actionResult.isValid) return mergeResults(options, ...results);
   }
 
-  const actionValidation = validateActions(conditionElement.action);
-  if (!actionValidation[0]) {
-    return [false, `ConditionElement action is invalid: ${actionValidation[1]}`];
-  }
-
-  return [true, null];
+  return mergeResults(options, ...results);
 }
 
-function validateFunction(func: FunctionElement): ValidationResult {
-  const ifResult = validateConditionElement(func.if as ConditionElement);
-  if (!ifResult[0]) return [false, `Function 'if' block invalid: ${ifResult[1]}`];
+function validateFunction(func: FunctionElement, options: ValidationOptions): ValidationResult {
+  const results: ValidationResult[] = [];
+
+  if (!isDefined(func.if)) {
+    results.push(createError("function.if", "Function requires an 'if' block"));
+    if (!options.collectAllErrors) return mergeResults(options, ...results);
+  } else {
+    const ifResult = validateConditionElement(func.if as ConditionElement, options, "function.if.");
+    results.push(ifResult);
+    if (!options.collectAllErrors && !ifResult.isValid) return mergeResults(options, ...results);
+  }
 
   if (isDefined(func.else_if)) {
     if (!Array.isArray(func.else_if)) {
-      return [false, "Function 'else_if' must be a non-empty array"];
-    }
-
-    for (const conditionElement of func.else_if) {
-      const result = validateConditionElement(conditionElement);
-      if (!result[0]) return [false, `Function 'else_if' block invalid: ${result[1]}`];
+      results.push(createError("function.else_if", "else_if must be an array"));
+      if (!options.collectAllErrors) return mergeResults(options, ...results);
+    } else {
+      for (let i = 0; i < func.else_if.length; i++) {
+        const result = validateConditionElement(
+          func.else_if[i], 
+          options,
+          `function.else_if[${i}].`
+        );
+        results.push(result);
+        if (!options.collectAllErrors && !result.isValid) return mergeResults(options, ...results);
+      }
     }
   }
 
   if (isDefined(func.else)) {
-    const result = validateConditionElement(func.else as ConditionElement, true);
-    if (!result[0]) return [false, `Function 'else' block invalid: ${result[1]}`];
+    const result = validateConditionElement(
+      func.else as ConditionElement, 
+      options,
+      "function.else.", 
+      true
+    );
+    results.push(result);
+    if (!options.collectAllErrors && !result.isValid) return mergeResults(options, ...results);
   }
 
-  return [true, null];
+  return mergeResults(options, ...results);
 }
 
-function validateGlobalActions(rule: RuleBase<any>): ValidationResult {
+function validateGlobalActions(rule: RuleBase<any>, options: ValidationOptions): ValidationResult {
   const actionData = rule.getActions();
   if (!actionData.areActions) {
-    return [false, "Rule is missing global actions"];
+    return createError("action", "Rule requires either global actions or a function block");
   }
 
-  const result = validateActions(actionData.Action);
-  if (!result[0]) return [false, `Global action invalid: ${result[1]}`];
-
-  return [true, null];
+  return validateActions(actionData.Action, options, "action.");
 }
 
-function validateRuleBase(rule: RuleBase<any>): ValidationResult {
+export function validateRuleBase(
+  rule: RuleBase<any>, 
+  options: ValidationOptions = { collectAllErrors: false }
+): ValidationResult {
+  console.log(rule)
+  const results: ValidationResult[] = [];
+
   const nameResult = validateName(rule);
-  if (!nameResult[0]) return nameResult;
+  results.push(nameResult);
+  if (!options.collectAllErrors && !nameResult.isValid) return mergeResults(options, ...results);
 
   const elementsResult = validateElements(rule);
-  if (!elementsResult[0]) return elementsResult;
+  results.push(elementsResult);
+  if (!options.collectAllErrors && !elementsResult.isValid) return mergeResults(options, ...results);
 
   if (rule.function && isDefined(rule.function) && isObject(rule.function)) {
-    const funcResult = validateFunction(rule.function as FunctionElement);
-    if (!funcResult[0]) return funcResult;
+    const funcResult = validateFunction(rule.function as FunctionElement, options);
+    results.push(funcResult);
+    if (!options.collectAllErrors && !funcResult.isValid) return mergeResults(options, ...results);
   } else {
-    const actionResult = validateGlobalActions(rule);
-    if (!actionResult[0]) return actionResult;
+    const actionsResult = validateGlobalActions(rule, options);
+    results.push(actionsResult);
+    if (!options.collectAllErrors && !actionsResult.isValid) return mergeResults(options, ...results);
   }
 
-  return [true, null];
+  return mergeResults(options, ...results);
 }
 
-export { validateRuleBase };
+export function getFieldError(result: ValidationResult, fieldName: string): string | undefined {
+  const error = result.errors.find(err => 
+    err.field === fieldName || err.field.startsWith(`${fieldName}.`)
+  );
+  return error?.message;
+}

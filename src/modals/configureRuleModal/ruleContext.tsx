@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useRef } from 'react';
 import { SelectableValue } from '@grafana/data';
 import { Action, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } from '../../types';
 import { RuleUIState, useRuleUIState } from 'modals/configureRuleModal/useRuleState';
-
+import { validateRuleBase, ValidationResult } from 'utils/ValidationUtils';
+import { createRecordFromObjects } from 'utils/TransformationUtils';
 interface RuleStateContextType {
 
   newRuleRef: React.MutableRefObject<YamlBindRule | YamlStylingRule>;
@@ -71,10 +72,8 @@ interface RuleStateProviderProps {
 export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({ 
   children, 
   initialRule,
-  possibleClasses,
   totalRuleCount,
-  element,
-  onSubmit
+  element
 }) => {
 
   const [stateHistory, setStateHistory] = React.useState<{
@@ -138,12 +137,15 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   const validateRule = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!newRuleRef.current.name || newRuleRef.current.name.trim() === '') {
-      errors.id = 'Rule Name is required';
+    const validationResult: ValidationResult = validateRuleBase(newRuleRef.current, {collectAllErrors: true})
+    console.log(validationResult)
+    if(!validationResult.isValid){
+      const errorRecord = createRecordFromObjects(validationResult.errors, 'field', 'message')
+      console.log(errorRecord)
+      setValidationErrors(errorRecord);
     }
 
-    setValidationErrors(errors);
-
+    return false;
     return Object.keys(errors).length === 0;
   };
 

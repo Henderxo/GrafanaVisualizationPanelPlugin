@@ -31,6 +31,19 @@ function mapDataToRows(data: PanelData): Record<string, any>[]{
     }));
   };
 
+  function createRecordFromObjects<T extends Record<string, any>>(
+    arr: T[],
+    keyField: keyof T,
+    valueField: keyof T
+  ): Record<string, string> {
+    return arr.reduce((acc, obj) => {
+      const key = String(obj[keyField]);
+      const value = String(obj[valueField]);
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+  }
+  
 function reformatDataFromResponse(rez: Diagram): {
     nodes: Map<string, FlowVertex>,
     edges: FlowEdge[],
@@ -68,4 +81,4 @@ function sortByPriority<T extends { priority?: number }>(arr: T[]): T[] {
     });
   }
 
-export{extractTableData, mapToSelectableValues, mapDataToRows, reformatDataFromResponse, sortByPriority}
+export{extractTableData, mapToSelectableValues, mapDataToRows, reformatDataFromResponse, sortByPriority, createRecordFromObjects}

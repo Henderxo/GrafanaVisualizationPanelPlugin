@@ -1,7 +1,7 @@
 import yaml from 'js-yaml';
 import { ErrorService, ErrorType } from 'services/ErrorService';
 import { YamlBindRule, YamlStylingRule } from '../types';
-import { validateRuleBase } from './ValidationUtils';
+import { validateRuleBase, ValidationResult } from './ValidationUtils';
 
  function convertToYaml (jsonObject: any): string {
     try {
@@ -30,23 +30,23 @@ import { validateRuleBase } from './ValidationUtils';
       if (Array.isArray(parsed.bindingRules)) {
         parsed.bindingRules.forEach((rule: any) => {
           const newRule = new YamlBindRule(rule)
-          const validationResult = validateRuleBase(newRule);
-          if (validationResult[0]) {
+          const validationResult: ValidationResult = validateRuleBase(newRule);
+          if (validationResult.isValid) {
             bindingRules.push(new YamlBindRule(newRule)); 
           } else {
-            console.warn(`Invalid binding rule (Name: ${rule.name || 'Unnamed'}): ${validationResult[1]}`);
+            console.warn(`Invalid binding rule (Name: ${rule.name || 'Unnamed'}): ${validationResult.errors[0].message}`);
           }
         });
       }
 
       if (Array.isArray(parsed.stylingRules)) {
         parsed.stylingRules.forEach((rule: any) => {
-          const newRule = new YamlStylingRule(rule)
-          const validationResult = validateRuleBase(newRule);
-          if (validationResult[0]) {
+          const newRule = new YamlStylingRule(rule) 
+          const validationResult = validateRuleBase(newRule, );
+          if (validationResult.isValid) {
             stylingRules.push(new YamlStylingRule(newRule));
           } else {
-            console.warn(`Invalid styling rule (Name: ${rule.name || 'Unnamed'}): ${validationResult[1]}`);
+            console.warn(`Invalid styling rule (Name: ${rule.name || 'Unnamed'}): ${validationResult.errors[0].message}`);
           }
         });
       }
