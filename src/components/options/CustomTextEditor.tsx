@@ -7,7 +7,6 @@ interface CustomTextEditorProps extends StandardEditorProps<string, any, { rows?
 export const CustomTextEditor: React.FC<CustomTextEditorProps> = ({ value, onChange, item }) => {
   const [text, setText] = useState(value || '');
 
-  
   useEffect(() => {
     setText(value || '');
   }, [value]);

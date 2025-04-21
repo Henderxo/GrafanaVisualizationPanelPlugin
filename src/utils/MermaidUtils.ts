@@ -1,193 +1,372 @@
-import internal from "stream";
-import { TemplateObject, ClassStyle, Element } from "types/types";
+import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } from '../types';
 
+   const VALID_SHAPES = new Set<FlowVertexTypeParam>([
+    'square', 'doublecircle', 'circle', 'ellipse', 'stadium', 'subroutine',
+    'rect', 'cylinder', 'round', 'diamond', 'hexagon', 'odd',
+    'trapezoid', 'inv_trapezoid', 'lean_right', 'lean_left',
+  ]);
 
-function extractNodeId(node: string) {
-    const match = node.trim().match(/^([\w\d_-]+)/); // Matches the first alphanumeric part (Node ID)
-    return match ? match[1] : '';
-}
+   const isValidShape = (shape: any): shape is FlowVertexTypeParam => 
+    VALID_SHAPES.has(shape);
 
-function extractLabel(node: string) {
-    // Regex to handle all Mermaid node types
-    const match = node.match(/(?:\[\s*(.*?)\s*\])|(?:\(\(\s*(.*?)\s*\)\))|(?:\(\s*(.*?)\s*\))|(?:\{\s*(.*?)\s*\})/);
+   function extractMermaidDiagramType(mermaidCode: string): string {
+    const normalizedCode = mermaidCode.trim().replace(/^graph\b/i, 'flowchart');
+  
+    const regex = /^(flowchart)(?:\s+(TD|TB|BT|LR|RL))?|^(sequenceDiagram|gantt|classDiagram|stateDiagram|pie|erDiagram|journey)\b/i;
+    const match = normalizedCode.match(regex);
+  
+    if (!match) return "Unknown diagram type";
+  
+    if (match[1]) {
+      return `flowchart ${match[2]?.toUpperCase() || ""}`.trim();
+    }
+  
+    return match[3] || "Unknown diagram type";
+  }
+  
+   function extractMermaidConfigString(template: string): string | undefined {
+      const initRegex = /%%\{init:\s*(.*?)\s*\}%%/;
+      const match = template.match(initRegex);
+      
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+      
+      return undefined;
+    }
 
-    // Return the matched label from one of the possible node formats
-    return match ? match[1] || match[2] || match[3] || match[4] : '';
-}
-
-function getNodeType(node: string) {
-    if (node.includes('((')) return 'circle'; 
-    if (node.includes('(')) return 'round';
-    if (node.includes('[')) return 'square';  // Node type square
-    if (node.includes('{')) return 'diamond'; // Node type diamond
-    return 'unknown'; // Default type
-}
-
-const parseMermaidToMap = (
-  input: string,
-): {
-  object: TemplateObject,
-  edges: [string, string, string, string][],
-  classDefs: Map<string, ClassStyle>,
-  config: string,
-} => {
-  const object: TemplateObject = {};
-  const edges: [string, string, string, string][] = [];
-  const classDefs: Map<string, ClassStyle> = new Map();
-  let config: string = "";
-  const lines = input
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line);
-  const subgraphStack: string[] = [];
-
-  const configMatch = input.match(/%%\{init:\s*([\s\S]*?)\}%%/);
-  if (configMatch) {
-    config = configMatch[0];
+   function isFlowVertex(obj: any): obj is FlowVertex {
+    return (
+      obj &&
+      Array.isArray(obj.classes) &&
+      typeof obj.id === 'string' &&
+      typeof obj.domId === 'string' &&
+      obj.labelType === 'text' &&
+      Array.isArray(obj.styles)
+    );
+  }
+  
+   function isFlowSubGraph(obj: any): obj is FlowSubGraph {
+    return (
+      obj &&
+      Array.isArray(obj.classes) &&
+      typeof obj.id === 'string' &&
+      typeof obj.title === 'string' &&
+      Array.isArray(obj.nodes)
+    );
   }
 
-  lines.forEach((line, index) => {
-    if (line.startsWith("subgraph")) {
-        const subgraphMatch = line.match(/subgraph\s+([\w\d_-]+)(?:\s*\[(.*?)\])?/);
-        if (subgraphMatch) {
-          const [, id, label] = subgraphMatch;
-          const subgraphLabel = label || id;
-          object[id] = new Element(index, subgraphLabel, "subgraph");
-          subgraphStack.push(id);
-        }
-      } else if (line.startsWith("end")) {
-        if (subgraphStack.length > 0) {
-          const lastSubgraph = subgraphStack.pop();
-          if (lastSubgraph) {
-            object[lastSubgraph].endRow = index;
-          }
-        }
-    } else if (
-      line.includes("-->") ||
-      line.includes("---") ||
-      line.includes("-.->")
-    ) {
-        const splitLine = line.split(/\s*(-->|\-\-\>|\-\.\-\>|\-\-\-)\s*/).filter(Boolean);
-        if(splitLine.length>2){
-            for (let i = 0; i < splitLine.length - 2; i += 2) {
-                let x = splitLine[i]; 
-                let y = splitLine[i+1];
-                let z = splitLine[i+2]; 
-            
-                // Handle the arrow text (if present)
-                let textOnArrow = '';
-                const arrowTextMatch = z.match(/\|([^|]+)\|/); // Look for any text like |Yes|
-                if (arrowTextMatch) {
-                    textOnArrow = arrowTextMatch[1]; // Extract the text on the arrow
-                    z = z.replace(arrowTextMatch[0], ''); // Remove arrow text from the node
-                }
+ function generateDynamicMermaidFlowchart(data: {
+    nodes: Map<string, FlowVertex>,
+    edges: FlowEdge[],
+    classes: Map<string, FlowClass>,
+    subGraphs: Map<string, FlowSubGraph>,
+    config?: string
+    type: string
+  }): string {
 
-                // Register Node 1 (x) and Node 2 (z)
-                let fromNodeId = extractNodeId(x);
-                let toNodeId = extractNodeId(z);
-                
-                // Extract labels from nodes if present
-                let fromLabel = extractLabel(x);
-                let toLabel = extractLabel(z);
-                // Now handle the node types
-                let fromNodeType = getNodeType(x); // Square, Round, etc.
-                let toNodeType = getNodeType(z);   // Square, Round, etc.
-            
-                // Create the final edge object
-                const edge = {
-                    fromNodeId: fromNodeId,
-                    fromLabel: fromLabel,
-                    fromNodeType: fromNodeType,
-                    arrowType: y,
-                    toNodeId: toNodeId,
-                    toLabel: toLabel,
-                    toNodeType: toNodeType,
-                    textOnArrow: textOnArrow,
-                };
-                if(edge.fromNodeId && !object[edge.fromNodeId]){
-                    object[edge.fromNodeId] = new Element(index, edge.fromLabel, edge.fromNodeType);
-                }
-                if(edge.toNodeId && !object[edge.toNodeId]){
-                    object[edge.toNodeId] = new Element(index, edge.toLabel, edge.toNodeType);
-                }
-                edges.push([edge.fromNodeId, edge.toNodeId, textOnArrow??'', edge.arrowType.trim()]);
-            }
-        }
-    } else{
-        if (line.startsWith("classDef")) {
-            const classDefMatch = line.match(/^classDef\s+([\w\d_-]+)\s+(.*)$/);
-            if (classDefMatch) {
-              const [, className, classStyle] = classDefMatch;
-      
-              const style = parseStyleString(classStyle);
-              classDefs.set(className, style);
-            }
-        }
-        else{
-            console.log('mathing node')
-            console.log(line)
-            const nodeMatch = line.match(/^([\w\d_-]+)(\(\(|\[\{|\()([^(){}\[\]]+)(\)\)|\}\]|\))$/);
-            console.log(nodeMatch)
-            if(nodeMatch){
-                console.log('Matcherd')
-                console.log(nodeMatch)
-                addNode(index, nodeMatch, object)
-            }
-        }
+    let mermaidString = "";
+    if (data.config) {
+      mermaidString += `%%{init: ${data.config}}%%\n`;
     }
-  });
-  return { object, edges, classDefs, config };
-};
-
-const addNode = (index: number, nodeMatch: RegExpMatchArray, object: TemplateObject)=>{
-    const [, id, shape, text, ] = nodeMatch;
+    // Start building the Mermaid flowchart string
+    mermaidString += `${data.type}\n`;
     
-    let nodeType = "square"; 
-    if (shape === "((") nodeType = "circle";
-    else if (shape === "{") nodeType = "diamond";
-    else if (shape === "(") nodeType = "round"
-    object[id] = new Element(index, text, nodeType);
-}
-
-const getClassBindings = (input: string)=> {
-    const classBindings = new Map<string, string[]>(); 
-    const lines = input
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line);
-  
-    lines.forEach((line) => {
-      if (line.startsWith("class ")) {
-        const classMatch = line.match(/^class\s+([\w\d_-]+(?:,[\w\d_-]+)*)\s+([\w\d_-]+)/);
-        if (classMatch) {
-            const [, objectIds, className] = classMatch;
+    // Track nodes that are part of subgraphs
+    const nodesInSubgraphs = new Set<string>();
     
-            const ids = objectIds.split(',');
-    
-            ids.forEach((objectId) => {
-              if (!classBindings.has(objectId)) {
-                classBindings.set(objectId, []);
-              }
-    
-              classBindings.get(objectId)?.push(className);
-            });
+    // Process subgraphs first if they exist
+    if (data.subGraphs.size > 0) {
+      for (const [, subgraph] of data.subGraphs) {
+        mermaidString += `  subgraph ${subgraph.id} [${subgraph.title}]\n`;
+        
+        // Add nodes to subgraph
+        subgraph.nodes.forEach(nodeId => {
+          nodesInSubgraphs.add(nodeId);
+          const node = data.nodes.get(nodeId);
+          
+          if (node) {
+            // Format node with shape and properties based on node type
+            let nodeText = formatNodeText(nodeId, node);
+            mermaidString += `    ${nodeText}\n`;
+          } else {
+            // If node details aren't available, just add the node ID
+            mermaidString += `    ${nodeId}\n`;
           }
+        });
+        
+        mermaidString += "  end\n";
+      }
+      mermaidString += "\n";
+    }
+    
+    // Process any remaining nodes that aren't in subgraphs
+    for (const [nodeId, node] of data.nodes) {
+      if (!nodesInSubgraphs.has(nodeId)) {
+        let nodeText = formatNodeText(nodeId, node);
+        mermaidString += `  ${nodeText}\n`;
+      }
+    }
+    mermaidString += "\n";
+    
+    // Add all nodes that appear in edges but aren't defined in nodes
+    const edgeNodeIds = new Set<string>();
+    data.edges.forEach(edge => {
+      edgeNodeIds.add(edge.start);
+      edgeNodeIds.add(edge.end);
+    });
+    
+    const missingNodes = Array.from(edgeNodeIds)
+      .filter(nodeId => !data.nodes.has(nodeId) && !nodesInSubgraphs.has(nodeId));
+    
+    if (missingNodes.length > 0) {
+      missingNodes.forEach(nodeId => {
+        mermaidString += `  ${nodeId}\n`;
+      });
+      mermaidString += "\n";
+    }
+    
+    // Process all edges
+    if (data.edges.length > 0) {
+      // Group edges by type for better organization
+      const groupedEdges = groupEdges(data.edges);
+      
+      // Add edges by group
+      Object.entries(groupedEdges).forEach(([groupName, edges]) => {
+        mermaidString += `  %%%% ${groupName}\n`;
+        edges.forEach(edge => {
+          const lineStyle = getLineStyle(edge);
+
+          mermaidString += `  ${edge.start} ${lineStyle}${edge.text?`|${edge.text}|`:``} ${edge.end}\n`;
+        });
+        mermaidString += "\n";
+      });
+    }
+    
+    // Process class definitions
+    if (data.classes.size > 0) {
+      mermaidString += "  %%%% Class Definitions\n";
+      for (const [classId, classStyle] of data.classes) {
+        mermaidString += `  classDef ${classId} ${classStyle.styles.join(',')}\n`;
+      }
+      mermaidString += "\n";
+    }
+    
+    // Apply classes to nodes
+    const nodeClasses = new Map<string, string[]>();
+    const subgraphClasses = new Map<string, string[]>();
+
+    // Collect classes from nodes
+    for (const [nodeId, node] of data.nodes) {
+      if (node.classes && node.classes.length > 0) {
+        nodeClasses.set(nodeId, node.classes);
+      }
+    }
+
+     // Collect classes from subgraphs
+    for (const [subgraphId, subgraph] of data.subGraphs) {
+      if (subgraph.classes && subgraph.classes.length > 0) {
+        subgraphClasses.set(subgraphId, subgraph.classes);
+      }
+    }
+    
+    // Apply classes
+    if (nodeClasses.size > 0) {
+      mermaidString += "  %%%% Apply classes to nodes\n";
+      nodeClasses.forEach((classes, nodeId) => {
+        classes.forEach(className => {
+          mermaidString += `  class ${nodeId} ${className};\n`;
+        });
+      });
+    }
+
+    if (subgraphClasses.size > 0) {
+      mermaidString += "  %%%% Apply classes to subgraphs\n";
+      subgraphClasses.forEach((classes, subgraphId) => {
+        classes.forEach(className => {
+          mermaidString += `  class ${subgraphId} ${className};\n`;
+        });
+      });
+    }
+
+    const nodesWithStyles = Array.from(data.nodes.entries())
+    .filter(([_, node]) => node.styles && node.styles.length > 0);
+  
+    if (nodesWithStyles.length > 0) {
+    mermaidString += "  %%%% Apply direct styles to nodes\n";
+     nodesWithStyles.forEach(([nodeId, node]) => {
+        if (node.styles && node.styles.length > 0) {
+          mermaidString += `  style ${nodeId} ${node.styles.join(',')};\n`;
+        }
+      }) ;
+    }
+
+    const subgraphsWithStyles = Array.from(data.subGraphs.entries())
+    .filter(([_, subgraph]) => subgraph.styles && subgraph.styles.length > 0);
+
+    if (subgraphsWithStyles.length > 0) {
+      mermaidString += "  %%%% Apply direct styles to subgraphs\n";
+      subgraphsWithStyles.forEach(([subgraphId, subgraph]) => {
+        if (subgraph.styles && subgraph.styles.length > 0) {
+          mermaidString += `  style ${subgraphId} ${subgraph.styles.join(',')};\n`;
+        }
+      });
+    }
+    
+    return mermaidString;
+  }
+  
+  /**
+   * Formats a node's text representation based on its properties
+   */
+  function formatNodeText(nodeId: string, node: FlowVertex): string {
+    // Determine node shape based on type
+    let nodeShape = '';
+    if (node.type) {
+      switch (node.type) {
+        case 'circle':
+          nodeShape = '((default))';
+          break;
+        case 'doublecircle':
+          nodeShape = '(((default)))';
+          break;
+        case 'square': 
+          nodeShape = '[default]';
+          break;
+        case 'rect':
+          nodeShape = '[/default\\]';
+          break;
+        case 'diamond':
+          nodeShape = '{default}';
+          break;
+        case 'hexagon':
+          nodeShape = '{{default}}';
+          break;
+        case 'cylinder':
+          nodeShape = '[(default)]';
+          break;
+        case 'stadium':
+          nodeShape = '([default])';
+          break;
+        case 'round':
+          nodeShape = '(default)';
+          break;
+        case 'ellipse':
+          nodeShape = '((default))';
+          break;
+        case 'subroutine':
+          nodeShape = '[[default]]';
+          break;
+        case 'odd':
+          nodeShape = '>default]';
+          break;
+        case 'trapezoid':
+          nodeShape = '[/default/]';
+          break;
+        case 'inv_trapezoid':
+          nodeShape = '[\\default\\]';
+          break;
+        case 'lean_right':
+          nodeShape = '[/default/]';
+          break;
+        case 'lean_left':
+          nodeShape = '[\\default]';
+          break;
+        default:
+          nodeShape = '(default)';
+      }
+    } else {
+      // Default shape if none specified
+      nodeShape = '(default)';
+    }
+    
+    // Format node content with any properties
+    let nodeContent = node.text || nodeId;
+    
+    // Return the formatted node representation
+    return `${nodeId}${nodeShape.replace('default', nodeContent)}`;
+  }
+
+
+  // function formatNodeText(nodeId: string, node: FlowVertex): string {
+  //   let nodeContent = node.text || nodeId;
+    
+  //   // Using the new tag syntax
+  //   let tagAttributes = [];
+    
+  //   // Add shape attribute if node type is specified
+  //   if (node.type) {
+  //     tagAttributes.push(`shape: ${node.type}`);
+  //   } else {
+  //     // Default shape if none specified
+  //     tagAttributes.push('shape: round');
+  //   }
+    
+  //   // Add label attribute for the text (escape any quotes in the content)
+  //   const escapedContent = nodeContent.replace(/"/g, '\\"');
+  //   tagAttributes.push(`label: "${escapedContent}"`);
+    
+  //   // If there are direct styles, add them as a style attribute
+  //   if (node.styles && node.styles.length > 0) {
+  //     tagAttributes.push(`style: "${node.styles.join(',')}"`);
+  //   }
+    
+  //   // Format using the new @{} tag syntax
+  //   return `${nodeId}@{${tagAttributes.join(', ')}}`;
+  // }
+  
+  /**
+   * Groups edges by connection type for better organization in the chart
+   */
+  function groupEdges(edges: FlowEdge[]): Record<string, FlowEdge[]> {
+    // Group edges by some property
+    const groups: Record<string, FlowEdge[]> = {
+      'Standard Connections': [],
+    'Dotted Connections': [],
+    'Thick Connections': [],
+    'Invisible Connections': [],
+    'Other Connections': []
+    };
+    
+    edges.forEach(edge => {
+      if (edge.stroke === 'dotted') {
+        groups['Dotted Connections'].push(edge);
+      } else if (edge.stroke === 'normal') {
+        groups['Standard Connections'].push(edge);
+      } else if (edge.stroke === 'thick') {
+        groups['Thick Connections'].push(edge);
+      } else if (edge.stroke === 'invisible') {
+        groups['Invisible Connections'].push(edge);
+      } else {
+        groups['Other Connections'].push(edge);
       }
     });
-  
-    return classBindings;
-  };
-  
-
-const parseStyleString = (style: string): ClassStyle => {
-  const styleObj: ClassStyle = {};
-  const regex = /([a-zA-Z-]+)\s*[:=]\s*([^,;]+)/g;
-  let match;
-  while ((match = regex.exec(style)) !== null) {
-    const [, property, value] = match;
-    styleObj[property] = value;
+    
+    // Remove empty groups
+    Object.keys(groups).forEach(key => {
+      if (groups[key].length === 0) {
+        delete groups[key];
+      }
+    });
+    
+    return groups;
   }
-  return styleObj;
-};
+  
+  /**
+   * Determines the line style based on edge properties
+   */
+  function getLineStyle(edge: FlowEdge): string {
+    if (edge.stroke === 'dotted') {
+      return '-.->';
+    } else if (edge.stroke === 'thick') {
+      return '==>';
+    } else if (edge.stroke === 'invisible') {
+      return '~~~';
+    } else {
+      // Default to normal
+      return '-->';
+    }
+  }
 
-export { parseMermaidToMap, getClassBindings};
+
+  export {generateDynamicMermaidFlowchart, getLineStyle, isValidShape, extractMermaidConfigString, isFlowVertex, isFlowSubGraph, extractMermaidDiagramType}
