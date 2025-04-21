@@ -19,6 +19,8 @@ import VirtualModulesPlugin from 'webpack-virtual-modules';
 import { BuildModeWebpackPlugin } from './BuildModeWebpackPlugin';
 import { DIST_DIR, SOURCE_DIR } from './constants';
 import { getCPConfigVersion, getEntries, getPackageJson, getPluginJson, hasReadme, isWSL } from './utils';
+import MonacoEditorWebpackPlugin from 'monaco-editor-webpack-plugin';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 const pluginJson = getPluginJson();
 const cpVersion = getCPConfigVersion();
@@ -189,6 +191,23 @@ const config = async (env): Promise<Configuration> => {
     plugins: [
       new BuildModeWebpackPlugin(),
       virtualPublicPath,
+      new HtmlWebpackPlugin(),
+      new MonacoEditorWebpackPlugin({
+        languages: ['yaml'],
+        customLanguages: [
+          {
+            label: 'yaml',
+            entry: 'monaco-yaml',
+            worker: {
+              id: 'monaco-yaml/yamlWorker',
+              entry: 'monaco-yaml/yaml.worker',
+            },
+          },
+        ],
+        filename: '[name].worker.js',
+        globalAPI: true
+      }),
+      
       // Insert create plugin version information into the bundle
       new BannerPlugin({
         banner: '/* [create-plugin] version: ' + cpVersion + ' */',

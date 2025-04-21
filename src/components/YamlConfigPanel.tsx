@@ -4,41 +4,18 @@ import yaml from 'js-yaml';
 import { PanelData } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
+import { ClassStyle, StylingData, YamlBindRule, YamlFunctions, YamlStylingRule, ConditionElement, TemplateObject, BindingData, Element, Action } from 'types/types';
+import { parseMermaidToMap, getClassBindings } from 'utils/MermaidUtils';
+import { extractTableData } from 'utils/TransformationUtils';
+import { mapDataToRows } from 'utils/TransformationUtils';
+import { bindData } from 'utils/DataBindingUtils';
+
+import { Console } from 'console';
+import { ElementSelectionContext } from '@grafana/ui';
 
 interface OtherViewPanelProps {
   options: SimpleOptions;
   data: PanelData;
-}
-
-interface YamlRule {
-  id: string;
-  match: MatchElement;
-}
-
-interface MatchElement {
-  element: String
-  if?: ConditionElement
-  else_if?: ConditionElement[]
-  else?: ConditionElement
-}
-
-interface ConditionElement {
-  condition: string
-  action: ActionElemenet
-}
-
-interface ActionElemenet{
-  bind: BindElement[];
-}
-
-interface BindElement {
-  variable: string;
-}
-
-interface Node {
-  row?: number;
-  value?: string;
-  next?: Record<string, Node> | null;
 }
 
 export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data }) => {
@@ -60,73 +37,57 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   }
 
-  const rules: YamlRule[] = parsedYaml.rules || [];
+  const bindingRules: YamlBindRule[] = parsedYaml.bindingRules || [];
+  const stylingRules: YamlStylingRule[] = parsedYaml.stylingRules || [];
+  const functions: YamlFunctions[] = parsedYaml.functions || []
 
-  const table = data.series[0]?.fields.reduce((acc, field) => {
-    acc[field.name] = field.values.toArray();
-    return acc;
-  }, {} as Record<string, any[]>);
-
+  const table = extractTableData(data)
   if (!table) return <div>No Data Available</div>;
+  const rows = mapDataToRows(data)
+  console.log('Extracted rows Data:', rows);
+  let templateMap = parseMermaidToMap(template)
+  const classBindings = getClassBindings(template)
+  console.log('Initial Parsed Tree:', templateMap);
 
-  const rows = table[Object.keys(table)[0]].map((_, i) =>
-    Object.keys(table).reduce((acc, key) => {
-      acc[key] = table[key][i];
-      return acc;
-    }, {} as Record<string, any>)
-  );
 
-  console.log('Extracted Data:', rows);
+  const getDiagram = async (template: string) => {
+    const rez = await mermaid.mermaidAPI.getDiagramFromText(template)
+    console.log('Diagram')
+    console.log(rez)
+    
 
-  const parseMermaidToTree = (input: string): { tree: Record<string, Node>; edges: [string, string, string][] } => {
-    const tree: Record<string, Node> = {};
-    const edges: [string, string, string][] = []; // Stores [from, to, label]
-    const lines = input.split('\n').map(line => line.trim()).filter(line => line);
-    const stack: { node: Record<string, Node>; depth: number }[] = [];
-    let current = tree;
-    let currentDepth = 0;
-  
-    lines.forEach((line, index) => {
-      const match = line.match(/^(\s*)/);
-      const depth = match ? match[0].length : 0;
-  
-      if (line.startsWith('subgraph')) {
-        const subgraphMatch = line.match(/subgraph\s+([\w\d_-]+)\s+\[(.*?)\]/);
-        if (subgraphMatch) {
-          const [, id, label] = subgraphMatch;
-          current[id] = { row: index, value: label, next: {} };
-  
-          stack.push({ node: current, depth: currentDepth });
-          current = current[id].next!;
-          currentDepth = depth;
-        }
-      } else if (line.startsWith('end')) {
-        while (stack.length > 0 && stack[stack.length - 1].depth >= currentDepth) {
-          const prev = stack.pop();
-          if (prev) {
-            current = prev.node;
-            currentDepth = prev.depth;
-          }
-        }
-      } else if (line.includes('-->') || line.includes('---')) {
-        
-        const edgeMatch = line.match(/^([\w\d_-]+)\s*[-]+>\s*(\|([^|]+)\|)?\s*([\w\d_-]+)/);
-        if (edgeMatch) {
-          const [, from, , label = '', to] = edgeMatch;
-          edges.push([from, to, label.trim()]);
-        }
-      } else {
-        const nodeMatch = line.match(/^([\w\d_-]+)[(\[{](.*?)[)\]}]$/);
-        if (nodeMatch) {
-          const [, id, text] = nodeMatch;
-          current[id] = { row: index, value: text, next: null };
-        }
-      }
-    });
-  
-    return { tree, edges };
+    // rez.db.addSubGraph('sdasdasd', '')
+    console.log(rez.db.getData())
+    console.log(rez.db.getVertices());
+    console.log(rez.db.getClasses())
+    console.log(rez.db.getEdges())
+    console.log(rez.db.getSubGraphs())
+    console.log(rez.db.indexNodes())
+    return rez;
+
   };
-  
+
+
+
+
+  const bindClasses = (element: string, classData: StylingData[], classBindings: Map<string, string[]>) => {
+    classData.sort((a,b) => a.priority - b.priority)
+    classData.forEach(data => {
+        if (!classBindings.has(element)) {
+            classBindings.set(element, []);
+        }
+        const currentClasses = classBindings.get(element);
+
+        if (currentClasses) {
+          const classIndex = currentClasses.indexOf(data.class);
+          if (classIndex !== -1) {
+              currentClasses.splice(classIndex, 1); 
+          }
+            currentClasses.push(data.class);
+        }
+    });
+  };
+
   const evaluateCondition = (condition: string, row: Record<string, any>): boolean => {
     try {
       const keys = Object.keys(row);
@@ -140,181 +101,277 @@ export const OtherViewPanel: React.FC<OtherViewPanelProps> = ({ options, data })
     }
   };
 
-  // const findPathUsingRule = (tree: Record<string, Node>, condition: ConditionElement, values: Record<string, any>): void => {
-  //   Object.entries(tree).forEach(([nodeKey, node]) => {
-  //     let splitKeys = nodeKey.split('_');
-  //     let mainKey = splitKeys[0];  
-  //     let secondKey = splitKeys[1]; 
+  const determineAction = (rule: YamlBindRule | YamlStylingRule, row: Record<string, any>, functions: YamlFunctions[]):  ConditionElement[] | null => {
+    let matchedAction: ConditionElement[] = []
 
-  //     if (values[mainKey] && String(values[mainKey]) === String(secondKey)) {
-  //       if (node.value && condition.action.bind.some(binding => node.value.includes(`$${binding.variable}`))) {
-  //         condition.action.bind.forEach(binding => {
-  //           const variable = binding.variable;
-  //           if (node.value && node.value.includes(`$${variable}`)) {
-  //             node.value = node.value.replace(new RegExp(`\\$${variable}`, 'g'), values[variable] || `$${variable}`);
-  //             return
-  //           }
-  //         });
-  //       }
-  //     }
-  //     if (node.next) {
-  //       findPathUsingRule(node.next, condition, values);
-  //     }
-  //   });
-  // };
-
-  const findAndApplyBindings = (
-    tree: Record<string, Node>,
-    rule: YamlRule,
-    rows: Record<string, any>[]
-  ) => {
-    for (const [key, node] of Object.entries(tree)) {
-      if (key === rule.match.element || node.value === rule.match.element) {
-        rows.forEach(row => {
-          if(rule.match.if){
-            if (evaluateCondition(rule.match.if.condition, row)) {
-              console.log(`IF - Condition matched for node ${key}`, row);
-              console.log(`CONDITION: ${rule.match.if.condition}`)
-              rule.match.if.action.bind.forEach(binding => {
-                if (node.value && node.value.includes(`$${binding.variable}`)) {
-                  node.value = node.value.replace(
-                    new RegExp(`\\$${binding.variable}`, 'g'),
-                    row[binding.variable] || `$${binding.variable}`
-                  );
-                }
-              });
-              return
-            }
-          }
-          if(rule.match.else_if){
-            console.log(`ELSE_IF - Condition matched for node ${key}`, row);
-            const elseIfArray = Array.isArray(rule.match.else_if) ? rule.match.else_if : [rule.match.else_if];
-            let conditionMatched: boolean = false
-            elseIfArray .forEach(else_if => {
-              console.log(`CONDITION: ${else_if.condition}`)
-              if((evaluateCondition(else_if.condition, row))){
-                else_if.action.bind.forEach(binding=>{
-                  if (node.value && node.value.includes(`$${binding.variable}`)) {
-                    node.value = node.value.replace(
-                      new RegExp(`\\$${binding.variable}`, 'g'),
-                      row[binding.variable] || `$${binding.variable}`
-                    );
-                  } 
-                })
-                conditionMatched = true
-                return
-              }
-            });
-            if(conditionMatched){
-              return
-            }
-          }
-          if(rule.match.else){
-            console.log(`ELSE - Condition matched for node ${key}`, row);
-            console.log(`CONDITION: ${rule.match.else}`)
-            rule.match.else.action.bind.forEach(binding => {
-              if (node.value && node.value.includes(`$${binding.variable}`)) {
-                node.value = node.value.replace(
-                  new RegExp(`\\$${binding.variable}`, 'g'),
-                  row[binding.variable] || `$${binding.variable}`
-                );
-              }
-            });
-          }
-          
-        });
+    for (let func of rule.function) {
+      if (typeof func === 'string') {
+        const foundFunction = functions.find((functionn) => functionn.id === func)?.function;
+        if (!foundFunction) {
+          continue;
+        }
+        func = foundFunction; 
       }
-      if (node.next) {
-        findAndApplyBindings(node.next, rule, rows);
+      let valueFound = false
+      if (func.if && evaluateCondition(func.if.condition, row)) {
+        matchedAction.push(func.if); 
+        valueFound = true
+      } 
+      else if (func.else_if) {
+        const elseIfArray = Array.isArray(func.else_if) ? func.else_if : [func.else_if];
+        for (const elseIf of elseIfArray) {
+          if (evaluateCondition(elseIf.condition, row)) {
+            matchedAction.push(elseIf);
+            valueFound = true
+            break
+          }
+        }
+      } 
+      if (func.else && !valueFound) {
+        matchedAction.push(func.else);
       }
     }
+    return matchedAction.length > 0 ? matchedAction : null;
   };
+
+  const findAndApplyBindings = (templateMap: TemplateObject, rule: YamlBindRule, rows: Record<string, any>[], functions: YamlFunctions[]) => {
+    rows.some((row) => {
+      const actionDataList = determineAction(rule, row, functions);
+      if (actionDataList) {
+        let elementList: string[] = getElements(rule, templateMap)
+        elementList.forEach(element => {
+          actionDataList.forEach(action=>{
+            console.log(action)
+            console.log(rule)
+            addActions(action.action, templateMap[element], rule, row)
+          })
+        });
+      }
+      return actionDataList!==null
+    });
+  };
+
+  const addActions = (
+    Action: Action,
+    Element: Record<string, any> | Element,
+    rule: YamlBindRule | YamlStylingRule,
+    row?: any
+  ) => {
+      Object.keys(Action).forEach(action => {
+        switch (action) {
+          case "bindData":
+            const tempPriority = rule.priority ? rule.priority : -1
+            if (Element.bindingData.priority <= tempPriority) {
+              Element.bindingData.priority = tempPriority;
+              if (row) {
+                Object.keys(row).forEach((key) => {
+                  if(Element.bindingData.data && key in Element.bindingData.data) {
+                    Element.bindingData.data[key] = row[key];
+                  } else {
+                    Element.bindingData.data[key] = row[key];
+                  }
+                });
+              } 
+              Action[action]?.forEach((actionX) => {
+                const [key, value] = actionX.split('=');
+                
+                Element.bindingData.data = {
+                  ...Element.bindingData.data,
+                  [key]: value  
+                };
+              });
+            }
+            break;
   
-   
-  let templateTree = parseMermaidToTree(template);
-  console.log('Initial Parsed Tree:', templateTree);
-  console.log(rules)
-  rules.forEach(rule => {
-    if(rule.match.if)
-    {
-      console.log(rule)
-      findAndApplyBindings(templateTree.tree, rule, rows)
+          case "applyClass":
+            if(Action[action]){
+              Action[action].forEach((className: string) => {
+                Element.stylingData.push({
+                  class: className,
+                  priority: rule.priority ? rule.priority : -1,
+                });
+              });
+            }
+            break;
+  
+          default:
+            console.warn(`Unknown action type: ${action}`);
+        }
+      });
+  };
+
+  const getElements = (rule: YamlBindRule | YamlStylingRule, templateMap: TemplateObject):string[]=>{
+    let elementList: string[] = []
+    let specialElements: string | string[] = ''
+    if(rule.elements){
+      if(rule.elements.some(element =>{
+        switch (element){
+          case 'all':
+            specialElements = 'all'
+          case 'nodes':
+            specialElements = ['unknown', 'square', 'circle', 'diamond', 'round']
+            break
+          case 'subgraphs':
+            specialElements = 'subgraph'
+            break
+          default:
+            break
+        }
+        return specialElements !== ''
+        })){
+        Object.keys(templateMap).forEach(objectName =>{
+          if(specialElements === 'all' || specialElements.includes(templateMap[objectName].type)){
+            elementList.push(objectName)
+          }
+        })
+      }else{
+        elementList = rule.elements
+      }
+    }else{
+      elementList = Object.keys(templateMap)
+    }
+    return elementList
+  }
+
+  const findAndApplyStyling = (templateMap: TemplateObject, rule: YamlStylingRule, rows: Record<string, any>[]) =>{
+    let elementList: string[] = getElements(rule, templateMap)
+    elementList.forEach(object =>{
+      if(templateMap[object].bindingData.data){
+        const actionDataList = determineAction(rule, templateMap[object].bindingData.data, functions);
+        if(actionDataList){
+          actionDataList.forEach(action=>{
+            addActions(action.action, templateMap[object], rule)
+          })
+        }
+      }
+    })
+  }
+
+  console.log(bindingRules)
+  console.log(stylingRules)
+  bindingRules.forEach(rule => {
+    if(rule.function){
+      findAndApplyBindings(templateMap.object, rule, rows, functions)
+    }else if(rule.bindData){
+      getElements(rule, templateMap.object).forEach(element=>{
+        addActions({bindData: rule.bindData},templateMap.object[element],rule)
+      })
+    }
+  });
+  stylingRules.forEach(rule => {
+    if(rule.function){
+      findAndApplyStyling(templateMap.object, rule, functions)
+    }
+  });
+  Object.keys(templateMap.object).forEach(ObjectName => {
+    if(templateMap.object[ObjectName].bindingData.data){
+      bindData(templateMap.object, ObjectName, templateMap.object[ObjectName].bindingData.data);
+    }
+    if(templateMap.object[ObjectName].stylingData){
+      bindClasses(ObjectName, templateMap.object[ObjectName].stylingData, classBindings)
     }
   });
 
-  // rules.forEach(rule => {
-  //   rows.forEach(row => {
-  //     if(rule.match.if){
-  //       if (evaluateCondition(rule.match.if.condition, row)) {
-  //         findPathUsingRule(templateTree.tree, rule.match.if, row);
-  //         return
-  //       }else if(rule.match.else_if){
-  //         if (evaluateCondition(rule.match.else_if.condition, row)) {
-  //           findPathUsingRule(templateTree.tree, rule.match.else_if, row);
-  //           return
-  //         }
-  //       }else if(rule.match.else){
-  //         if (evaluateCondition('true', row)) {
-  //           findPathUsingRule(templateTree.tree, rule.match.else, row);
-  //           return
-  //         }
-  //       }
-  //     }
-  //   });
-  // });
 
-  console.log('Updated Tree:', templateTree);
+  const rebuildMermaid = (object: TemplateObject, edges: [string, string, string, string][], classBindings: Map<string, string[]>, classDefs: Map<string, ClassStyle>, config: string): string => {
+    let output = `${config} \n`;
+    output += `graph TB\n`;
+    const addedNodes: Set<string> = new Set();
 
-  const rebuildMermaid = (obj: Record<string, Node>, edges: [string, string, string][], depth = 0): string => {
-    let output = '';
-    const indent = '  '.repeat(depth);
-    const nodeKeys = Object.keys(obj);
+    Object.keys(object).forEach((key) => {
+        const node = object[key];
 
-    nodeKeys.forEach((key) => {
-        const node = obj[key];
+        if (node.type === 'subgraph') {
+            output += `  subgraph ${key} [${node.value}]\n`;
 
-        if (node.next) {
-            output += `${indent}subgraph ${key} [${node.value}]\n`;
-            output += rebuildMermaid(node.next, edges, depth + 1);
-            output += `${indent}end\n`;
-        } else {
-            output += `${indent}${key}(${node.value})\n`;
+            Object.keys(object).forEach((subKey) => {
+                const subNode = object[subKey];
+                if (subNode.row > node.row && subNode.row <= (node.endRow || Number.MAX_VALUE)) {
+                    if (!addedNodes.has(subKey)) {
+                        output += `    ${subKey}(${subNode.value})\n`;
+                        addedNodes.add(subKey); 
+                    }
+                }
+            });
+
+            output += '  end\n'; 
         }
     });
 
-    if (depth === 0) {
-        edges.forEach(([from, to, label]) => {
-            const edgeLabel = label ? `|${label}|` : '';
-            output += `${from} -->${edgeLabel} ${to}\n`;
-        });
-    }
+    Object.keys(object).forEach((key) => {
+        const node = object[key];
+        if (node.type !== 'subgraph' && !node.endRow && !addedNodes.has(key)) {
+          switch(node.type){
+            case 'square':
+              output+= `${key}[${node.value}]\n`;
+              break;  // Square node format [Node]
+            case 'round':
+              output+= `${key}(${node.value})\n`;
+              break;
+            case 'circle':
+              output+= `${key}((${node.value}))\n`;
+              break;  // Circle node format (Node)
+            case 'diamond':
+              output+= `${key}{${node.value}}\n`;
+              break;  // Diamond node format {Node}
+            default:
+              output+= `${key}\n`;
+              break;
+          }
+            addedNodes.add(key); 
+        }
+    });
+
+    edges.forEach(([from, to, label, arrowType]) => {
+        const edgeLabel = label ? `|${label}|` : '';
+        output += `${from} ${arrowType}${edgeLabel} ${to}\n`;
+    });
+
+    classBindings.forEach((classNames, element) => {
+      classNames.forEach(name=>{
+        output+= `class ${element} ${name};\n`
+      })
+    });
+
+    classDefs.forEach((style, className) => {
+        let styleStr = '';
+        for (const [key, value] of Object.entries(style)) {
+            styleStr += `${key}:${value},`;
+        }
+        styleStr = styleStr.slice(0, -1) + ';';
+        output += `classDef ${className} ${styleStr}\n`;
+    });
 
     return output;
 };
 
-  let generatedChart2 = `graph TB\n` + rebuildMermaid(templateTree.tree, templateTree.edges);
+  console.log('class bindings', classBindings)
+
+  let generatedChart2 = rebuildMermaid(templateMap.object, templateMap.edges, classBindings, templateMap.classDefs, templateMap.config);
   console.log('Generated Mermaid Chart:', generatedChart2);
 
   useEffect(() => {
-    if (chartRef.current) {
-      mermaid.initialize({ startOnLoad: true });
-  
-      mermaid.render('graphDiv', generatedChart2).then(({ svg }) => {
-        if (chartRef.current) {
-          chartRef.current.innerHTML = svg;
-  
-          const svgElement = chartRef.current.querySelector('svg');
-          if (svgElement) {
-            createPanZoom(svgElement, {
-              zoomDoubleClickSpeed: 1,
-              maxZoom: 4,
-              minZoom: 0.5,
-            });
+    mermaid.initialize({})
+    getDiagram(template).then((rez)=>{
+      if (chartRef.current) {
+        mermaid.render('graphDiv', rez.text).then(({ svg }) => {
+          if (chartRef.current) {
+            chartRef.current.innerHTML = svg;
+    
+            const svgElement = chartRef.current.querySelector('svg');
+            if (svgElement) {
+              createPanZoom(svgElement, {
+                zoomDoubleClickSpeed: 1,
+                maxZoom: 4,
+                minZoom: 0.5,
+              });
+            }
           }
-        }
-      });
-    }
-  }, [generatedChart2]);
+        });
+      }
+    })
+    
+  }, );
 
   return <div ref={chartRef} />;
 };
