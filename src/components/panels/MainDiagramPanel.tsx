@@ -24,6 +24,7 @@ interface MainDiagramPanelProps {
 export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, data, onOptionsChange }) => {
   const { yamlConfig, template } = options;
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingYaml, setIsLoadingYaml] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [variableChangeCount, setVariableChangeCount] = useState(0);
   const [selectedElement, setSelectedElement] = useState<BaseObject | null>(null);
@@ -39,6 +40,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
   const fullMapRef = useRef<fullMermaidMap | null>(null);
   
   useEffect(() => {
+    setIsLoadingYaml(true)
     if (!yamlConfig) {
       setParsedYamlState({
         bindingRules: [],
@@ -50,6 +52,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     const [parsedYamlConfig, parsedYamlError] = parseYamlConfig(yamlConfig)
     setYamlError(parsedYamlError)
     setParsedYamlState(parsedYamlConfig)
+    setIsLoadingYaml(false)
   }, [yamlConfig]);
 
   useEffect(() => {
@@ -158,7 +161,6 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     const element = findElementInMaps(nodeId, fullMapRef.current);
     
     if (element) {
-      console.log('Element found:', element);
       setSelectedElement(element);
       setIsModalOpen(true);
     } else {
@@ -234,12 +236,12 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     <div>
       <div
         ref={chartRef}
-        className={(!isLoading && isMermaidError === null && isYamlError === null) ? "" : "hidden"}
+        className={(!isLoading && isMermaidError === null && isYamlError === null && !isLoadingYaml) ? "" : "hidden"}
       />
   
-      {isLoading && <div className="loading-indicator">Loading diagram...</div>}
+      {isLoading || isLoadingYaml && <div className="loading-indicator">Loading diagram...</div>}
   
-      {(isMermaidError !== null || isYamlError !== null || !yamlConfig || !isValidTemplate(template)) && (
+      {!isLoading&& !isLoadingYaml&&(isMermaidError !== null || isYamlError !== null || !yamlConfig || !isValidTemplate(template)) && (
         <NoTemplatesProvidedDisplay
           onConfigChanges={(yaml, template) =>
             onOptionsChange({ ...options, yamlConfig: yaml, template })

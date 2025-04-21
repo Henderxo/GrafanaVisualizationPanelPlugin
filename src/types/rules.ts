@@ -146,4 +146,4 @@ export interface FunctionElement {
     applyText?: string;
     applyStyle?: string[];
     applyShape?: string;
-  }
+  } 

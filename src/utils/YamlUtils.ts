@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 import { ErrorService, ErrorType } from 'services/ErrorService';
 import { YamlBindRule, YamlStylingRule } from '../types';
+import { validateRuleBase } from './ValidationUtils';
 
  function convertToYaml (jsonObject: any): string {
     try {
@@ -22,14 +23,37 @@ import { YamlBindRule, YamlStylingRule } from '../types';
   function parseYamlConfig(yamlConfig: string): [{ bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[] }, string | null] {
     try {
       const parsed = yaml.load(yamlConfig) as any;
+
+      const bindingRules: YamlBindRule[] = [];
+      const stylingRules: YamlStylingRule[] = [];
       
+      if (Array.isArray(parsed.bindingRules)) {
+        parsed.bindingRules.forEach((rule: any) => {
+          const newRule = new YamlBindRule(rule)
+          const validationResult = validateRuleBase(newRule);
+          if (validationResult[0]) {
+            bindingRules.push(new YamlBindRule(newRule)); 
+          } else {
+            console.warn(`Invalid binding rule (Name: ${rule.name || 'Unnamed'}): ${validationResult[1]}`);
+          }
+        });
+      }
+
+      if (Array.isArray(parsed.stylingRules)) {
+        parsed.stylingRules.forEach((rule: any) => {
+          const newRule = new YamlStylingRule(rule)
+          const validationResult = validateRuleBase(newRule);
+          if (validationResult[0]) {
+            stylingRules.push(new YamlStylingRule(newRule));
+          } else {
+            console.warn(`Invalid styling rule (Name: ${rule.name || 'Unnamed'}): ${validationResult[1]}`);
+          }
+        });
+      }
+
       return [{
-        bindingRules: Array.isArray(parsed.bindingRules) 
-          ? parsed.bindingRules.map((rule: any) => new YamlBindRule(rule)) 
-          : [],
-        stylingRules: Array.isArray(parsed.stylingRules) 
-          ? parsed.stylingRules.map((rule: any) => new YamlStylingRule(rule)) 
-          : []
+        bindingRules,
+        stylingRules
       }, null];
     } catch (e) {
       let errorMessage = 'An unknown error occurred';
@@ -48,6 +72,7 @@ import { YamlBindRule, YamlStylingRule } from '../types';
       }, errorMessage];
     }
   }
+  
 
 
 export {parseYamlConfig, convertToYaml}
