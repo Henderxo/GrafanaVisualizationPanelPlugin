@@ -299,8 +299,8 @@ const activeRule = activeTab === 'bindingRules'
   return (
     <Modal
       className={css`
-        width: 70vw;
-        height: auto;
+        width: 1340px;
+        height: 850px;
         display: flex;
         flex-direction: column;
       `}
@@ -308,146 +308,148 @@ const activeRule = activeTab === 'bindingRules'
       isOpen={isOpen}
       onDismiss={handleClose}
     >
-      <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'row', marginBottom: '5px' }}>
-        <Text element={'h5'}>Add a new Rule:</Text>      
-        <IconButton 
-          className={css`
-            margin-left: 5px;
-            background: linear-gradient(45deg, #FFA500,rgb(255, 102, 0)); 
-            color: black; 
-            border: none;
-            border-radius: 4px; 
-            padding: 1px; 
-            transition: background 0.3s ease; 
-            &:hover {
-              background: linear-gradient(45deg, #FF8C00, #FFA500); 
-            }
-          `}
-          name={'plus'} 
-          size={`xl`}
-          aria-label="newRule" 
-          variant="secondary" 
-          onClick={()=>setIsModalOpen(true)}
-        />
-      </div>
-      {isModalOpen && <ConfigureRulenew
-        possibleClasses={possibleClasses}
-        totalRuleCount={workingConfig.bindingRules.length + workingConfig.stylingRules.length}
-        elements={elements}
-        isOpen={isModalOpen}
-        element={element?.id??undefined}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleRuleSubmit}
-      />}
-      
-      <TabsBar>
-        <Tab
-          label="Binding Rules"
-          active={activeTab === "bindingRules"}
-          onChangeTab={() => {
-            setActiveTab("bindingRules")
-          }}
-        />
-        <Tab
-          label="Styling Rules"
-          active={activeTab === "stylingRules"}
-          onChangeTab={() => {
-            setActiveTab("stylingRules")
-          }}
-        />
-      </TabsBar>
-      
-      <div
-        style={{
-          marginTop: "3px",
-          flex: 1,
-          display: "flex",
-          height: '50vh',
-          flexDirection: "column",
-        }}
-      >
-        {isLoading ? (
-          <div
+      <div style={{height: '100%'}}>
+        <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'row', marginBottom: '5px' }}>
+          <Text element={'h5'}>Add a new Rule:</Text>      
+          <IconButton 
             className={css`
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              flex: 1;
+              margin-left: 5px;
+              background: linear-gradient(45deg, #FFA500,rgb(255, 102, 0)); 
+              color: black; 
+              border: none;
+              border-radius: 4px; 
+              padding: 1px; 
+              transition: background 0.3s ease; 
+              &:hover {
+                background: linear-gradient(45deg, #FF8C00, #FFA500); 
+              }
             `}
-          >
-            <LoadingBar width={500} />
-          </div>
-        ) : (
-          <div style={{height: '60vh'}}>
+            name={'plus'} 
+            size={`xl`}
+            aria-label="newRule" 
+            variant="secondary" 
+            onClick={()=>setIsModalOpen(true)}
+          />
+        </div>
+        {isModalOpen && <ConfigureRulenew
+          possibleClasses={possibleClasses}
+          totalRuleCount={workingConfig.bindingRules.length + workingConfig.stylingRules.length}
+          elements={elements}
+          isOpen={isModalOpen}
+          element={element?.id??undefined}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleRuleSubmit}
+        />}
+        
+        <TabsBar>
+          <Tab
+            label="Binding Rules"
+            active={activeTab === "bindingRules"}
+            onChangeTab={() => {
+              setActiveTab("bindingRules")
+            }}
+          />
+          <Tab
+            label="Styling Rules"
+            active={activeTab === "stylingRules"}
+            onChangeTab={() => {
+              setActiveTab("stylingRules")
+            }}
+          />
+        </TabsBar>
+        
+        <div
+          style={{
+            marginTop: "3px",
+            flex: 1,
+            display: "flex",
+            height: 'auto',
+            flexDirection: "column",
+          }}
+        >
+          {isLoading ? (
             <div
-              {...containerProps}
               className={css`
                 display: flex;
-                flex-direction: row;
-                width: 100%;
-                height: 100%;
+                align-items: center;
+                justify-content: center;
+                flex: 1;
               `}
             >
+              <LoadingBar width={500} />
+            </div>
+          ) : (
+            <div style={{height: '55vh'}}>
               <div
-                {...primaryProps}
+                {...containerProps}
                 className={css`
                   display: flex;
-                  flex-direction: column;
-                  width: 125px;
-                  overflow-y: auto;
-                  overflow-x: hidden;
+                  flex-direction: row;
+                  width: 100%;
+                  height: 100%;
                 `}
               >
-                <DndContext 
-                  modifiers={[restrictToVerticalAxis]}
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
+                <div
+                  {...primaryProps}
+                  className={css`
+                    display: flex;
+                    flex-direction: column;
+                    width: 125px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                  `}
                 >
-                  <SortableContext
-                    items={rulesToDisplay.map(rule => rule.name)}
-                    strategy={verticalListSortingStrategy}
+                  <DndContext 
+                    modifiers={[restrictToVerticalAxis]}
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
                   >
-                    {rulesToDisplay.map(rule => (
-                      <SortableTabWrapper
-                        key={rule.name}
-                        rule={rule}
-                        activeRule={activeRule}
-                        onActivate={() => setActiveRule(rule)}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              </div>
-              
-              <div {...splitterProps}></div>
-              
-              <div
-                {...secondaryProps}
-                className={css`
-                  width: "100%";
-                `}
-              >
-                {activeRule && !isLoading && (
-                  <RuleDisplay
-                    onDelete={(rule)=>{handleRuleDelete(rule)}}
-                    elements={elements}
-                    possibleClasses={possibleClasses}
-                    onEditSubmit={handleRuleEdit}
-                    textSize="span"
-                    labelSize="span"
-                    rule={activeRule}
-                  />
-                )}
+                    <SortableContext
+                      items={rulesToDisplay.map(rule => rule.name)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {rulesToDisplay.map(rule => (
+                        <SortableTabWrapper
+                          key={rule.name}
+                          rule={rule}
+                          activeRule={activeRule}
+                          onActivate={() => setActiveRule(rule)}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                </div>
+                
+                <div {...splitterProps}></div>
+                
+                <div
+                  {...secondaryProps}
+                  className={css`
+                    width: "100%";
+                  `}
+                >
+                  {activeRule && !isLoading && (
+                    <RuleDisplay
+                      onDelete={(rule)=>{handleRuleDelete(rule)}}
+                      elements={elements}
+                      possibleClasses={possibleClasses}
+                      onEditSubmit={handleRuleEdit}
+                      textSize="span"
+                      labelSize="span"
+                      rule={activeRule}
+                    />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-      <Modal.ButtonRow>
+          )}
+        </div>
+        <Modal.ButtonRow>
         <Button onClick={handleClose} variant='destructive'>Cancel</Button>
         <Button onClick={saveChanges} variant='primary'>Save</Button>
       </Modal.ButtonRow>
+      </div>
     </Modal>
   );
 };

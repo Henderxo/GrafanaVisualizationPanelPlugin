@@ -48,6 +48,7 @@ interface RuleStateContextType {
   
   saveStateToHistory: (state?: YamlBindRule | YamlStylingRule) => void;
   handleUndo: () => void;
+  handleRuleReset: () => void
   validateRule: () => boolean;
   handleRuleTypeChange: (selectedType: SelectableValue) => void;
   handleGeneralRuleChange: (action: Action) => void;
@@ -125,28 +126,31 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   const handleUndo = () => {
     if (stateHistory.length > 0) {
       const previousState = stateHistory[stateHistory.length - 1];
-
-      resetRule(previousState.rule);
       
+      resetRule(previousState.rule);
+
+      ruleUIState.resetUIState();
       ruleUIState.setUIState(previousState.uiState);
 
       setStateHistory(prevHistory => prevHistory.slice(0, -1));
     }
   };
 
+  const handleRuleReset = () =>{
+    saveStateToHistory(newRuleRef.current)
+    resetRule()
+  }
+
   const validateRule = (): boolean => {
-    const errors: Record<string, string> = {};
 
     const validationResult: ValidationResult = validateRuleBase(newRuleRef.current, {collectAllErrors: true})
-    console.log(validationResult)
+
     if(!validationResult.isValid){
       const errorRecord = createRecordFromObjects(validationResult.errors, 'field', 'message')
-      console.log(errorRecord)
       setValidationErrors(errorRecord);
     }
 
-    return false;
-    return Object.keys(errors).length === 0;
+    return validationResult.isValid;
   };
 
   const handleRuleTypeChange = (selectedType: SelectableValue) => {
@@ -241,9 +245,7 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   };
 
   const reconfigureEditor = (rule: YamlBindRule | YamlStylingRule) => {
-    ruleUIState.resetUIState();
     ruleUIState.setRuleType(ruleTypeOptions.find(obj => obj.value === rule.getRuleType()) ?? { label: 'Binding Rule', value: 'binding' });
-
     rule.elements && ruleUIState.setElementsActionAdded(true);
 
     if (rule.function) {
@@ -279,7 +281,6 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
   };
 
   const resetRule = (rule?: YamlBindRule | YamlStylingRule) => {
-    saveStateToHistory(newRuleRef.current)
     let tempRule = rule??initialRule
     if (tempRule) {
       newRuleRef.current = tempRule.clone();
@@ -321,6 +322,7 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
     
     // Handler methods
     saveStateToHistory,
+    handleRuleReset,
     handleUndo,
     validateRule,
     handleRuleTypeChange,

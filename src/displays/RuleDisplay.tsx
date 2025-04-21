@@ -43,9 +43,10 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
         padding: 17px;
         background: ${isHovered ? bgHoverColor : bgColor};
         transition: background-color 0.3s ease;
-        overflow-y: auto;
+        max-height: calc(100% - 5px);
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
       `}
       onMouseEnter={() => setIsHovered(hover)} 
       onMouseLeave={() => setIsHovered(false)} 

@@ -57,10 +57,11 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
   onSubmit,
   elements,
   possibleClasses,
-  rule,
 }) => {
   const { 
     // State
+    stateHistory,
+    uiState,
     newRuleRef,
     validationErrors,
     isLoading,
@@ -69,15 +70,11 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
     elementList,
     isConfirmModalOpen,
     
-    // UI State
-    priorityActionAdded,
     elementsActionAdded,
     functionActionAdded,
-    ifActionAdded,
     generalActionsAdded,
     ruleType,
     
-    // Methods
     forceUpdate,
     setIsLoading,
     setElementsAreLoading,
@@ -85,9 +82,6 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
     setElementList,
     setIsConfirmModalOpen,
     
-    // Handlers
-    saveStateToHistory,
-    handleUndo,
     validateRule,
     handleRuleTypeChange,
     handleGeneralRuleChange,
@@ -96,14 +90,6 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
     handleRuleInputDelete,
     resetRule,
     
-    // UI State setters
-    setPriorityActionAdded,
-    setElementsActionAdded,
-    setFunctionActionAdded,
-    setIfActionAdded,
-    setElseIfActionAdded,
-    setElseActionAdded,
-    setGeneralActionsAdded,
   } = useRuleStateContext();
   
   const theme = useTheme2();
@@ -140,14 +126,13 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
       onDismiss={() => setIsConfirmModalOpen(true)}
       title={`${isEdit ? 'Edit Rule' : 'Create New Rule'}`}
       className={css`
-        width: 900px;
-        height: 825px;
+        width: 1340px;
+        height: 850px;
         display: flex;
         flex-direction: column;
       `}
       trapFocus={false}
     >
-      {(JSON.stringify(newRuleRef.current))}
       {isLoading ? (
         <div
           className={css`
@@ -167,7 +152,7 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
             display: flex;
             flex-direction: row;
             width: 100%;
-            height: 650px;
+            height: 575px;
           `}
         >
           <div

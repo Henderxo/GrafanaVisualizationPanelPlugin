@@ -227,7 +227,6 @@ export function validateRuleBase(
   rule: RuleBase<any>, 
   options: ValidationOptions = { collectAllErrors: false }
 ): ValidationResult {
-  console.log(rule)
   const results: ValidationResult[] = [];
 
   const nameResult = validateName(rule);

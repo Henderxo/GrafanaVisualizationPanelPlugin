@@ -23,7 +23,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = () => {
         setElseIfActionAdded,
         setElseActionAdded,
         setGeneralActionsAdded,
-        resetRule,
+        handleRuleReset,
         handleUndo,
         elementsActionAdded,
         functionActionAdded,
@@ -108,7 +108,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = () => {
                 `}
             >
                 <Text>Creation Actions:</Text>
-                <ButtonWrapper onClick={() => resetRule()}>
+                <ButtonWrapper onClick={() => handleRuleReset()}>
                     <Icon size={'lg'} name={'history-alt'} className={css`margin-right: 3px;`}></Icon><Text>Reset</Text>
                 </ButtonWrapper>
                 <ButtonWrapper onClick={() => handleUndo()}>
@@ -134,7 +134,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = () => {
 
             {!functionActionAdded && !generalActionsAdded && (
                 <div>
-                    <Field  invalid={validationErrors.action?true:false} error={validationErrors.action}>
+                    <Field invalid={validationErrors.action?true:false} error={validationErrors.action}>
                         <div className={css`
                             display: flex;
                             flex-direction: column;`} >
