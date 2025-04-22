@@ -107,7 +107,6 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
     { label: 'Styling Rule', value: 'styling' }
   ];
 
-  // Handler methods
   const saveStateToHistory = (state?: YamlBindRule | YamlStylingRule) => {
     setStateHistory(prevHistory => {
       const clonedState = state ? state.clone() : newRuleRef.current.clone()

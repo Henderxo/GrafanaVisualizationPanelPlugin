@@ -1,245 +1,374 @@
 {
-    "type": "object",
-    "properties": {
-      "functions": {
-        "type": "array",
-        "description": "List of functions",
-        "items": {
-          "type": "object",
-          "required": ["id", "function"],
-          "properties": {
-            "id": {
+  "title": "YAML Configuration Schema",
+  "description": "Schema for validating bindingRules and stylingRules configuration",
+  "type": "object",
+  "required": ["bindingRules", "stylingRules"],
+  "additionalProperties": false,
+  "properties": {
+    "bindingRules": {
+      "type": "array",
+      "description": "Rules for binding data to elements",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the binding rule",
+            "minLength": 1
+          },
+          "elements": {
+            "type": "array",
+            "description": "Elements this rule applies to",
+            "items": {
               "type": "string",
-              "description": "Unique function ID"
+              "minLength": 1
             },
-            "function": {
-              "type": "object",
-              "properties": {
-                "if": {
+            "minItems": 1
+          },
+          "bindData": {
+            "type": "array",
+            "description": "Data to bind to elements",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "function": {
+            "type": "object",
+            "description": "Conditional function for complex binding logic",
+            "additionalProperties": false,
+            "properties": {
+              "if": {
+                "type": "object",
+                "required": ["condition", "action"],
+                "additionalProperties": false,
+                "properties": {
+                  "condition": {
+                    "type": "string",
+                    "description": "Condition expression",
+                    "minLength": 1
+                  },
+                  "action": {
+                    "type": "object",
+                    "description": "Action to take when condition is true",
+                    "additionalProperties": false,
+                    "properties": {
+                      "bindData": {
+                        "type": "array",
+                        "description": "Data to bind when condition is true",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "minItems": 1
+                      }
+                    },
+                    "minProperties": 1
+                  }
+                }
+              },
+              "else_if": {
+                "type": "array",
+                "description": "Additional conditions to check if previous conditions are false",
+                "items": {
                   "type": "object",
                   "required": ["condition", "action"],
+                  "additionalProperties": false,
                   "properties": {
                     "condition": {
                       "type": "string",
-                      "description": "Condition for if statement"
+                      "description": "Condition expression",
+                      "minLength": 1
                     },
                     "action": {
                       "type": "object",
-                      "required": ["bindData", "bindClass"],
+                      "description": "Action to take when condition is true",
+                      "additionalProperties": false,
                       "properties": {
                         "bindData": {
                           "type": "array",
-                          "items": { "type": "string" },
-                          "description": "Data bindings"
-                        },
-                        "bindClass": {
-                          "type": "array",
-                          "items": { "type": "string" },
-                          "enum": [
-                            "active", "inactive", "highUsage", "warning", "alert", 
-                            "unknown", "highLoad", "lowDisk", "highPerformance", "lowMemory"
-                          ],
-                          "description": "Class bindings"
+                          "description": "Data to bind when condition is true",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "minItems": 1
                         }
                       },
-                      "additionalProperties": false,
-                      "anyOf": [
-                        { "required": ["bindData"] },
-                        { "required": ["bindClass"] }
-                      ]
+                      "minProperties": 1
                     }
-                  },
-                  "additionalProperties": false
+                  }
                 },
-                "else_if": {
-                  "type": "object",
-                  "properties": {
-                    "condition": {
-                      "type": "string",
-                      "description": "Condition for else if statement"
-                    },
-                    "action": {
-                      "type": "object",
-                      "required": ["bindData", "bindClass"],
-                      "properties": {
-                        "bindData": {
-                          "type": "array",
-                          "items": { "type": "string" },
-                          "description": "Data bindings"
-                        },
-                        "bindClass": {
-                          "type": "array",
-                          "items": { "type": "string" },
-                          "description": "Class bindings"
-                        }
-                      },
-                      "additionalProperties": false,
-                      "anyOf": [
-                        { "required": ["bindData"] },
-                        { "required": ["bindClass"] }
-                      ]
-                    }
-                  },
-                  "additionalProperties": false
-                },
-                "else": {
-                  "type": "object",
-                  "properties": {
-                    "action": {
-                      "type": "object",
-                      "required": ["bindData", "bindClass"],
-                      "properties": {
-                        "bindData": {
-                          "type": "array",
-                          "items": { "type": "string" },
-                          "description": "Data bindings"
-                        },
-                        "bindClass": {
-                          "type": "array",
-                          "items": { "type": "string" },
-                          "description": "Class bindings"
-                        }
-                      },
-                      "additionalProperties": false,
-                      "anyOf": [
-                        { "required": ["bindData"] },
-                        { "required": ["bindClass"] }
-                      ]
-                    }
-                  },
-                  "additionalProperties": false
-                }
+                "minItems": 1
               },
-              "additionalProperties": false
-            }
-          }
-        }
-      },
-      "rules": {
-        "type": "array",
-        "description": "List of rules",
-        "items": {
-          "type": "object",
-          "required": ["id", "match"],
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "Unique rule ID"
+              "else": {
+                "type": "object",
+                "required": ["action"],
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "type": "object",
+                    "description": "Action to take if no conditions are true",
+                    "additionalProperties": false,
+                    "properties": {
+                      "bindData": {
+                        "type": "array",
+                        "description": "Data to bind when no conditions are true",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "minItems": 1
+                      }
+                    },
+                    "minProperties": 1
+                  }
+                }
+              }
             },
-            "match": {
-              "type": "object",
-              "required": ["element", "function"],
-              "properties": {
-                "element": {
-                  "type": "string",
-                  "description": "Element associated with the rule"
-                },
-                "function": {
-                  "type": "object",
-                  "properties": {
-                    "if": {
-                      "type": "object",
-                      "required": ["condition", "action"],
-                      "properties": {
-                        "condition": {
-                          "type": "string",
-                          "description": "Condition for if statement"
-                        },
-                        "action": {
-                          "type": "object",
-                          "required": ["bindData", "bindClass"],
-                          "properties": {
-                            "bindData": {
-                              "type": "array",
-                              "items": { "type": "string" },
-                              "description": "Data bindings"
-                            },
-                            "bindClass": {
-                              "type": "array",
-                              "items": { "type": "string" },
-                              "enum": [
-                                "active", "inactive", "highUsage", "warning", "alert", 
-                                "unknown", "highLoad", "lowDisk", "highPerformance", "lowMemory"
-                              ],
-                              "description": "Class bindings"
-                            }
-                          },
-                          "additionalProperties": false,
-                          "anyOf": [
-                            { "required": ["bindData"] },
-                            { "required": ["bindClass"] }
-                          ]
-                        }
-                      },
-                      "additionalProperties": false
-                    },
-                    "else_if": {
-                      "type": "object",
-                      "properties": {
-                        "condition": {
-                          "type": "string",
-                          "description": "Condition for else if statement"
-                        },
-                        "action": {
-                          "type": "object",
-                          "required": ["bindData", "bindClass"],
-                          "properties": {
-                            "bindData": {
-                              "type": "array",
-                              "items": { "type": "string" },
-                              "description": "Data bindings"
-                            },
-                            "bindClass": {
-                              "type": "array",
-                              "items": { "type": "string" },
-                              "description": "Class bindings"
-                            }
-                          },
-                          "additionalProperties": false,
-                          "anyOf": [
-                            { "required": ["bindData"] },
-                            { "required": ["bindClass"] }
-                          ]
-                        }
-                      },
-                      "additionalProperties": false
-                    },
-                    "else": {
-                      "type": "object",
-                      "properties": {
-                        "action": {
-                          "type": "object",
-                          "required": ["bindData", "bindClass"],
-                          "properties": {
-                            "bindData": {
-                              "type": "array",
-                              "items": { "type": "string" },
-                              "description": "Data bindings"
-                            },
-                            "bindClass": {
-                              "type": "array",
-                              "items": { "type": "string" },
-                              "description": "Class bindings"
-                            }
-                          },
-                          "additionalProperties": false,
-                          "anyOf": [
-                            { "required": ["bindData"] },
-                            { "required": ["bindClass"] }
-                          ]
-                        }
-                      },
-                      "additionalProperties": false
-                    }
+            "oneOf": [
+              {
+                "required": ["if"]
+              }
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "required": ["bindData"]
+          },
+          {
+            "required": ["function"]
+          }
+        ]
+      },
+      "minItems": 0
+    },
+    "stylingRules": {
+      "type": "array",
+      "description": "Rules for styling elements",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the styling rule",
+            "minLength": 1
+          },
+          "elements": {
+            "type": "array",
+            "description": "Elements this rule applies to",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "applyClass": {
+            "type": "array",
+            "description": "CSS classes to apply",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "applyText": {
+            "type": "string",
+            "description": "Text content to apply",
+            "minLength": 1
+          },
+          "applyStyle": {
+            "type": "array",
+            "description": "CSS styles to apply",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "applyShape": {
+            "type": "string",
+            "description": "Shape to apply",
+            "minLength": 1
+          },
+          "function": {
+            "type": "object",
+            "description": "Conditional function for complex styling logic",
+            "additionalProperties": false,
+            "properties": {
+              "if": {
+                "type": "object",
+                "required": ["condition", "action"],
+                "additionalProperties": false,
+                "properties": {
+                  "condition": {
+                    "type": "string",
+                    "description": "Condition expression",
+                    "minLength": 1
                   },
-                  "additionalProperties": false
+                  "action": {
+                    "type": "object",
+                    "description": "Action to take when condition is true",
+                    "additionalProperties": false,
+                    "minProperties": 1,
+                    "properties": {
+                      "applyClass": {
+                        "type": "array",
+                        "description": "CSS classes to apply when condition is true",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "minItems": 1
+                      },
+                      "applyText": {
+                        "type": "string",
+                        "description": "Text content to apply when condition is true",
+                        "minLength": 1
+                      },
+                      "applyStyle": {
+                        "type": "array",
+                        "description": "CSS styles to apply when condition is true",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "minItems": 1
+                      },
+                      "applyShape": {
+                        "type": "string",
+                        "description": "Shape to apply when condition is true",
+                        "minLength": 1
+                      }
+                    }
+                  }
                 }
               },
-              "additionalProperties": false
-            }
+              "else_if": {
+                "type": "array",
+                "description": "Additional conditions to check if previous conditions are false",
+                "items": {
+                  "type": "object",
+                  "required": ["condition", "action"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "condition": {
+                      "type": "string",
+                      "description": "Condition expression",
+                      "minLength": 1
+                    },
+                    "action": {
+                      "type": "object",
+                      "description": "Action to take when condition is true",
+                      "additionalProperties": false,
+                      "minProperties": 1,
+                      "properties": {
+                        "applyClass": {
+                          "type": "array",
+                          "description": "CSS classes to apply when condition is true",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "minItems": 1
+                        },
+                        "applyText": {
+                          "type": "string",
+                          "description": "Text content to apply when condition is true",
+                          "minLength": 1
+                        },
+                        "applyStyle": {
+                          "type": "array",
+                          "description": "CSS styles to apply when condition is true",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "minItems": 1
+                        },
+                        "applyShape": {
+                          "type": "string",
+                          "description": "Shape to apply when condition is true",
+                          "minLength": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "minItems": 1
+              },
+              "else": {
+                "type": "object",
+                "required": ["action"],
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "type": "object",
+                    "description": "Action to take if no conditions are true",
+                    "additionalProperties": false,
+                    "minProperties": 1,
+                    "properties": {
+                      "applyClass": {
+                        "type": "array",
+                        "description": "CSS classes to apply when no conditions are true",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "minItems": 1
+                      },
+                      "applyText": {
+                        "type": "string",
+                        "description": "Text content to apply when no conditions are true",
+                        "minLength": 1
+                      },
+                      "applyStyle": {
+                        "type": "array",
+                        "description": "CSS styles to apply when no conditions are true",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "minItems": 1
+                      },
+                      "applyShape": {
+                        "type": "string",
+                        "description": "Shape to apply when no conditions are true",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "oneOf": [
+              {
+                "required": ["if"]
+              }
+            ]
           }
-        }
-      }
-    },
-    "additionalProperties": false
+        },
+        "oneOf": [
+          {
+            "anyOf": [
+              { "required": ["applyClass"] },
+              { "required": ["applyText"] },
+              { "required": ["applyStyle"] },
+              { "required": ["applyShape"] }
+            ]
+          },
+          {
+            "required": ["function"]
+          }
+        ]
+      },
+      "minItems": 0
+    }
   }
+}

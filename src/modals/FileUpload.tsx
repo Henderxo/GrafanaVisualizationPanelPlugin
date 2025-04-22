@@ -60,7 +60,7 @@ export const FileUpload: React.FC<FileUploadSettings> = ({ value, onChange, onCl
   return (
     <>
       {isOpen && (
-        <Modal className={css`width: 70vw;`} title="Import File" isOpen={isOpen} onDismiss={handleCloseModal} >
+        <Modal className={css`width: 1340px;`} title="Import File" isOpen={isOpen} onDismiss={handleCloseModal} >
           <div
             className={css`
               display: flex;
