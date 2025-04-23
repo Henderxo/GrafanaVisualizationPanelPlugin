@@ -447,7 +447,7 @@ const activeRule = activeTab === 'bindingRules'
         </div>
         <Modal.ButtonRow>
         <Button onClick={handleClose} variant='destructive'>Cancel</Button>
-        <Button onClick={saveChanges} variant='primary'>Save</Button>
+        <Button onClick={saveChanges} disabled={!hasChanges} variant='primary'>Save</Button>
       </Modal.ButtonRow>
       </div>
     </Modal>
