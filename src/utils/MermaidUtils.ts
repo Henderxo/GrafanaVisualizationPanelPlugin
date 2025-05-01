@@ -1,3 +1,4 @@
+import { NoEmitOnErrorsPlugin } from 'webpack';
 import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } from '../types';
 
    const VALID_SHAPES = new Set<FlowVertexTypeParam>([
@@ -10,18 +11,22 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
     VALID_SHAPES.has(shape);
 
    function extractMermaidDiagramType(mermaidCode: string): string {
-    const normalizedCode = mermaidCode.trim().replace(/^graph\b/i, 'flowchart');
-  
-    const regex = /^(flowchart)(?:\s+(TD|TB|BT|LR|RL))?|^(sequenceDiagram|gantt|classDiagram|stateDiagram|pie|erDiagram|journey)\b/i;
-    const match = normalizedCode.match(regex);
-  
-    if (!match) return "Unknown diagram type";
-  
-    if (match[1]) {
-      return `flowchart ${match[2]?.toUpperCase() || ""}`.trim();
+    const codeWithoutInit = mermaidCode.replace(/%%{init:[\s\S]*?}%%/g, '').trim();
+    
+    const flowchartRegex = /^(?:flowchart|graph)\s+(TB|TD|BT|RL|LR)\b/i;
+    const basicFlowchartRegex = /^(?:flowchart|graph)\b(?!\s+(TB|TD|BT|RL|LR))/i;
+    
+    const flowchartMatch = codeWithoutInit.match(flowchartRegex);
+    if (flowchartMatch) {
+      const direction = flowchartMatch[1].toUpperCase();
+      return `flowchart ${direction}`;
     }
-  
-    return match[3] || "Unknown diagram type";
+    
+    if (basicFlowchartRegex.test(codeWithoutInit)) {
+      return "flowchart TD";
+    }
+    
+    return "Unknown diagram type";
   }
   
    function extractMermaidConfigString(template: string): string | undefined {
@@ -220,100 +225,126 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
    * Formats a node's text representation based on its properties
    */
   function formatNodeText(nodeId: string, node: FlowVertex): string {
-    // Determine node shape based on type
-    let nodeShape = '';
-    if (node.type) {
-      switch (node.type) {
-        case 'circle':
-          nodeShape = '((default))';
-          break;
-        case 'doublecircle':
-          nodeShape = '(((default)))';
-          break;
-        case 'square': 
-          nodeShape = '[default]';
-          break;
-        case 'rect':
-          nodeShape = '[/default\\]';
-          break;
-        case 'diamond':
-          nodeShape = '{default}';
-          break;
-        case 'hexagon':
-          nodeShape = '{{default}}';
-          break;
-        case 'cylinder':
-          nodeShape = '[(default)]';
-          break;
-        case 'stadium':
-          nodeShape = '([default])';
-          break;
-        case 'round':
-          nodeShape = '(default)';
-          break;
-        case 'ellipse':
-          nodeShape = '((default))';
-          break;
-        case 'subroutine':
-          nodeShape = '[[default]]';
-          break;
-        case 'odd':
-          nodeShape = '>default]';
-          break;
-        case 'trapezoid':
-          nodeShape = '[/default/]';
-          break;
-        case 'inv_trapezoid':
-          nodeShape = '[\\default\\]';
-          break;
-        case 'lean_right':
-          nodeShape = '[/default/]';
-          break;
-        case 'lean_left':
-          nodeShape = '[\\default]';
-          break;
-        default:
-          nodeShape = '(default)';
+    let nodeProp: string[] = []
+    let nodeContent = node.text || nodeId;
+    if(node.type){
+      if(node.type && node.type === 'lean_right'){
+        nodeProp.push(`shape: ${'lean-right'}`)
+      }else if(node.type === 'lean_left'){
+        nodeProp.push(`shape: ${'lean-left'}`)
+      } else if(node.type === 'round'){
+        nodeProp.push(`shape: ${'rounded'}`)
+      } else if(node.type === 'square'){
+        nodeProp.push(`shape: ${'rect'}`)
+      }else{
+        nodeProp.push(`shape: ${node.type??'round'}`)
       }
-    } else {
-      // Default shape if none specified
-      nodeShape = '(default)';
     }
     
+    if(node.linkTarget){
+      nodeProp.push(`linkTarget: ${node.linkTarget}`)
+    }
+    if(node.link){
+      nodeProp.push(`link: ${node.link}`)
+    }
+    if(node.icon){
+      nodeProp.push(`icon: ${node.icon}`)
+    }
+    if(node.pos){
+      nodeProp.push(`pos: ${node.pos}`)
+    }
+    if(node.assetWidth){
+      nodeProp.push(`assetWidth: ${node.assetWidth}`)
+    }
+    if(node.assetHeight){
+      nodeProp.push(`assetHeight: ${node.assetHeight}`)
+    }
+    if(node.form){
+      nodeProp.push(`form: ${node.form}`)
+    }
+    if(node.labelType){
+      nodeProp.push(`labelType: "${node.labelType}"`)
+    }
+    if(node.labelType === 'text'){
+      nodeProp.push(`label: '${nodeContent}'`) 
+    }else if(node.labelType === 'string'){
+      nodeProp.push(`label: ${nodeContent}`) 
+    }else if(node.labelType === 'markdown'){
+      nodeProp.push(`label: "\`${nodeContent}\`"`)
+    }
+    
+    if(node.img){
+      nodeProp.push(`img: ${node.img}`)
+    }
+    // if (node.img) {
+    //   return ;
+    // }
+    
+    // let nodeShape = '';
+    // if (node.type) {
+    //   switch (node.type) {
+    //     case 'circle':
+    //       nodeShape = '((default))';
+    //       break;
+    //     case 'doublecircle':
+    //       nodeShape = '(((default)))';
+    //       break;
+    //     case 'square': 
+    //       nodeShape = '[default]';
+    //       break;
+    //     case 'rect':
+    //       nodeShape = '[/default\\]';
+    //       break;
+    //     case 'diamond':
+    //       nodeShape = '{default}';
+    //       break;
+    //     case 'hexagon':
+    //       nodeShape = '{{default}}';
+    //       break;
+    //     case 'cylinder':
+    //       nodeShape = '[(default)]';
+    //       break;
+    //     case 'stadium':
+    //       nodeShape = '([default])';
+    //       break;
+    //     case 'round':
+    //       nodeShape = '(default)';
+    //       break;
+    //     case 'ellipse':
+    //       nodeShape = '((default))';
+    //       break;
+    //     case 'subroutine':
+    //       nodeShape = '[[default]]';
+    //       break;
+    //     case 'odd':
+    //       nodeShape = '>default]';
+    //       break;
+    //     case 'trapezoid':
+    //       nodeShape = '[/default/]';
+    //       break;
+    //     case 'inv_trapezoid':
+    //       nodeShape = '[\\default\\]';
+    //       break;
+    //     case 'lean_right':
+    //       nodeShape = '[/default/]';
+    //       break;
+    //     case 'lean_left':
+    //       nodeShape = '[\\default]';
+    //       break;
+    //     default:
+    //       nodeShape = '(default)';
+    //   }
+    // } else {
+      // Default shape if none specified
+    //   nodeShape = '(default)';
+    // }
+    
     // Format node content with any properties
-    let nodeContent = node.text || nodeId;
+    
     
     // Return the formatted node representation
-    return `${nodeId}${nodeShape.replace('default', nodeContent)}`;
+    return `${nodeId}@{ ${nodeProp.join(', ')} }`
   }
-
-
-  // function formatNodeText(nodeId: string, node: FlowVertex): string {
-  //   let nodeContent = node.text || nodeId;
-    
-  //   // Using the new tag syntax
-  //   let tagAttributes = [];
-    
-  //   // Add shape attribute if node type is specified
-  //   if (node.type) {
-  //     tagAttributes.push(`shape: ${node.type}`);
-  //   } else {
-  //     // Default shape if none specified
-  //     tagAttributes.push('shape: round');
-  //   }
-    
-  //   // Add label attribute for the text (escape any quotes in the content)
-  //   const escapedContent = nodeContent.replace(/"/g, '\\"');
-  //   tagAttributes.push(`label: "${escapedContent}"`);
-    
-  //   // If there are direct styles, add them as a style attribute
-  //   if (node.styles && node.styles.length > 0) {
-  //     tagAttributes.push(`style: "${node.styles.join(',')}"`);
-  //   }
-    
-  //   // Format using the new @{} tag syntax
-  //   return `${nodeId}@{${tagAttributes.join(', ')}}`;
-  // }
   
   /**
    * Groups edges by connection type for better organization in the chart
@@ -356,14 +387,25 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
    * Determines the line style based on edge properties
    */
   function getLineStyle(edge: FlowEdge): string {
+    console.log(edge)
     if (edge.stroke === 'dotted') {
       return '-.->';
     } else if (edge.stroke === 'thick') {
       return '==>';
     } else if (edge.stroke === 'invisible') {
       return '~~~';
-    } else {
-      // Default to normal
+    } else if (edge.stroke === 'normal' && edge.type === 'arrow_circle'){
+      return '--o'
+    }else if (edge.stroke === 'normal' && edge.type === 'arrow_cross'){
+      return '--x'
+    }else if(edge.stroke === 'normal' && edge.type === 'double_arrow_circle'){
+      return 'o--o'
+    } else if(edge.stroke === 'normal' && edge.type === 'double_arrow_point'){
+      return '<-->'
+    } else if(edge.stroke === 'normal' && edge.type === 'double_arrow_cross'){
+      return 'x--x'
+    }
+     else {
       return '-->';
     }
   }

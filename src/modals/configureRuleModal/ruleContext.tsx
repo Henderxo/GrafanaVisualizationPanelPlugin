@@ -4,7 +4,7 @@ import { Action, FlowClass, FunctionElement, YamlBindRule, YamlStylingRule } fro
 import { RuleUIState, useRuleUIState } from 'modals/configureRuleModal/useRuleState';
 import { validateRuleBase, ValidationResult } from 'utils/ValidationUtils';
 import { createRecordFromObjects } from 'utils/TransformationUtils';
-import { roundedRect } from 'mermaid/dist/rendering-util/rendering-elements/shapes/labelRect';
+
 interface RuleStateContextType {
 
   newRuleRef: React.MutableRefObject<YamlBindRule | YamlStylingRule>;
