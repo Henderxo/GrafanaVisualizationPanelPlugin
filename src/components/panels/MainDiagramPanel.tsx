@@ -83,15 +83,15 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
       console.log(fullMap)
       const rows = extractTableData(data) ? mapDataToRows(data) : undefined;
       
-      if (rows) {
-        applyAllRules(
-          parsedYamlState.bindingRules, 
-          parsedYamlState.stylingRules, 
-          fullMap, 
-          rows, 
-          variables
-        );
-      }
+
+      applyAllRules(
+        parsedYamlState.bindingRules, 
+        parsedYamlState.stylingRules, 
+        fullMap, 
+        rows??[], 
+        variables
+      );
+
       
       onOptionsChange({
         ...options, 

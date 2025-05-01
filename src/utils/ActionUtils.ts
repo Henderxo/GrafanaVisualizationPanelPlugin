@@ -80,11 +80,11 @@ import { isValidShape } from "./MermaidUtils";
         
         if (Action.bindData && Array.isArray(Action.bindData)) {
         Action.bindData.forEach((actionX) => {
-            const [key, value] = actionX.split('=');
-            Element.data = {
-            ...Element.data,
-            [key]: value
-            };
+          const [key, value] = actionX.split('=');
+          Element.data = {
+              ...Element.data,
+              [key.trim()]: value.trim()
+          };
         });
         }
     };

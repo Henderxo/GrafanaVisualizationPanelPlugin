@@ -254,16 +254,19 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       nodeProp.push(`pos: ${node.pos}`)
     }
     if(node.assetWidth){
-      nodeProp.push(`assetWidth: ${node.assetWidth}`)
+      nodeProp.push(`w: ${node.assetWidth}`)
     }
     if(node.assetHeight){
-      nodeProp.push(`assetHeight: ${node.assetHeight}`)
+      nodeProp.push(`h: ${node.assetHeight}`)
     }
     if(node.form){
       nodeProp.push(`form: ${node.form}`)
     }
     if(node.labelType){
       nodeProp.push(`labelType: "${node.labelType}"`)
+    }
+    if(node.constraint){
+      nodeProp.push(`constraint: ${node.constraint}`)
     }
     if(node.labelType === 'text'){
       nodeProp.push(`label: '${nodeContent}'`) 
