@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, useTheme2 } from '@grafana/ui';
 import { saveAs } from 'file-saver';
 import { css } from '@emotion/css';
-import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 
 interface FileExportProps {
   value: string,
@@ -38,11 +37,16 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
     }
   };
 
-  return (
+  return (  
     <>
       {isOpen && (
         <Modal 
-          className={css`width: 70vw`} 
+          className={css`
+            width: 1340px;
+            height: 800px;
+            display: flex;
+            flex-direction: column;
+            `} 
           title={titleString || "Export File"} 
           isOpen={isOpen} 
           onDismiss={() => onClose()}
@@ -54,31 +58,30 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
               height: 100%;
               flex-direction: column;
               justify-content: center;
-              padding: 10px;
               text-align: center;
               border-radius: 8px;
             `}
           >
             {valueState && (
-              <RuleInputWrapper isIcon={false} backgroundColor={theme.colors.background.primary}> 
-                <div style={{display: 'row', justifyContent: 'start', alignItems: 'start', textAlign: 'left'}}>
+              <>
+              <div style={{display: 'row', justifyContent: 'start', alignItems: 'start', textAlign: 'left'}}>
                   <strong>📜 File Content:</strong>
                 </div>
                 <pre 
                   style={{
                     overflow: 'auto', 
                     backgroundColor: theme.colors.background.secondary,
-                    marginTop: '15px', 
-                    padding: '10px',
+                    marginTop: '8px',
                     whiteSpace: 'pre-wrap', 
                     maxHeight: '550px', 
                     textAlign: 'left', 
-                    fontSize: '12px'
+                    fontSize: '12px',
+                    marginBottom: '0px',
                   }}
                 >
                   {valueState}
                 </pre>
-              </RuleInputWrapper>
+              </>
             )}
 
             <Modal.ButtonRow>

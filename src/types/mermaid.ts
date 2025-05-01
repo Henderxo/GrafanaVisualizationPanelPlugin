@@ -52,7 +52,7 @@ export interface FlowEdge {
     domId: string;
     haveCallback?: boolean;
     id: string;
-    labelType: 'text';
+    labelType: 'text' | 'string' | 'markdown';
     link?: string;
     linkTarget?: string;
     props?: any;

@@ -60,8 +60,6 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
 }) => {
   const { 
     // State
-    stateHistory,
-    uiState,
     newRuleRef,
     validationErrors,
     isLoading,

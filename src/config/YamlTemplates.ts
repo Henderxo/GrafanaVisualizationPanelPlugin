@@ -1,5 +1,5 @@
 export const YAML_DEFAULT_CONFIG_TEMPLATE = `stylingRules:
-  - id: "StyleRule1"
+  - name: "StyleRule1"
     function:
       if:
         condition: "CPU < 50"
@@ -12,14 +12,14 @@ export const YAML_DEFAULT_CONFIG_TEMPLATE = `stylingRules:
       else:
         action:
           applyClass: ["active"]
-  - id: "StyleRule2"
+  - name: "StyleRule2"
     elements: ["Switch_2"]
     function:
       if:
         condition: "CPU > 50"
         action:
           applyClass: ["active"]
-  - id: "StyleRule3"
+  - name: "StyleRule3"
     elements: ["Switch_2"]
     priority: 5
     function:
@@ -29,19 +29,18 @@ export const YAML_DEFAULT_CONFIG_TEMPLATE = `stylingRules:
           applyClass: ["inactive"]
 
 bindingRules:
-
-  - id: "BindRule1"
+  - name: "BindRule1"
     elements: ["nodes"]
     bindData: ["CPU=7777777777"]
     
-  - id: "BindRule2"
+  - name: "BindRule2"
     elements: ["Router_1", "Router_2"]
     function:
       if:
         condition: "CPU < 50"
         action:
           bindData: ["BOOM='ItExploded'"]
-  - id: "BindRule3"
+  - name: "BindRule3"
     elements: ["Firewall_1"]
     function:
       if:
@@ -49,7 +48,7 @@ bindingRules:
         action:
           bindData: []
 
-  - id: "BindRule4"
+  - name: "BindRule4"
     elements: ["Server_1", "Server_2"]
     function:
       if:
@@ -57,7 +56,7 @@ bindingRules:
         action:
           bindData: []
 
-  - id: "BindRule5"
+  - name: "BindRule5"
     priority: 1
     elements: ["Switch_1", "Switch_2"]
     function:
@@ -66,11 +65,12 @@ bindingRules:
         action:
           bindData: []
 
-  - id: "BindRule6"
+  - name: "BindRule6"
     elements: ["Switch_1"]
     function:
       if:
         condition: "CPU == 50"
         action:
           bindData: ["CPU=7784"]
+
 `;
