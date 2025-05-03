@@ -1,4 +1,3 @@
-import { NoEmitOnErrorsPlugin } from 'webpack';
 import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } from '../types';
 
    const VALID_SHAPES = new Set<FlowVertexTypeParam>([
