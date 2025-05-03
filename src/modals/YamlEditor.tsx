@@ -26,7 +26,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
 
     if (!model) { return false };
   
-    const markers = monaco.editor.getModelMarkers({ model });
+    const markers = monaco.editor.getModelMarkers({ resource: model.uri });
 
     const hasErrors = markers.some(marker => marker.severity === monaco.MarkerSeverity.Error || monaco.MarkerSeverity.Warning);
   
