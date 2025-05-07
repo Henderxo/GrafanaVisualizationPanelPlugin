@@ -1,31 +1,11 @@
 import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
 import { 
-  applyAllRules, 
-  getElementRules, 
-  getElementsFromRule, 
-  ruleHasElement 
-} from '../utils/RuleUtils';
-import { 
-  bindDataToAllMapStrings
-} from '../utils/DataBindingUtils';
-import { 
-  findAllElementsInMaps
-} from '../utils/DiagramMapUtils';
-import { 
-  isFlowVertex,
-  isFlowSubGraph
-} from '../utils/MermaidUtils';
-import { 
-  BaseObject, 
-  FlowVertex, 
-  FlowSubGraph, 
-  fullMermaidMap, 
+  BaseObject,  
   YamlBindRule, 
   YamlStylingRule,
   Action,
   FlowVertexTypeParam
 } from '../types';
-import { ErrorService, ErrorType } from "services/ErrorService";
 import { addActions, applyClassAction, applyShapeAction, applyStyleAction, applyTextAction, bindDataAction, getGeneralRuleActions } from "utils/ActionUtils";
 
 jest.mock("services/ErrorService", () => ({
@@ -70,56 +50,6 @@ jest.mock('../utils/RuleUtils', () => {
     applyStylings: jest.fn()
   };
 });
-
-describe('RuleUtils Tests', () => {
-  const mockGrafanaVariables: TypedVariableModel[] = [
-    {
-      name: 'testVar',
-      type: 'custom',
-      current: { value: 'testValue' },
-    } as TypedVariableModel
-  ];
-
-  const mockRows = [
-    { id: '1', name: 'Node 1', status: 'active' },
-    { id: '2', name: 'Node 2', status: 'inactive' }
-  ];
-
-  let mockFullMap: fullMermaidMap;
-  let mockNode: FlowVertex;
-  let mockSubgraph: FlowSubGraph;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-
-    mockNode = {
-      id: 'node1',
-      domId: 'dom_node1',
-      labelType: 'text',
-      text: 'Node 1',
-      type: 'rect',
-      classes: ['node-class'],
-      styles: ['fill:white', 'stroke:black'],
-      data: {}
-    };
-
-    mockSubgraph = {
-      id: 'subgraph1',
-      title: 'Subgraph 1',
-      nodes: ['node1'],
-      labelType: 'i donno',
-      classes: ['subgraph-class'],
-      styles: ['fill:lightgrey'],
-      data: {}
-    };
-
-    mockFullMap = {
-      nodes: new Map([['node1', mockNode]]),
-      subGraphs: new Map([['subgraph1', mockSubgraph]]),
-      edges: [],
-      classes: new Map()
-    };
-  });
 
 describe('ActionUtils Tests', () => {
     let mockElement: BaseObject;
@@ -385,4 +315,3 @@ describe('ActionUtils Tests', () => {
       });
     });
   })
-})

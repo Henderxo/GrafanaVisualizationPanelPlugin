@@ -80,7 +80,7 @@ function validateElements(rule: RuleBase<any>): ValidationResult {
   return createValidResult();
 }
 
-function validateActions(action: Action, options: ValidationOptions, fieldPrefix: string = ""): ValidationResult {
+function validateActions(action: Action, options: ValidationOptions, fieldPrefix = ""): ValidationResult {
   if (!isObject(action)) {
     return createError(`${fieldPrefix}action`, "Action must be an object");
   }
@@ -93,7 +93,7 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
         `${fieldPrefix}bindData`, 
         "bindData must be a non-empty array of strings"
       ));
-      if (!options.collectAllErrors) return mergeResults(options, ...results);
+      if (!options.collectAllErrors) { return mergeResults(options, ...results); }
     }
   }
 
@@ -103,7 +103,9 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
         `${fieldPrefix}applyClass`, 
         "applyClass must be a non-empty array of strings"
       ));
-      if (!options.collectAllErrors) return mergeResults(options, ...results);
+      if (!options.collectAllErrors) {
+        return mergeResults(options, ...results);
+      }
     }
   }
 
@@ -112,7 +114,9 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
       `${fieldPrefix}applyText`, 
       "applyText must be a non-empty string"
     ));
-    if (!options.collectAllErrors) return mergeResults(options, ...results);
+    if (!options.collectAllErrors) {
+      return mergeResults(options, ...results);
+    }
   }
 
   if (isDefined(action.applyStyle)) {
@@ -121,7 +125,9 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
         `${fieldPrefix}applyStyle`, 
         "applyStyle must be a non-empty array of strings"
       ));
-      if (!options.collectAllErrors) return mergeResults(options, ...results);
+      if (!options.collectAllErrors) {
+        return mergeResults(options, ...results);
+      }
     }
   }
 
@@ -130,7 +136,9 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
       `${fieldPrefix}applyShape`, 
       "applyShape must be a non-empty string"
     ));
-    if (!options.collectAllErrors) return mergeResults(options, ...results);
+    if (!options.collectAllErrors) {
+      return mergeResults(options, ...results);
+    }
   }
 
   return mergeResults(options, ...results);
@@ -139,7 +147,7 @@ function validateActions(action: Action, options: ValidationOptions, fieldPrefix
 function validateConditionElement(
   conditionElement: ConditionElement,
   options: ValidationOptions,
-  fieldPrefix: string = "",
+  fieldPrefix = "",
   ruleType: 'binding' | 'styling',
   elseFlag?: boolean
 ): ValidationResult {
@@ -151,7 +159,9 @@ function validateConditionElement(
         `${fieldPrefix}condition`, 
         "Condition expression is required"
       ));
-      if (!options.collectAllErrors) return mergeResults(options, ...results);
+      if (!options.collectAllErrors) {
+        return mergeResults(options, ...results);
+      }
     }
   }
 
@@ -160,11 +170,15 @@ function validateConditionElement(
       `${fieldPrefix}action`, 
       "Action is required for condition"
     ));
-    if (!options.collectAllErrors) return mergeResults(options, ...results);
+    if (!options.collectAllErrors) {
+      return mergeResults(options, ...results);
+    }
   } else {
     const actionResult = validateActions(conditionElement.action, options, `${fieldPrefix}action.`);
     results.push(actionResult);
-    if (!options.collectAllErrors && !actionResult.isValid) return mergeResults(options, ...results);
+    if (!options.collectAllErrors && !actionResult.isValid) {
+      return mergeResults(options, ...results);
+    }
   }
 
   return mergeResults(options, ...results);
@@ -175,17 +189,23 @@ function validateFunction(func: FunctionElement, options: ValidationOptions, rul
 
   if (!isDefined(func.if)) {
     results.push(createError("function.if", "Function requires an 'if' block"));
-    if (!options.collectAllErrors) return mergeResults(options, ...results);
+    if (!options.collectAllErrors) {
+      return mergeResults(options, ...results);
+    }
   } else {
     const ifResult = validateConditionElement(func.if as ConditionElement, options, "function.if.", ruleType);
     results.push(ifResult);
-    if (!options.collectAllErrors && !ifResult.isValid) return mergeResults(options, ...results);
+    if (!options.collectAllErrors && !ifResult.isValid) {
+      return mergeResults(options, ...results);
+    }
   }
 
   if (isDefined(func.else_if)) {
     if (!Array.isArray(func.else_if)) {
       results.push(createError("function.else_if", "else_if must be an array"));
-      if (!options.collectAllErrors) return mergeResults(options, ...results);
+      if (!options.collectAllErrors) {
+        return mergeResults(options, ...results);
+      }
     } else {
       for (let i = 0; i < func.else_if.length; i++) {
         const result = validateConditionElement(
@@ -195,7 +215,9 @@ function validateFunction(func: FunctionElement, options: ValidationOptions, rul
           ruleType
         );
         results.push(result);
-        if (!options.collectAllErrors && !result.isValid) return mergeResults(options, ...results);
+        if (!options.collectAllErrors && !result.isValid) {
+          return mergeResults(options, ...results);
+        }
       }
     }
   }
@@ -209,7 +231,9 @@ function validateFunction(func: FunctionElement, options: ValidationOptions, rul
       true
     );
     results.push(result);
-    if (!options.collectAllErrors && !result.isValid) return mergeResults(options, ...results);
+    if (!options.collectAllErrors && !result.isValid) {
+      return mergeResults(options, ...results);
+    }
   }
 
   return mergeResults(options, ...results);
@@ -218,7 +242,7 @@ function validateFunction(func: FunctionElement, options: ValidationOptions, rul
 function validateGlobalActions(rule: RuleBase<any>, options: ValidationOptions): ValidationResult {
   const actionData = rule.getActions();
   if(!actionData.areActions){
-    return createError("action", "Rule requires either global actions or a function block");
+    return createError("action", "Rule requires either unconditional actions or a function block");
   }
   return validateActions(actionData.areActions?actionData.Action:{}, options);
 }
@@ -231,20 +255,28 @@ export function validateRuleBase(
 
   const nameResult = validateName(rule);
   results.push(nameResult);
-  if (!options.collectAllErrors && !nameResult.isValid) return mergeResults(options, ...results);
+  if (!options.collectAllErrors && !nameResult.isValid) {
+    return mergeResults(options, ...results);
+  }
 
   const elementsResult = validateElements(rule);
   results.push(elementsResult);
-  if (!options.collectAllErrors && !elementsResult.isValid) return mergeResults(options, ...results);
+  if (!options.collectAllErrors && !elementsResult.isValid) {
+    return mergeResults(options, ...results);
+  }
 
   if (rule.function && isDefined(rule.function) && isObject(rule.function)) {
     const funcResult = validateFunction(rule.function, options, rule.getRuleType());
     results.push(funcResult);
-    if (!options.collectAllErrors && !funcResult.isValid) return mergeResults(options, ...results);
+    if (!options.collectAllErrors && !funcResult.isValid) {
+      return mergeResults(options, ...results);
+    }
   } else {
     const actionsResult = validateGlobalActions(rule, options);
     results.push(actionsResult);
-    if (!options.collectAllErrors && !actionsResult.isValid) return mergeResults(options, ...results);
+    if (!options.collectAllErrors && !actionsResult.isValid) {
+      return mergeResults(options, ...results);
+    }
   }
 
   return mergeResults(options, ...results);

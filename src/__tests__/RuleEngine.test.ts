@@ -1,6 +1,5 @@
 import {
   applyAllRules,
-  getElementRules,
   getElementsFromRule,
   ruleHasElement
 } from '../utils/RuleUtils';
@@ -8,10 +7,7 @@ import { TypedVariableModel } from '@grafana/data';
 import { addActions } from '../utils/ActionUtils';
 import * as DiagramMapUtils from '../utils/DiagramMapUtils';
 import * as MermaidUtils from '../utils/MermaidUtils'
-import * as ErrorService from 'services/ErrorService';
-import { BaseObject, FlowVertex, RuleBase, YamlBindRule, YamlStylingRule } from '../types';
-
-
+import { BaseObject, YamlBindRule, YamlStylingRule } from '../types';
 
 jest.mock('../utils/ActionUtils', () => ({
   addActions: jest.fn()

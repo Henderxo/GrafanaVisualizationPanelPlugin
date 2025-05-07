@@ -19,7 +19,7 @@ import {
       } as RuleBase<any>;
     };
   
-    it('should return valid result for a valid rule with global actions', () => {
+    it('should return valid result for a valid rule with unconditional actions', () => {
       const rule = createMockRule({
         getActions: () => ({
           areActions: true,
@@ -97,13 +97,13 @@ import {
       expect(getFieldError(result, 'function.if.condition')).toBe('Condition expression is required');
     });
   
-    it('should return error if global actions are not provided when function is absent', () => {
+    it('should return error if unconditional actions are not provided when function is absent', () => {
       const rule = createMockRule({
       });
   
       const result = validateRuleBase(rule);
       expect(result.isValid).toBe(false);
-      expect(getFieldError(result, 'action')).toBe('Rule requires either global actions or a function block');
+      expect(getFieldError(result, 'action')).toBe('Rule requires either unconditional actions or a function block');
     });
   
     it('should stop on first error when collectAllErrors is false', () => {

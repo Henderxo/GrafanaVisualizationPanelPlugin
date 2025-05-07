@@ -1,18 +1,15 @@
 import { 
-  applyAllRules, 
   getElementRules, 
   getElementsFromRule, 
   ruleHasElement 
 } from '../utils/RuleUtils';
 import { 
-  BaseObject, 
   FlowVertex, 
   FlowSubGraph, 
   fullMermaidMap, 
   YamlBindRule, 
   YamlStylingRule
 } from '../types';
-import { ErrorService, ErrorType } from "services/ErrorService";
 
 jest.mock("services/ErrorService", () => ({
   ErrorService: {
