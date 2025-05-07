@@ -90,7 +90,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
       if (updatedFunction.else_if) {
         updatedFunction.else_if = updatedFunction.else_if
           .filter((_: any, i: any) => i !== index)
-          .filter((item:any) => item !== null && item !== undefined);
+          .filter((item: any) => item !== null && item !== undefined);
       }
       
       onFunctionChange(updatedFunction);
@@ -116,128 +116,130 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
     }
     forceUpdate()
   }
-  if(functionData)
-  return (
-    <RuleInputWrapper  onDelete={()=>{handleConditionDelete()}}>
-      <TabsBar>
-        <Tab 
-          label="If" 
-          active={activeTab === 'if'} 
-          onChangeTab={() => {
-            activeTab!=="if"&&setisLoaded(false)
-            onActiveTabChange('if') 
-          }}
-        />
-        {functionData.else_if && (
+  if(functionData){
+    return (
+      <RuleInputWrapper  onDelete={()=>{handleConditionDelete()}}>
+        <TabsBar>
           <Tab 
-            label="Else If" 
-            active={activeTab === 'else_if'} 
+            label="If" 
+            active={activeTab === 'if'} 
             onChangeTab={() => {
-              activeTab!=="else_if"&&setisLoaded(false)
-              onActiveTabChange('else_if')
+              activeTab!=="if"&&setisLoaded(false)
+              onActiveTabChange('if') 
             }}
           />
-        )}
-        {functionData.else && (
-          <Tab 
-            label="Else" 
-            active={activeTab === 'else'} 
-            onChangeTab={() => {
-              activeTab!=="else"&&setisLoaded(false)
-              onActiveTabChange('else')
-            }}
-          />
-        )}
-      </TabsBar>
-
-      {activeTab === 'if'  && functionData.if  && (
-        <div style={{marginTop: '5px', marginBottom: '10px', width: '100%'}}>
-          <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
-              {isLoaded ? (<div style={{marginTop: '5px', marginBottom: '10px'}}>
-                  <Text>Condition:</Text>
-                  <Field invalid={validationErrors[`function.if.condition`]?true:false} error={validationErrors[`function.if.condition`]}>
-                    <Input 
-                        placeholder="Condition" 
-                        value={functionData.if.condition || ''} 
-                        onChange={(e) => handleConditionChange(e)}
-                        className="mb-2"
-                    />
-                  </Field>
-              </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
-              <div style={{marginTop: '5px', marginBottom: '5px'}}>
-                  <ActionInput 
-                    possibleClasses={possibleClasses}
-                      type={type}
-                      actionBackgroundColor={theme.colors.background.primary}
-                      action={functionData.if.action} 
-                      onChange={(action) => handleActionChange(action, 'if')}
-                      onLoaded={(status)=>{
-                        setisLoaded(status)
-                        onLoaded(status)
-                      }}
-                      validationPrefix='function.if.'
-                  />
-              </div>
-          </RuleInputWrapper>
-        </div>
-      )}
-
-      {activeTab === 'else_if' && functionData.else_if  && (
-        <div>
-          <form></form>
-          {functionData.else_if.map((elseIfCondition, index) => (
-            <div key={index} style={{marginTop: '5px', marginBottom: '5px'}}>
-                <RuleInputWrapper onDelete={()=>handleActionDelete(index)} backgroundColor={theme.colors.background.secondary} icon={'x'} isIcon={functionData.else_if && functionData.else_if?.length>1}>
-                    {isLoaded ? (<div style={{ marginBottom: '10px'}}>
-                        <Text>Condition:</Text>
-                        <Field invalid={validationErrors[`function.else_if[${index}].condition`]?true:false} error={validationErrors[`function.else_if[${index}].condition`]}>
-                          <Input 
-                              placeholder="Condition" 
-                              value={elseIfCondition.condition || ''} 
-                              onChange={(e) => handleConditionChange(e , 'else_if', index)}
-                              className="mb-2"
-                          />
-                        </Field>
-                    </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
-                    <div style={{ marginTop: '5px'}}>                     
-                        <ActionInput
-                            possibleClasses={possibleClasses}
-                            type={type}
-                            actionBackgroundColor={theme.colors.background.primary}
-                            action={elseIfCondition.action} 
-                            onChange={(action) => handleActionChange(action, 'else_if', index)}
-                            onLoaded={(status)=>{
-                              setisLoaded(status)
-                              onLoaded(status)
-                            }}
-                            validationPrefix={`function.else_if[${index}].`}
-                        />
-                    </div>
-                </RuleInputWrapper>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'else' && functionData.else &&  (
-        <div style={{marginTop: '5px', marginBottom: '10px'}}>
-          <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
-             <ActionInput 
-             possibleClasses={possibleClasses}
-              type={type}
-              actionBackgroundColor={theme.colors.background.primary}
-              action={functionData.else.action} 
-              onChange={(action) => handleActionChange(action, 'else')}
-              onLoaded={(status)=>{
-                setisLoaded(status)
-                onLoaded(status)
+          {functionData.else_if && (
+            <Tab 
+              label="Else If" 
+              active={activeTab === 'else_if'} 
+              onChangeTab={() => {
+                activeTab!=="else_if"&&setisLoaded(false)
+                onActiveTabChange('else_if')
               }}
-              validationPrefix={`function.else.`}
             />
-            {!isLoaded && <LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>}
-          </RuleInputWrapper>
-        </div>
-      )}
-    </RuleInputWrapper>
-  );return(<></>)
+          )}
+          {functionData.else && (
+            <Tab 
+              label="Else" 
+              active={activeTab === 'else'} 
+              onChangeTab={() => {
+                activeTab!=="else"&&setisLoaded(false)
+                onActiveTabChange('else')
+              }}
+            />
+          )}
+        </TabsBar>
+  
+        {activeTab === 'if'  && functionData.if  && (
+          <div style={{marginTop: '5px', marginBottom: '10px', width: '100%'}}>
+            <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
+                {isLoaded ? (<div style={{marginTop: '5px', marginBottom: '10px'}}>
+                    <Text>Condition:</Text>
+                    <Field invalid={validationErrors[`function.if.condition`]?true:false} error={validationErrors[`function.if.condition`]}>
+                      <Input 
+                          placeholder="Condition" 
+                          value={functionData.if.condition || ''} 
+                          onChange={(e) => handleConditionChange(e)}
+                          className="mb-2"
+                      />
+                    </Field>
+                </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
+                <div style={{marginTop: '5px', marginBottom: '5px'}}>
+                    <ActionInput 
+                      possibleClasses={possibleClasses}
+                        type={type}
+                        actionBackgroundColor={theme.colors.background.primary}
+                        action={functionData.if.action} 
+                        onChange={(action) => handleActionChange(action, 'if')}
+                        onLoaded={(status)=>{
+                          setisLoaded(status)
+                          onLoaded(status)
+                        }}
+                        validationPrefix='function.if.'
+                    />
+                </div>
+            </RuleInputWrapper>
+          </div>
+        )}
+  
+        {activeTab === 'else_if' && functionData.else_if  && (
+          <div>
+            <form></form>
+            {functionData.else_if.map((elseIfCondition, index) => (
+              <div key={index} style={{marginTop: '5px', marginBottom: '5px'}}>
+                  <RuleInputWrapper onDelete={()=>handleActionDelete(index)} backgroundColor={theme.colors.background.secondary} icon={'x'} isIcon={functionData.else_if && functionData.else_if?.length>1}>
+                      {isLoaded ? (<div style={{ marginBottom: '10px'}}>
+                          <Text>Condition:</Text>
+                          <Field invalid={validationErrors[`function.else_if[${index}].condition`]?true:false} error={validationErrors[`function.else_if[${index}].condition`]}>
+                            <Input 
+                                placeholder="Condition" 
+                                value={elseIfCondition.condition || ''} 
+                                onChange={(e) => handleConditionChange(e , 'else_if', index)}
+                                className="mb-2"
+                            />
+                          </Field>
+                      </div>):(<LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>)}
+                      <div style={{ marginTop: '5px'}}>                     
+                          <ActionInput
+                              possibleClasses={possibleClasses}
+                              type={type}
+                              actionBackgroundColor={theme.colors.background.primary}
+                              action={elseIfCondition.action} 
+                              onChange={(action) => handleActionChange(action, 'else_if', index)}
+                              onLoaded={(status)=>{
+                                setisLoaded(status)
+                                onLoaded(status)
+                              }}
+                              validationPrefix={`function.else_if[${index}].`}
+                          />
+                      </div>
+                  </RuleInputWrapper>
+              </div>
+            ))}
+          </div>
+        )}
+  
+        {activeTab === 'else' && functionData.else &&  (
+          <div style={{marginTop: '5px', marginBottom: '10px'}}>
+            <RuleInputWrapper backgroundColor={theme.colors.background.secondary} isIcon={false}>
+               <ActionInput 
+               possibleClasses={possibleClasses}
+                type={type}
+                actionBackgroundColor={theme.colors.background.primary}
+                action={functionData.else.action} 
+                onChange={(action) => handleActionChange(action, 'else')}
+                onLoaded={(status)=>{
+                  setisLoaded(status)
+                  onLoaded(status)
+                }}
+                validationPrefix={`function.else.`}
+              />
+              {!isLoaded && <LoadingPlaceholder text={'Loading...'}></LoadingPlaceholder>}
+            </RuleInputWrapper>
+          </div>
+        )}
+      </RuleInputWrapper>
+    );
+  }
+ return(<></>)
 };

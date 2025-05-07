@@ -4,14 +4,15 @@ import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
 import { isValidShape } from "./MermaidUtils";
 
     function applyClassAction(Action: Action, Element: BaseObject){
-    if (Action.applyClass) 
-      Action.applyClass.forEach((className: string) => {
-        const classIndex = Element.classes.indexOf(className);
-        if (classIndex !== -1) {
-          Element.classes.splice(classIndex, 1);
-        }
-        Element.classes.push(className);
-      });
+      if (Action.applyClass){
+        Action.applyClass.forEach((className: string) => {
+          const classIndex = Element.classes.indexOf(className);
+          if (classIndex !== -1) {
+            Element.classes.splice(classIndex, 1);
+          }
+          Element.classes.push(className);
+        });
+      } 
     }
 
   

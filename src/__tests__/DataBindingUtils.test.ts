@@ -162,8 +162,12 @@ describe('DataBindingUtils Tests', () => {
       (findAllElementsInMaps as jest.Mock).mockReturnValue(['node1', 'subgraph1']);
       
       (findElementInMaps as jest.Mock).mockImplementation((id, map) => {
-        if (id === 'node1') return mockNode;
-        if (id === 'subgraph1') return mockSubgraph;
+        if (id === 'node1') {
+          return mockNode;
+        }
+        if (id === 'subgraph1') {
+          return mockSubgraph;
+        }
         return null;
       });
 
@@ -191,8 +195,12 @@ describe('DataBindingUtils Tests', () => {
 
       (findAllElementsInMaps as jest.Mock).mockReturnValue(['node1', 'subgraph1']);
       (findElementInMaps as jest.Mock).mockImplementation((id, map) => {
-        if (id === 'node1') return nodeWithoutData;
-        if (id === 'subgraph1') return subgraphWithoutData;
+        if (id === 'node1') {
+          return nodeWithoutData;
+        }
+        if (id === 'subgraph1') {
+          return subgraphWithoutData;
+        }
         return null;
       });
 
@@ -215,8 +223,12 @@ describe('DataBindingUtils Tests', () => {
 
       (findAllElementsInMaps as jest.Mock).mockReturnValue(['node1', 'subgraph1']);
       (findElementInMaps as jest.Mock).mockImplementation((id, map) => {
-        if (id === 'node1') return nodeWithoutText;
-        if (id === 'subgraph1') return subgraphWithoutTitle;
+        if (id === 'node1') {
+          return nodeWithoutText;
+        }
+        if (id === 'subgraph1') {
+          return subgraphWithoutTitle;
+        }
         return null;
       });
 

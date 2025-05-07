@@ -256,7 +256,7 @@ export const ActionInput: React.FC<ActionInputProps> = ({
     }
       {activeActions.length > 0 && <Text>{label}</Text>}
       {activeActions.map(actionType => (
-        <div style={{width: '100%'}}>
+        <div key={actionType} style={{width: '100%'}}>
           <RuleInputWrapper 
               backgroundColor={actionBackgroundColor??theme.colors.background.primary}
               key={actionType}

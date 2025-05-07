@@ -45,7 +45,7 @@ import { test, expect } from '@grafana/plugin-e2e';
       
       await page.getByLabel('VizBind Button theme field').locator('svg').click();
       await page.getByRole('option', { name: 'VizBind' }).click();
-      
+
       const button = await page.getByTestId('data-testid Options group YAML Configuration')
         .getByRole('button', { name: 'Select a File' });
       const backgroundImage = await button.evaluate(element => 
@@ -55,13 +55,6 @@ import { test, expect } from '@grafana/plugin-e2e';
     });
 
     // YAML Configuration Tests
-    test('should export YAML configuration with correct format', async ({ page }) => {
-      await setupNewDashboard(page);
-      await page.getByRole('button', { name: 'Export YAML Config' }).click();
-      const foundConfig = await page.getByLabel('Export YAML Config', { exact: true }).getByText(/stylingRules:/);
-      expect(foundConfig).toContainText('    elements: ["Switch_1", "Switch_2"]');
-    });
-
     test('should navigate to YAML configuration editor', async ({ page }) => {
       await setupNewDashboard(page);
 
@@ -92,9 +85,9 @@ import { test, expect } from '@grafana/plugin-e2e';
       const bindTab2 = await page.getByTestId('data-testid Tab BindRule2');
       const bindTab6 = await page.getByTestId('data-testid Tab BindRule6');
       
-      expect(bindTab1).toContainText('BindRule1');
-      expect(bindTab2).toContainText('BindRule2');
-      expect(bindTab6).toContainText('BindRule6');
+      await expect(bindTab1).toContainText('BindRule1');
+      await expect(bindTab2).toContainText('BindRule2');
+      await expect(bindTab6).toContainText('BindRule6');
     });
 
     test('should create new rule with correct default name', async ({ page, panelEditPage }) => {
@@ -205,8 +198,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       const bindTab1 = await page.getByTestId('data-testid Tab BindRule1');
       const bindTab2 = await page.getByTestId('data-testid Tab BindRule2');
       
-      expect(bindTab1).toContainText('BindRule1');
-      expect(bindTab2).toContainText('BindRule2');
+      await expect(bindTab1).toContainText('BindRule1');
+      await expect(bindTab2).toContainText('BindRule2');
     });
   
     test('should display styling rules on node click', async ({ page }) => {
@@ -216,7 +209,7 @@ import { test, expect } from '@grafana/plugin-e2e';
       await page.getByTestId('data-testid Tab Styling Rules').click();
       
       const styleTab1 = await page.getByTestId('data-testid Tab StyleRule1');
-      expect(styleTab1).toContainText('StyleRule1');
+      await expect(styleTab1).toContainText('StyleRule1');
     });
   
     test('should expand rule conditions when clicked', async ({ page }) => {

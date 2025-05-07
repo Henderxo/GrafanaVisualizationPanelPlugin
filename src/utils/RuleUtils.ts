@@ -248,3 +248,4 @@ import { bindDataToAllMapStrings } from "./DataBindingUtils";
     };
 
     export {applyAllRules, getElementRules, getElementsFromRule, ruleHasElement}
+    

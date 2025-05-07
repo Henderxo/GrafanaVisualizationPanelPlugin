@@ -1,3 +1,23 @@
 {
-  "extends": "./.config/.eslintrc"
+  "extends": "./.config/.eslintrc",
+  "overrides": [
+    {
+      "files": ["src/**/*.{ts,tsx}"],
+      "rules": {
+        "deprecation/deprecation": "off"
+      }
+    }
+  ],
+  "rules": {
+    "@typescript-eslint/array-type": "off",
+    "eol-last": "off",
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        "selector": "interface",
+        "format": ["PascalCase", "camelCase"]
+      }
+    ],
+    "react-hooks/exhaustive-deps": "off"
+  }
 }

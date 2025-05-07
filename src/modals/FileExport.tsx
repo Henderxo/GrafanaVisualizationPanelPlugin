@@ -5,8 +5,8 @@ import { css } from '@emotion/css';
 
 interface FileExportProps {
   value: string,
-  onChange: (newConfig: string)=>void
-  onClose: ()=>void
+  onChange: (newConfig: string) => void
+  onClose: () => void
   isOpen: boolean
   titleString: string
 }
@@ -24,7 +24,9 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
   }, [value]);
   
   const handleExport = () => {
-    if (!valueState) return;
+    if (!valueState) {
+      return;
+    }
     
     try {
       const blob = new Blob([valueState], { type: 'text/plain' });

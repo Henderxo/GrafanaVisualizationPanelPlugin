@@ -5,8 +5,7 @@ import { SimpleOptions } from 'types';
 import createPanZoom from 'panzoom';
 import {fullMermaidMap, BaseObject, FlowClass, YamlParsedConfig } from '../../types';
 import { extractMermaidConfigString, extractMermaidDiagramType, generateDynamicMermaidFlowchart } from 'utils/MermaidUtils';
-import { extractTableData, reformatDataFromResponse, } from 'utils/TransformationUtils';
-import { mapDataToRows } from 'utils/TransformationUtils';
+import { extractTableData, reformatDataFromResponse, mapDataToRows} from 'utils/TransformationUtils';
 import { RulesConfig } from '../../modals/RulesConfig';
 import { getTemplateSrv, locationService } from '@grafana/runtime';
 import { NoTemplatesProvidedDisplay } from 'displays/NoTemplatesProvidedDisplay';
@@ -124,13 +123,17 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
   };
 
   const isValidTemplate = (template: string | undefined): boolean => {
-    if (!template) return false;
+    if (!template) {
+      return false;
+    }
     const trimmedTemplate = template.trim();
     return trimmedTemplate.length > 0;
   };
 
   const handleElementDoubleClick = (event: MouseEvent) => {
-    if (!fullMapRef.current) return;
+    if (!fullMapRef.current) {
+      return;
+    }
     
     const currentElement = event.target as HTMLElement;
     
