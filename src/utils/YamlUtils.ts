@@ -14,8 +14,12 @@ import { validateRuleBase, ValidationResult } from './ValidationUtils';
       });
   
       return yamlString;
-    } catch (error) {
-      console.error('Error converting to YAML:', error);
+    } catch (e) {
+      ErrorService.displayError(ErrorType.YAML_PARSING, {
+        title: 'YAML Converting Error',
+        message: 'Failed to convert YAML configuration',
+        error: (e as Error).message
+      });
       return '';
     }
   };

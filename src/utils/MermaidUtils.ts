@@ -47,7 +47,7 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       typeof obj.domId === 'string' &&
       obj.labelType === 'text' &&
       Array.isArray(obj.styles)
-    );
+    );  
   }
   
    function isFlowSubGraph(obj: any): obj is FlowSubGraph {
@@ -278,72 +278,7 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
     if(node.img){
       nodeProp.push(`img: ${node.img}`)
     }
-    // if (node.img) {
-    //   return ;
-    // }
-    
-    // let nodeShape = '';
-    // if (node.type) {
-    //   switch (node.type) {
-    //     case 'circle':
-    //       nodeShape = '((default))';
-    //       break;
-    //     case 'doublecircle':
-    //       nodeShape = '(((default)))';
-    //       break;
-    //     case 'square': 
-    //       nodeShape = '[default]';
-    //       break;
-    //     case 'rect':
-    //       nodeShape = '[/default\\]';
-    //       break;
-    //     case 'diamond':
-    //       nodeShape = '{default}';
-    //       break;
-    //     case 'hexagon':
-    //       nodeShape = '{{default}}';
-    //       break;
-    //     case 'cylinder':
-    //       nodeShape = '[(default)]';
-    //       break;
-    //     case 'stadium':
-    //       nodeShape = '([default])';
-    //       break;
-    //     case 'round':
-    //       nodeShape = '(default)';
-    //       break;
-    //     case 'ellipse':
-    //       nodeShape = '((default))';
-    //       break;
-    //     case 'subroutine':
-    //       nodeShape = '[[default]]';
-    //       break;
-    //     case 'odd':
-    //       nodeShape = '>default]';
-    //       break;
-    //     case 'trapezoid':
-    //       nodeShape = '[/default/]';
-    //       break;
-    //     case 'inv_trapezoid':
-    //       nodeShape = '[\\default\\]';
-    //       break;
-    //     case 'lean_right':
-    //       nodeShape = '[/default/]';
-    //       break;
-    //     case 'lean_left':
-    //       nodeShape = '[\\default]';
-    //       break;
-    //     default:
-    //       nodeShape = '(default)';
-    //   }
-    // } else {
-      // Default shape if none specified
-    //   nodeShape = '(default)';
-    // }
-    
-    // Format node content with any properties
-    
-    
+
     // Return the formatted node representation
     return `${nodeId}@{ ${nodeProp.join(', ')} }`
   }
@@ -389,7 +324,6 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
    * Determines the line style based on edge properties
    */
   function getLineStyle(edge: FlowEdge): string {
-    console.log(edge)
     if (edge.stroke === 'dotted') {
       return '-.->';
     } else if (edge.stroke === 'thick') {
