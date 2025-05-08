@@ -38,7 +38,7 @@ import { validateRuleBase, ValidationResult } from './ValidationUtils';
           if (validationResult.isValid) {
             bindingRules.push(new YamlBindRule(newRule)); 
           } else {
-            console.warn(`Invalid binding rule (Name: ${rule.name || 'Unnamed'}): ${validationResult.errors[0].message}`);
+            ErrorService.displayWarning('YAML Converting Error', `Invalid binding rule (Name: ${rule.name || 'Unnamed'}): ${validationResult.errors[0].message}`,);
           }
         });
       }
