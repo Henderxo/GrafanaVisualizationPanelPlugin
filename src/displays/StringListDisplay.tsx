@@ -28,7 +28,6 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
     }
 
     const containerWidth = containerRef.current.offsetWidth;
-    let totalWidth = 0;
     let visible: string[] = [];
     let remaining = 0;
 
@@ -39,12 +38,12 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
         const str = 'none';
         const strWidth = getTextWidth(str)
   
-        if (totalWidth + strWidth <= availableWidth) {
+        if (strWidth <= availableWidth) {
           visible.push(str);
-          totalWidth += strWidth + 5;
         }
       }else{
         for (let i = 0; i < content.length; i++) {
+          let totalWidth = 0;
           const str = content[i];
           const strWidth = getTextWidth(str);
           
@@ -61,9 +60,8 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
       const str = 'all';
       const strWidth = getTextWidth(str)
 
-      if (totalWidth + strWidth <= availableWidth) {
+      if (strWidth <= availableWidth) {
         visible.push(str);
-        totalWidth += strWidth + 5;
       }
     }
     

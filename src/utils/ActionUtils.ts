@@ -28,7 +28,7 @@ import { isValidShape } from "./MermaidUtils";
             }
         });
         }
-    };
+    }
 
     function applyTextAction  (Action: Action, Element: BaseObject){
         if (Action.applyText) {
@@ -39,7 +39,7 @@ import { isValidShape } from "./MermaidUtils";
             Element.text = text;
         }
         }
-    };
+    }
 
     const applyShapeAction = (Action: Action, Element: BaseObject) => {
       if (Action.applyShape) {

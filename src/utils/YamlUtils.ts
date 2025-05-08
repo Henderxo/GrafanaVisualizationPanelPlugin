@@ -22,7 +22,7 @@ import { validateRuleBase, ValidationResult } from './ValidationUtils';
       });
       return '';
     }
-  };
+  }
 
   function parseYamlConfig(yamlConfig: string): [{ bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[] }, string | null] {
     try {

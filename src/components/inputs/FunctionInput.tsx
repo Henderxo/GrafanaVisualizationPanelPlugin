@@ -41,7 +41,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   const {validationErrors} = useRuleStateContext()
 
   const handleConditionChange = (e: React.FormEvent<HTMLInputElement>, type: 'if' | 'else_if' = 'if', index?: number) => {
-    if (functionData && typeof functionData !== 'string') {
+    if (functionData) {
 
       const updatedFunction = { ...functionData };
 
@@ -67,7 +67,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   }, []);
 
   const handleActionChange = (action: any, type: 'if' | 'else_if' | 'else', index?: number) => {
-    if (functionData && typeof functionData !== 'string') {
+    if (functionData) {
       const updatedFunction = JSON.parse(JSON.stringify(functionData));
 
       if (type === 'if' && updatedFunction.if) {
@@ -84,7 +84,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
   };
 
   const handleActionDelete = (index: number) => {
-    if (functionData && typeof functionData !== 'string') {
+    if (functionData) {
       const updatedFunction = JSON.parse(JSON.stringify(functionData));
       
       if (updatedFunction.else_if) {
@@ -100,7 +100,7 @@ export const FunctionInput: React.FC<FunctionInputProps> = ({
 
   const handleConditionDelete = () =>{
       if(activeTab !== 'if'){
-        if (functionData && typeof functionData !== 'string'){
+        if (functionData){
           const updatedFunction = { ...functionData };
         
         if (activeTab === 'else_if' && updatedFunction.else_if) {

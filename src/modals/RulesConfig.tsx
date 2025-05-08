@@ -76,7 +76,6 @@ const activeRule = activeTab === 'bindingRules'
     dragPosition: 'start',
   });
 
-  // Draggable functions
     const sensors = useSensors(
       useSensor(PointerSensor, {
         activationConstraint: {
@@ -130,8 +129,6 @@ const activeRule = activeTab === 'bindingRules'
       }
     };
 
-
-  // Rule Editing functions
   const handleRuleDelete = (rule: YamlBindRule | YamlStylingRule) => {
     if (!workingConfig) {
       return;

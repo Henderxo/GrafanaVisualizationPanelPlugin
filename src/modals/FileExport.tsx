@@ -11,7 +11,7 @@ interface FileExportProps {
   titleString: string
 }
 
-export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose, isOpen, titleString }) => {
+export const FileExport: React.FC<FileExportProps> = ({ value, onClose, isOpen, titleString }) => {
   const [valueState, setValueState] = useState(value);
   
   const theme = useTheme2();
