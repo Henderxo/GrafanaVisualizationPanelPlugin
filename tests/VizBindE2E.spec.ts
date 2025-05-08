@@ -1,38 +1,30 @@
-import { test, expect } from '@grafana/plugin-e2e';
+import { test, expect, DashboardPage } from '@grafana/plugin-e2e';
 
-  async function setupNewDashboard(page) {
-    await page.goto('http://localhost:3000/dashboards');
-    await page.locator('#pageContent').getByRole('button', { name: 'New' }).click();
-    const newDashboardButton = await page.getByRole('link', { name: 'New dashboard' });
-    await newDashboardButton.click();
-    const addVizualizactionButton = await page.getByTestId('data-testid Create new panel button');
-    await addVizualizactionButton.click();
-    await page.getByRole('button', { name: 'Close' }).click();
-    await page.locator('div').filter({ hasText: /^ScenarioRandom Walk$/ }).locator('svg').click();
-    await page.getByText('CSV Content').click();
-    await page.getByTestId('data-testid toggle-viz-picker').click();
-    await page.getByText('VizBind').click();
+  async function setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage) {
+    const dashboard = await readProvisionedDashboard({ fileName: 'dashboard.json' });
+    const dashboardPage: DashboardPage = await gotoDashboardPage(dashboard);
+    await dashboardPage.gotoPanelEditPage('1')
   }
   
   test.describe('VizBind Tests', () => {
     // Basic Functionality Tests
-    test('should verify initial diagram loads correctly', async ({ page }) => {
-      await setupNewDashboard(page);
-
+    test('should verify initial diagram loads correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage, panelEditPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
+     
       const loadedDiagram = await page.getByText('Diagram LoadedMermaid diagram');
       expect(loadedDiagram).toBeTruthy();
     });
 
-    test('should update panel title correctly', async ({ page, panelEditPage }) => {
-      await setupNewDashboard(page);
+    test('should update panel title correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByTestId('data-testid Panel editor option pane field input Title').fill('WOW')
 
       expect(await page.getByRole('heading', { name: 'WOW' }))
     });
 
-    test('should handle invalid YAML configuration gracefully', async ({ page, panelEditPage }) => {
-      await setupNewDashboard(page);
+    test('should handle invalid YAML configuration gracefully', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByRole('textbox', { name: 'Enter YAML configuration...' }).fill('Making an error!!!!!!!!!!!!!')
       expect(await page.getByText('Diagram LoadedMermaid diagram'))
@@ -40,8 +32,8 @@ import { test, expect } from '@grafana/plugin-e2e';
     });
 
     // UI Theme Tests
-    test('should apply correct VizBind button theme', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should apply correct VizBind button theme', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByLabel('VizBind Button theme field').locator('svg').click();
       await page.getByRole('option', { name: 'VizBind' }).click();
@@ -55,8 +47,8 @@ import { test, expect } from '@grafana/plugin-e2e';
     });
 
     // YAML Configuration Tests
-    test('should navigate to YAML configuration editor', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should navigate to YAML configuration editor', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
 
       await page.waitForTimeout(2000);
 
@@ -66,8 +58,8 @@ import { test, expect } from '@grafana/plugin-e2e';
         .toBeTruthy();
     });
 
-    test('should handle mermaid configuration errors', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should handle mermaid configuration errors', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByRole('textbox', { name: 'Enter Mermaid configuration...' })
         .fill('Making an error !!!!!!!!!!!!');
@@ -77,8 +69,8 @@ import { test, expect } from '@grafana/plugin-e2e';
     });
 
     // Rule Management Tests
-    test('should display binding rules tabs correctly', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should display binding rules tabs correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByRole('button', { name: 'Open Rule Configuration' }).click()
       const bindTab1 = await page.getByTestId('data-testid Tab BindRule1');
@@ -90,8 +82,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       await expect(bindTab6).toContainText('BindRule6');
     });
 
-    test('should create new rule with correct default name', async ({ page, panelEditPage }) => {
-      await setupNewDashboard(page);
+    test('should create new rule with correct default name', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByRole('button', { name: 'Open Rule Configuration' }).click()
       await page.getByRole('button', { name: 'newRule' }).click()
@@ -99,8 +91,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       expect(textContent === 'Rule_6')
     });
 
-    test('should change rule type from binding to styling', async ({ page, panelEditPage }) => {
-      await setupNewDashboard(page);
+    test('should change rule type from binding to styling', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByRole('button', { name: 'Open Rule Configuration' }).click()
       await page.getByRole('button', { name: 'newRule' }).click()
@@ -111,8 +103,8 @@ import { test, expect } from '@grafana/plugin-e2e';
     });
 
     // Function Management Tests
-    test('should add If, Else If, Else blocks correctly', async ({ page, panelEditPage }) => {
-      await setupNewDashboard(page);
+    test('should add If, Else If, Else blocks correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByRole('button', { name: 'Open Rule Configuration' }).click()
       await page.getByRole('button', { name: 'newRule' }).click()
@@ -134,8 +126,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       expect(await page.getByTestId('data-testid Tab Else'))
     });
 
-    test('should add multiple Else If conditions correctly', async ({ page, panelEditPage }) => {
-      await setupNewDashboard(page);
+    test('should add multiple Else If conditions correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByRole('button', { name: 'Open Rule Configuration' }).click()
       await page.getByRole('button', { name: 'newRule' }).click()
@@ -152,8 +144,8 @@ import { test, expect } from '@grafana/plugin-e2e';
 
     });
     
-    test('should undo rule creation actions correctly', async ({ page, panelEditPage }) => {
-      await setupNewDashboard(page);
+    test('should undo rule creation actions correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByRole('button', { name: 'Open Rule Configuration' }).click()
       await page.getByRole('button', { name: 'newRule' }).click()
@@ -171,8 +163,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       expect(await functionButton.count()).toBe(1)
     });
 
-    test('should reset rule creation to initial state', async ({ page, panelEditPage }) => {
-      await setupNewDashboard(page);
+    test('should reset rule creation to initial state', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.getByRole('button', { name: 'Open Rule Configuration' }).click()
       await page.getByRole('button', { name: 'newRule' }).click()
@@ -190,8 +182,8 @@ import { test, expect } from '@grafana/plugin-e2e';
     });
 
     // Rule Inspection & Editing Tests
-    test('should display binding rules on node click', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should display binding rules on node click', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
 
       await page.locator('#flowchart-Router_1-112').getByText('CPU: 7777777777, Memory: ').dblclick();
       
@@ -202,8 +194,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       await expect(bindTab2).toContainText('BindRule2');
     });
   
-    test('should display styling rules on node click', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should display styling rules on node click', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.locator('#flowchart-Router_1-112').getByText('CPU: 7777777777, Memory: ').dblclick();
       await page.getByTestId('data-testid Tab Styling Rules').click();
@@ -212,8 +204,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       await expect(styleTab1).toContainText('StyleRule1');
     });
   
-    test('should expand rule conditions when clicked', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should expand rule conditions when clicked', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.locator('#flowchart-Router_1-112').getByText('CPU: 7777777777, Memory: ').dblclick();
       await page.getByTestId('data-testid Tab Styling Rules').click();
@@ -226,8 +218,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       await expect(elseCond).toContainText('Else:');
     });
   
-    test('should enter rule edit mode correctly', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should enter rule edit mode correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.locator('#flowchart-Router_1-112').getByText('CPU: 7777777777, Memory: ').dblclick();
       await page.getByTestId('data-testid Tab Styling Rules').click();
@@ -241,8 +233,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       expect(action).toBeTruthy();
     });
   
-    test('should add and remove elements from rules', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should add and remove elements from rules', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.locator('#flowchart-Router_1-112').getByText('CPU: 7777777777, Memory: ').dblclick();
       await page.getByTestId('data-testid Tab Styling Rules').click();
@@ -260,8 +252,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       expect(elementsAddButton).toBeTruthy();
     });
   
-    test('should add and remove functions from existing rules', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should add and remove functions from existing rules', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.locator('#flowchart-Router_1-112').getByText('CPU: 7777777777, Memory: ').dblclick();
       await page.getByTestId('data-testid Tab Styling Rules').click();
@@ -277,8 +269,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       expect(await action.count()).toBe(0);
     });
   
-    test('should show validation errors for incomplete rules', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should show validation errors for incomplete rules', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.locator('#flowchart-Router_1-112').getByText('CPU: 7777777777, Memory: ').dblclick();
       await page.getByTestId('data-testid Tab Styling Rules').click();
@@ -292,8 +284,8 @@ import { test, expect } from '@grafana/plugin-e2e';
       expect(actionError).toBeTruthy();
     });
   
-    test('should update styling rule and verify visual changes', async ({ page }) => {
-      await setupNewDashboard(page);
+    test('should update styling rule and verify visual changes', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
+      await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
       await page.locator('#flowchart-Router_1-112').getByText('CPU: 7777777777, Memory: ').dblclick();
       await page.getByTestId('data-testid Tab Styling Rules').click();
