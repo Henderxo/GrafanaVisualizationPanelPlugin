@@ -15,7 +15,7 @@ export const SingleActionDisplay: React.FC<{
   return (
     <Box marginBottom={1} marginTop={1}>
           <Text element={textSize}>{label}</Text>
-          {singleAction && singleAction !== undefined && Array.isArray(singleAction) ? (
+          {singleAction && Array.isArray(singleAction) ? (
             (singleAction as string[]).length > 0 ? (
               (singleAction as string[]).map((item, i) => (
                 <Badge 

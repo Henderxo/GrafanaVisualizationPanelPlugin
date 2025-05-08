@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Badge, MenuGroup, Text, useTheme2 } from '@grafana/ui';
+import { Badge, MenuGroup, Text } from '@grafana/ui';
 import { customHtmlBase } from '../types';
 
 interface StringListProps extends customHtmlBase{
@@ -7,7 +7,7 @@ interface StringListProps extends customHtmlBase{
   content: string[] | undefined;
 }
 
-const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'span', textSize = 'span', bgColor = useTheme2().colors.success.main}, color = 'black') => {
+const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'span'}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [visibleStrings, setVisibleStrings] = useState<string[]>([]); 
   const [remainingCount, setRemainingCount] = useState<number>(0);
@@ -15,16 +15,19 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
   const getTextWidth = (text: string): number => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    if (!context) return 0;
+    if (!context) {
+      return 0;
+    }
     context.font = '14px Arial';
     return context.measureText(text).width + 20; 
   };
 
   const calculateVisibleStrings = () => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) {
+      return;
+    }
 
     const containerWidth = containerRef.current.offsetWidth;
-    let totalWidth = 0;
     let visible: string[] = [];
     let remaining = 0;
 
@@ -35,12 +38,12 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
         const str = 'none';
         const strWidth = getTextWidth(str)
   
-        if (totalWidth + strWidth <= availableWidth) {
+        if (strWidth <= availableWidth) {
           visible.push(str);
-          totalWidth += strWidth + 5;
         }
       }else{
         for (let i = 0; i < content.length; i++) {
+          let totalWidth = 0;
           const str = content[i];
           const strWidth = getTextWidth(str);
           
@@ -57,9 +60,8 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
       const str = 'all';
       const strWidth = getTextWidth(str)
 
-      if (totalWidth + strWidth <= availableWidth) {
+      if (strWidth <= availableWidth) {
         visible.push(str);
-        totalWidth += strWidth + 5;
       }
     }
     
@@ -95,7 +97,7 @@ const StringList: React.FC<StringListProps> = ({ label, content, labelSize = 'sp
         }}
       >
         {visibleStrings.map((str, index) => (
-          <Badge color="blue" text={<Text variant={'body'}>{str}</Text>}> </Badge>
+          <Badge color="blue" key={index} text={<Text variant={'body'}>{str}</Text>}> </Badge>
         ))}
 
         {remainingCount > 0 && (

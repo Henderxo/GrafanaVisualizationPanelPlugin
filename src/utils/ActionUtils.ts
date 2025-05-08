@@ -4,14 +4,15 @@ import { TypedVariableModel, VariableWithOptions } from "@grafana/data";
 import { isValidShape } from "./MermaidUtils";
 
     function applyClassAction(Action: Action, Element: BaseObject){
-    if (Action.applyClass) 
-      Action.applyClass.forEach((className: string) => {
-        const classIndex = Element.classes.indexOf(className);
-        if (classIndex !== -1) {
-          Element.classes.splice(classIndex, 1);
-        }
-        Element.classes.push(className);
-      });
+      if (Action.applyClass){
+        Action.applyClass.forEach((className: string) => {
+          const classIndex = Element.classes.indexOf(className);
+          if (classIndex !== -1) {
+            Element.classes.splice(classIndex, 1);
+          }
+          Element.classes.push(className);
+        });
+      } 
     }
 
   
@@ -27,7 +28,7 @@ import { isValidShape } from "./MermaidUtils";
             }
         });
         }
-    };
+    }
 
     function applyTextAction  (Action: Action, Element: BaseObject){
         if (Action.applyText) {
@@ -38,7 +39,7 @@ import { isValidShape } from "./MermaidUtils";
             Element.text = text;
         }
         }
-    };
+    }
 
     const applyShapeAction = (Action: Action, Element: BaseObject) => {
       if (Action.applyShape) {
@@ -80,11 +81,11 @@ import { isValidShape } from "./MermaidUtils";
         
         if (Action.bindData && Array.isArray(Action.bindData)) {
         Action.bindData.forEach((actionX) => {
-            const [key, value] = actionX.split('=');
-            Element.data = {
-            ...Element.data,
-            [key]: value
-            };
+          const [key, value] = actionX.split('=');
+          Element.data = {
+              ...Element.data,
+              [key.trim()]: value.trim()
+          };
         });
         }
     };

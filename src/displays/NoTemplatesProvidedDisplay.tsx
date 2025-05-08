@@ -10,7 +10,7 @@ interface NoTemplatesProvidedDisplayProps extends customHtmlBase {
     template: string
     onConfigChanges: (yaml: string, template: string) => void
 }
-export const NoTemplatesProvidedDisplay: React.FC<NoTemplatesProvidedDisplayProps> = ({bgColor, hover, color, yamlConfig, template, onConfigChanges }) =>{
+export const NoTemplatesProvidedDisplay: React.FC<NoTemplatesProvidedDisplayProps> = ({yamlConfig, template, onConfigChanges }) =>{
     const [isYamlEditorOpen, setYamlEditorOpen] = useState(false);
     const handleYamlConfigClick = () =>{
         setYamlEditorOpen(true)

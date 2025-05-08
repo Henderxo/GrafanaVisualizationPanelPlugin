@@ -49,7 +49,6 @@ export const ConfigureRulenew: React.FC<ConfigureRuleModalProps> = (props) => {
   );
 };
 
-// The inner component that uses the context
 const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({ 
   isOpen,
   isEdit = false, 
@@ -59,7 +58,6 @@ const ConfigureRuleContent: React.FC<ConfigureRuleModalProps> = ({
   possibleClasses,
 }) => {
   const { 
-    // State
     newRuleRef,
     validationErrors,
     isLoading,

@@ -1,7 +1,7 @@
 import { BaseObject, fullMermaidMap } from "types";
 import { isFlowSubGraph, isFlowVertex } from "./MermaidUtils";
 
-  function findElementInMaps(element: string, map: fullMermaidMap) : BaseObject | null{
+  function findElementInMaps(element: string, map: fullMermaidMap): BaseObject | null{
     if (map.nodes.has(element)) {
         return map.nodes.get(element) as BaseObject;
     }

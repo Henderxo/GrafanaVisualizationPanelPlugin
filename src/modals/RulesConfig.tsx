@@ -76,7 +76,6 @@ const activeRule = activeTab === 'bindingRules'
     dragPosition: 'start',
   });
 
-  // Draggable functions
     const sensors = useSensors(
       useSensor(PointerSensor, {
         activationConstraint: {
@@ -89,7 +88,9 @@ const activeRule = activeTab === 'bindingRules'
     );
 
     const handleDragEnd = (event: DragEndEvent) => {
-      if (!workingConfig) return;
+      if (!workingConfig) {
+        return;
+      }
       
       const { active, over } = event;
       
@@ -128,10 +129,10 @@ const activeRule = activeTab === 'bindingRules'
       }
     };
 
-
-  // Rule Editing functions
   const handleRuleDelete = (rule: YamlBindRule | YamlStylingRule) => {
-    if (!workingConfig) return;
+    if (!workingConfig) {
+      return;
+    }
     
     setIsLoading(true);
     const updatedWorkingConfig = { ...workingConfig };
@@ -152,7 +153,9 @@ const activeRule = activeTab === 'bindingRules'
   };
 
   const handleRuleSubmit = (rule: YamlBindRule | YamlStylingRule) => {
-    if (!workingConfig) return;
+    if (!workingConfig) {
+      return;
+    }
     
     setIsLoading(true);
     const updatedWorkingConfig = { ...workingConfig };
@@ -173,7 +176,9 @@ const activeRule = activeTab === 'bindingRules'
   };
 
   const handleRuleEdit = (rule: YamlBindRule | YamlStylingRule, oldRuleName: string) => {
-    if (!workingConfig) return;
+    if (!workingConfig) {
+      return;
+    }
     
     setIsLoading(true);
     const updatedWorkingConfig = { ...workingConfig };
@@ -213,7 +218,9 @@ const activeRule = activeTab === 'bindingRules'
   };
 
   const updateElementRules = (config: YamlParsedConfig | null) => {
-    if (!config) return;
+    if (!config) {
+      return;
+    }
     
     setIsLoading(true);
     let filteredRules;
@@ -284,7 +291,9 @@ const activeRule = activeTab === 'bindingRules'
     onClose(); 
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   const setActiveRule = (rule: YamlBindRule | YamlStylingRule) => {
     if (rule instanceof YamlBindRule) {

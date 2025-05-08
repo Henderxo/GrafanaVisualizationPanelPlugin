@@ -19,6 +19,7 @@ export const ConditionDisplay: React.FC<{
     setIsLoading(false)
   }, [condition]);
 
+  const color = useTheme2().colors.background.primary
   let label = '';
   switch (type) {
     case 'if':
@@ -34,7 +35,7 @@ export const ConditionDisplay: React.FC<{
 
   return (
     <Box>
-      {!isLoading && <Collapse className={css`background-color: ${bgColor??useTheme2().colors.background.primary}`}
+      {!isLoading && <Collapse className={css`background-color: ${bgColor??color}`}
         onToggle={() => setIsOpen(!isOpen)}
         isOpen={isOpen}
         label={`${label}: ${condition.condition || 'No condition'}`}

@@ -5,13 +5,13 @@ import RuleInputWrapper from 'components/wrappers/RuleInputWrapper';
 
 interface FileUploadSettings {
   value: string,
-  onChange: (newConfig: string)=>void
-  onClose: ()=>void
+  onChange: (newConfig: string) => void
+  onClose: () => void
   isOpen: boolean
   titleString: string
 }
 
-export const FileUpload: React.FC<FileUploadSettings> = ({ value, onChange, onClose, isOpen, titleString }) => {
+export const FileUpload: React.FC<FileUploadSettings> = ({ onChange, onClose, isOpen, titleString }) => {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
   const [fileContent, setFileContent] = useState<string | null>(null);
@@ -47,7 +47,9 @@ export const FileUpload: React.FC<FileUploadSettings> = ({ value, onChange, onCl
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) handleFileRead(file);
+    if (file) {
+      handleFileRead(file);
+    }
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {

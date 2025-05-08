@@ -7,8 +7,8 @@ import schemaData from '../config/YamlEditorSchema.json';
 
 interface EditorProps{
   value: string,
-  onChange: (newConfig: string)=>void
-  onClose: ()=>void
+  onChange: (newConfig: string) => void
+  onClose: () => void
   isOpen: boolean
 }
 
@@ -24,9 +24,9 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
   const checkForErrors = () => {
     const model = editorRef.current?.getModel();
 
-    if (!model) return false;
+    if (!model) { return false }
   
-    const markers = monaco.editor.getModelMarkers({ model });
+    const markers = monaco.editor.getModelMarkers({ resource: model.uri });
 
     const hasErrors = markers.some(marker => marker.severity === monaco.MarkerSeverity.Error || monaco.MarkerSeverity.Warning);
   
@@ -39,7 +39,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
   }, [value])
 
   useEffect(() => {
-    if (!isOpen || !containerRef.current) return;
+    if (!isOpen || !containerRef.current) { return }
 
     monaco.languages.register({ id: "yaml" });
     const sheme =  configureMonacoYaml(monaco, {
@@ -105,7 +105,7 @@ export const YamlEditor: React.FC<EditorProps> = ({ value, onChange, onClose, is
 
   useEffect(()=>{
 
-    if (!isOpen) return;
+    if (!isOpen) { return }
     if (completionProviderRef.current) {
       completionProviderRef.current.dispose();
       completionProviderRef.current = null;

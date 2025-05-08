@@ -14,6 +14,6 @@ function colorToHex(color: string): string{
     
   
     return 'D4D4D4'; 
-  };
+  }
 
   export {colorToHex}

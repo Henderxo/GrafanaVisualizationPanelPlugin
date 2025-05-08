@@ -296,9 +296,7 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
     setIsLoading(false);
   };
 
-  // Combine all the state and handlers
   const value: RuleStateContextType = {
-    // State
     newRuleRef,
     stateHistory,
     validationErrors,
@@ -308,10 +306,8 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
     elementList,
     isConfirmModalOpen,
     
-    // UI State
     ...ruleUIState,
     
-    // State setters
     forceUpdate,
     setStateHistory,
     setValidationErrors,
@@ -321,7 +317,6 @@ export const RuleStateProvider: React.FC<RuleStateProviderProps> = ({
     setElementList,
     setIsConfirmModalOpen,
     
-    // Handler methods
     saveStateToHistory,
     handleRuleReset,
     handleUndo,

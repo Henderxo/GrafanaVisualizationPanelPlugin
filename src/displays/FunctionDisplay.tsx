@@ -34,7 +34,7 @@ export const FunctionDisplay: React.FC<FunctionDisplayProps> = ({ bgColor, func,
           <ConditionDisplay 
             bgColor={bgColor}
             textSize={textSize}
-            key={`else_if_${i}`} 
+            key={`else_if_[${i}]`} 
             condition={elseIf} 
             type="else_if" 
             index={i} 
