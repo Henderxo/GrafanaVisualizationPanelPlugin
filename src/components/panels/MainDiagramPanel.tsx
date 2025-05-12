@@ -179,7 +179,6 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     setMermaidError(null)
     if (!isValidTemplate(template)) {
       setIsLoading(false);
-      return;
     }
     setIsLoading(true);
     mermaid.initialize({});
@@ -240,12 +239,12 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     <div>
       <div
         ref={chartRef}
-        className={(!isLoading && isMermaidError === null && isYamlError === null && !isLoadingYaml) ? "" : "hidden"}
+        className={(!isLoading && isMermaidError === null && isYamlError === null && !isLoadingYaml && isValidTemplate(template)) ? "" : "hidden"}
       />
   
       {isLoading || isLoadingYaml && <div className="loading-indicator">Loading diagram...</div>}
   
-      {!isLoading&& !isLoadingYaml&&(isMermaidError !== null || !isValidTemplate(template)) && (
+      {!isLoading && !isLoadingYaml && (isMermaidError !== null || !isValidTemplate(template)) && (
         <NoTemplatesProvidedDisplay
           onConfigChanges={(yaml, template) =>
             onOptionsChange({ ...options, yamlConfig: yaml, template })
