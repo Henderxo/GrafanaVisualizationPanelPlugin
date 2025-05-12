@@ -81,7 +81,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
       updateMapValuesWithDefault(fullMap);
       console.log(fullMap)
       const rows = extractTableData(data) ? mapDataToRows(data) : undefined;
-      
+      console.log(variables)
 
       applyAllRules(
         parsedYamlState.bindingRules, 
@@ -245,7 +245,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
   
       {isLoading || isLoadingYaml && <div className="loading-indicator">Loading diagram...</div>}
   
-      {!isLoading&& !isLoadingYaml&&(isMermaidError !== null || isYamlError !== null || !yamlConfig || !isValidTemplate(template)) && (
+      {!isLoading&& !isLoadingYaml&&(isMermaidError !== null || !isValidTemplate(template)) && (
         <NoTemplatesProvidedDisplay
           onConfigChanges={(yaml, template) =>
             onOptionsChange({ ...options, yamlConfig: yaml, template })

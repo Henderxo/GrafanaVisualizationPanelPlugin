@@ -91,6 +91,10 @@ const activeRule = activeTab === 'bindingRules'
       if (!workingConfig) {
         return;
       }
+
+      if(element){
+        return;
+      }
       
       const { active, over } = event;
       
@@ -408,7 +412,7 @@ const activeRule = activeTab === 'bindingRules'
                     overflow-x: hidden;
                   `}
                 >
-                  <DndContext 
+                {!element && <DndContext 
                     modifiers={[restrictToVerticalAxis]}
                     sensors={sensors}
                     collisionDetection={closestCenter}
@@ -427,7 +431,19 @@ const activeRule = activeTab === 'bindingRules'
                         />
                       ))}
                     </SortableContext>
-                  </DndContext>
+                  </DndContext>}
+                {element && 
+                    <>
+                    {rulesToDisplay.map(rule => (
+                      <Tab
+                          key={rule.name}
+                          label={rule.name}
+                          active={activeRule ? JSON.stringify(activeRule) === JSON.stringify(rule) : false}
+                          onChangeTab={() => setActiveRule(rule)}
+                        />
+                      ))}
+                    </>
+                  }
                 </div>
                 
                 <div {...splitterProps}></div>

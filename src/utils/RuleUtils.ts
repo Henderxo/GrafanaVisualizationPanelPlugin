@@ -29,7 +29,7 @@ import { bindDataToAllMapStrings } from "./DataBindingUtils";
           getElementsFromRule(rule, fullMap).forEach(element => {
           let mapElement = findElementInMaps(element, fullMap);
           if (mapElement) {
-              addActions({bindData: rule.bindData}, mapElement);
+              addActions({bindData: rule.bindData}, mapElement, [], grafanaVariables);
           }
           });
       }

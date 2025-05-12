@@ -65,14 +65,16 @@ import { isValidShape } from "./MermaidUtils";
             ...row
             };
         }
-        
+
         if (grafanaVariables && grafanaVariables.length > 0) {
         const variablesData: Record<string, any> = {};
         
         grafanaVariables.forEach(variable => {
-            variablesData[variable.name] = (variable as VariableWithOptions).current.value;
+          const rawValue = (variable as VariableWithOptions).current.value;
+          const parsedValue = isNaN(Number(rawValue)) ? rawValue : Number(rawValue);
+          variablesData[variable.name] = parsedValue;
         });
-        
+
         Element.data = {
             ...Element.data,
             ...variablesData
@@ -82,10 +84,15 @@ import { isValidShape } from "./MermaidUtils";
         if (Action.bindData && Array.isArray(Action.bindData)) {
         Action.bindData.forEach((actionX) => {
           const [key, value] = actionX.split('=');
-          Element.data = {
-              ...Element.data,
-              [key.trim()]: value.trim()
-          };
+          if (key && value) {
+              const trimmedKey = key.trim();
+              const trimmedValue = value.trim();
+
+              Element.data = {
+                  ...Element.data,
+                  [trimmedKey]: Element.data ? trimmedValue in Element.data ? Element.data[trimmedValue] : trimmedValue : ''
+              };
+          }
         });
         }
     };
