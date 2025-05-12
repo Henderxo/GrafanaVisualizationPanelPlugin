@@ -179,17 +179,25 @@ const activeRule = activeTab === 'bindingRules'
     setIsLoading(false);
   };
 
-  const handleRuleEdit = (rule: YamlBindRule | YamlStylingRule, oldRuleName: string) => {
+  const handleRuleEdit = (rule: YamlBindRule | YamlStylingRule, oldRule:  YamlBindRule | YamlStylingRule) => {
     if (!workingConfig) {
       return;
     }
     
     setIsLoading(true);
     const updatedWorkingConfig = { ...workingConfig };
+    const oldRuleObject = JSON.stringify(oldRule)
   
     if (rule instanceof YamlBindRule) {
-      const ruleIndex = updatedWorkingConfig.bindingRules.findIndex(r => r.name === oldRuleName);
-      
+      const ruleIndex = updatedWorkingConfig.bindingRules.findIndex(r => {
+        if(r.name === oldRule.name){
+          if(JSON.stringify(r) === oldRuleObject){
+            return true
+          }
+        }
+        return false
+      });
+
       if (ruleIndex !== -1) {
         updatedWorkingConfig.bindingRules[ruleIndex] = rule;
       }
@@ -202,7 +210,14 @@ const activeRule = activeTab === 'bindingRules'
       setActiveTab('bindingRules');
 
     } else if (rule instanceof YamlStylingRule) {
-      const ruleIndex = updatedWorkingConfig.stylingRules.findIndex(r => r.name === oldRuleName);
+      const ruleIndex = updatedWorkingConfig.stylingRules.findIndex(r => {
+        if(r.name === oldRule.name){
+          if(JSON.stringify(r) === oldRuleObject){
+            return true
+          }
+        }
+        return false
+      });
       
       if (ruleIndex !== -1) {
         updatedWorkingConfig.stylingRules[ruleIndex] = rule;

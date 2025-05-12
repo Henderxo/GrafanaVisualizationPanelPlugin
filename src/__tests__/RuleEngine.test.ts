@@ -141,7 +141,6 @@ describe('isFlowVertex function', () => {
       styles: [],
     };
     
-    // Mocking isFlowVertex behavior
     (MermaidUtils.isFlowVertex as unknown as jest.Mock).mockReturnValue(true);
 
     expect(MermaidUtils.isFlowVertex(obj)).toBe(true);
@@ -156,7 +155,6 @@ describe('isFlowVertex function', () => {
       styles: ['style1'] 
     };
 
-    // Mocking isFlowVertex behavior
     (MermaidUtils.isFlowVertex as unknown as jest.Mock).mockReturnValue(false);
 
     expect(MermaidUtils.isFlowVertex(obj)).toBe(false);

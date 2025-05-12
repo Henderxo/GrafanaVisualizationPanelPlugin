@@ -7,7 +7,6 @@ import { test, expect, DashboardPage } from '@grafana/plugin-e2e';
   }
   
   test.describe('VizBind Tests', () => {
-    // Basic Functionality Tests
     test('should verify initial diagram loads correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage, panelEditPage }) => {
       await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
      
@@ -31,7 +30,6 @@ import { test, expect, DashboardPage } from '@grafana/plugin-e2e';
       expect(await page.locator('#flowchart-Router_1-189').getByText('CPU: $CPU, Memory: $Memory,'))
     });
 
-    // UI Theme Tests
     test('should apply correct VizBind button theme', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
       await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
@@ -46,7 +44,6 @@ import { test, expect, DashboardPage } from '@grafana/plugin-e2e';
       expect(backgroundImage).toBe('linear-gradient(45deg, rgb(255, 165, 0), rgb(255, 102, 0))');
     });
 
-    // YAML Configuration Tests
     test('should navigate to YAML configuration editor', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
       await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
 
@@ -68,7 +65,6 @@ import { test, expect, DashboardPage } from '@grafana/plugin-e2e';
         .toBeTruthy();
     });
 
-    // Rule Management Tests
     test('should display binding rules tabs correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
       await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
@@ -102,7 +98,6 @@ import { test, expect, DashboardPage } from '@grafana/plugin-e2e';
       expect(await page.locator('div').filter({ hasText: /^Styling Rule$/ }).first())
     });
 
-    // Function Management Tests
     test('should add If, Else If, Else blocks correctly', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
       await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
       
@@ -181,7 +176,6 @@ import { test, expect, DashboardPage } from '@grafana/plugin-e2e';
       expect(await functionButton.count()).toBe(1)
     });
 
-    // Rule Inspection & Editing Tests
     test('should display binding rules on node click', async ({ page, readProvisionedDashboard, gotoDashboardPage }) => {
       await setupNewDashboard(page, readProvisionedDashboard, gotoDashboardPage);
 

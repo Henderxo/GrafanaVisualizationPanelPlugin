@@ -79,9 +79,8 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
       fullMapRef.current = fullMap;
       setAllElements(findAllElementsInMaps(fullMap));
       updateMapValuesWithDefault(fullMap);
-      console.log(fullMap)
+
       const rows = extractTableData(data) ? mapDataToRows(data) : undefined;
-      console.log(variables)
 
       applyAllRules(
         parsedYamlState.bindingRules, 
@@ -184,7 +183,6 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
     mermaid.initialize({});
     getDiagram(template)
       .then((rez) => {
-        console.log(rez)
         if (chartRef.current) {
           mermaid.render('graphDiv', rez)
             .then(({ svg }) => {

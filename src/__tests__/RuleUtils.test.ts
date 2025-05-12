@@ -111,23 +111,21 @@ describe('RuleUtils Tests', () => {
         new YamlStylingRule({ name: 'node2', elements: ['node2'], applyClass: ['class6'] })
       ];
 
-      // Test for node1
       const nodeRules = getElementRules(mockNode, [mockBindRules, mockStylingRules]);
       expect(nodeRules.bindingRules).toHaveLength(2);
-      expect(nodeRules.bindingRules).toContainEqual(mockBindRules[0]); // all
-      expect(nodeRules.bindingRules).toContainEqual(mockBindRules[2]); // node1
+      expect(nodeRules.bindingRules).toContainEqual(mockBindRules[0]);
+      expect(nodeRules.bindingRules).toContainEqual(mockBindRules[2]);
       expect(nodeRules.stylingRules).toHaveLength(2);
-      expect(nodeRules.stylingRules).toContainEqual(mockStylingRules[0]); // all
-      expect(nodeRules.stylingRules).toContainEqual(mockStylingRules[2]); // node1
+      expect(nodeRules.stylingRules).toContainEqual(mockStylingRules[0]);
+      expect(nodeRules.stylingRules).toContainEqual(mockStylingRules[2]);
 
-      // Test for subgraph1
       const subgraphRules = getElementRules(mockSubgraph, [mockBindRules, mockStylingRules]);
       expect(subgraphRules.bindingRules).toHaveLength(2);
-      expect(subgraphRules.bindingRules).toContainEqual(mockBindRules[0]); // all
-      expect(subgraphRules.bindingRules).toContainEqual(mockBindRules[4]); // subgraphs
+      expect(subgraphRules.bindingRules).toContainEqual(mockBindRules[0]);
+      expect(subgraphRules.bindingRules).toContainEqual(mockBindRules[4]);
       expect(subgraphRules.stylingRules).toHaveLength(2);
-      expect(subgraphRules.stylingRules).toContainEqual(mockStylingRules[0]); // all
-      expect(subgraphRules.stylingRules).toContainEqual(mockStylingRules[4]); // subgraphs
+      expect(subgraphRules.stylingRules).toContainEqual(mockStylingRules[0]);
+      expect(subgraphRules.stylingRules).toContainEqual(mockStylingRules[4]);
     });
   });
 

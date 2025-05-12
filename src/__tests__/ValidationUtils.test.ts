@@ -73,7 +73,6 @@ import {
     it('should return error if function.if is missing', () => {
       const rule = createMockRule({
         function: {
-          // missing 'if'
         } as any,
       });
   
@@ -114,7 +113,7 @@ import {
   
       const result = validateRuleBase(rule, { collectAllErrors: false });
       expect(result.isValid).toBe(false);
-      expect(result.errors.length).toBe(1); // stops at name
+      expect(result.errors.length).toBe(1); 
     });
   
     it('should collect all errors when collectAllErrors is true', () => {

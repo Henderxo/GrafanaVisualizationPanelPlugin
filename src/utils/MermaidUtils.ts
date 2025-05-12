@@ -45,7 +45,6 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       Array.isArray(obj.classes) &&
       typeof obj.id === 'string' &&
       typeof obj.domId === 'string' &&
-      obj.labelType === 'text' &&
       Array.isArray(obj.styles)
     );  
   }

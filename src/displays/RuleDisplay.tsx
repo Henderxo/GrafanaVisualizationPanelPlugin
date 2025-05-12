@@ -13,7 +13,7 @@ interface RuleDisplayProps extends customHtmlBase {
   height?: string;
   elements: string[]
   possibleClasses: Map<string, FlowClass>
-  onEditSubmit: (rule: YamlBindRule | YamlStylingRule, oldRule: string) => void;
+  onEditSubmit: (rule: YamlBindRule | YamlStylingRule, oldRule: YamlBindRule | YamlStylingRule) => void;
   onDelete: (rule: YamlBindRule | YamlStylingRule) => void
 }
 
@@ -58,7 +58,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       elements={elements}
       isOpen={isEditModalOpen}
       onClose={() => setIsEditModalOpen(false)}
-      onSubmit={(newRule) =>onEditSubmit(newRule, rule.name)}/>}
+      onSubmit={(newRule) =>onEditSubmit(newRule, rule)}/>}
       <ConfirmModal 
         modalClass={css`top: 30%;`}
         isOpen={isDeleteModalOpen} 
