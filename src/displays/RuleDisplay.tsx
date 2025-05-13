@@ -101,7 +101,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
             rule={rule} 
             func={rule.function as FunctionElement}
         /></RuleInputWrapper>} 
-        {rule.getActions().areActions && <RuleInputWrapper isIcon={false}><ActionsDisplay label="General Actions:" textSize={textSize} action={rule.getActions().Action}></ActionsDisplay></RuleInputWrapper>}
+        {rule.getActions().areActions && <RuleInputWrapper isIcon={false}><ActionsDisplay label="Unconditional Actions:" textSize={textSize} action={rule.getActions().Action}></ActionsDisplay></RuleInputWrapper>}
 
       </div>
     </div>
