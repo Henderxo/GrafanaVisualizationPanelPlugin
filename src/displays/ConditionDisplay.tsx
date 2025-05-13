@@ -26,7 +26,7 @@ export const ConditionDisplay: React.FC<{
       label = 'If';
       break;
     case 'else_if':
-      label = `Else If ${index !== undefined ? index + 1 : ''}`;
+      label = `Else If [${index !== undefined ? index + 1 : ''}]`;
       break;
     case 'else':
       label = 'Else';
