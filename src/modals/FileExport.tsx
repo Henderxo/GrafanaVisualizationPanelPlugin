@@ -45,7 +45,6 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onClose, isOpen, 
         <Modal 
           className={css`
             width: 1340px;
-            height: 800px;
             display: flex;
             flex-direction: column;
             `} 
@@ -56,10 +55,9 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onClose, isOpen, 
           <div
             className={css`
               display: flex;
-              width: 100%;
-              height: 100%;
               flex-direction: column;
               justify-content: center;
+              padding: 10px;
               text-align: center;
               border-radius: 8px;
             `}
@@ -75,7 +73,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onClose, isOpen, 
                     backgroundColor: theme.colors.background.secondary,
                     marginTop: '8px',
                     whiteSpace: 'pre-wrap', 
-                    maxHeight: '550px', 
+                    maxHeight: '520px', 
                     textAlign: 'left', 
                     fontSize: '12px',
                     marginBottom: '0px',
@@ -85,7 +83,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onClose, isOpen, 
                 </pre>
               </>
             )}
-
+          </div>
             <Modal.ButtonRow>
               <Button variant="destructive" onClick={() => onClose()}>
                 Cancel
@@ -94,7 +92,6 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onClose, isOpen, 
                 Export
               </Button>
             </Modal.ButtonRow>
-          </div>
         </Modal>
       )}
     </>
