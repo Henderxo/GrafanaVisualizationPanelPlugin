@@ -195,7 +195,7 @@
         }
       ],
       "title": "Panel Title",
-      "type": "nedas-test2-panel"
+      "type": "nedas-vizbind-panel"
     }
   ],
   "preload": false,
