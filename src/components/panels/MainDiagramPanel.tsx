@@ -41,6 +41,7 @@ export const MainDiagramPanel: React.FC<MainDiagramPanelProps> = ({ options, dat
   useEffect(() => {
     setIsLoadingYaml(true)
     if (!yamlConfig) {
+      setIsLoadingYaml(false)
       setParsedYamlState({
         bindingRules: [],
         stylingRules: []
