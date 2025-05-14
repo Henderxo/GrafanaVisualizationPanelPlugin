@@ -28,7 +28,11 @@ export const YamlEditorButton: React.FC<Props> = ({ value, onChange, context}) =
         <Icon name={'pen'} className={css`margin-right: 6px;`}></Icon><Text>Edit YAML Config</Text>
       </ButtonWrapper>
       {isModalOpen &&
-        <YamlEditor isOpen={isModalOpen} onClose={()=>setModalOpen(false)} onChange={(value)=>{onChange(value), setModalOpen(false)}} value={value}></YamlEditor>
+        <YamlEditor isOpen={isModalOpen} onClose={()=>setModalOpen(false)} onChange={
+          (value)=>{
+          onChange(value) 
+          setModalOpen(false)}
+        } value={value}></YamlEditor>
       }
     </div>
   );

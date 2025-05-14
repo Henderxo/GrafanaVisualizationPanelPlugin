@@ -1,4 +1,3 @@
-// ErrorService.ts
 import { AppEvents } from '@grafana/data';
 import { getAppEvents } from '@grafana/runtime';
 

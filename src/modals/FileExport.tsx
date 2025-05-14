@@ -5,13 +5,13 @@ import { css } from '@emotion/css';
 
 interface FileExportProps {
   value: string,
-  onChange: (newConfig: string)=>void
-  onClose: ()=>void
+  onChange: (newConfig: string) => void
+  onClose: () => void
   isOpen: boolean
   titleString: string
 }
 
-export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose, isOpen, titleString }) => {
+export const FileExport: React.FC<FileExportProps> = ({ value, onClose, isOpen, titleString }) => {
   const [valueState, setValueState] = useState(value);
   
   const theme = useTheme2();
@@ -24,7 +24,9 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
   }, [value]);
   
   const handleExport = () => {
-    if (!valueState) return;
+    if (!valueState) {
+      return;
+    }
     
     try {
       const blob = new Blob([valueState], { type: 'text/plain' });
@@ -43,7 +45,6 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
         <Modal 
           className={css`
             width: 1340px;
-            height: 800px;
             display: flex;
             flex-direction: column;
             `} 
@@ -54,10 +55,9 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
           <div
             className={css`
               display: flex;
-              width: 100%;
-              height: 100%;
               flex-direction: column;
               justify-content: center;
+              padding: 10px;
               text-align: center;
               border-radius: 8px;
             `}
@@ -73,7 +73,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
                     backgroundColor: theme.colors.background.secondary,
                     marginTop: '8px',
                     whiteSpace: 'pre-wrap', 
-                    maxHeight: '550px', 
+                    maxHeight: '520px', 
                     textAlign: 'left', 
                     fontSize: '12px',
                     marginBottom: '0px',
@@ -83,7 +83,7 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
                 </pre>
               </>
             )}
-
+          </div>
             <Modal.ButtonRow>
               <Button variant="destructive" onClick={() => onClose()}>
                 Cancel
@@ -92,7 +92,6 @@ export const FileExport: React.FC<FileExportProps> = ({ value, onChange, onClose
                 Export
               </Button>
             </Modal.ButtonRow>
-          </div>
         </Modal>
       )}
     </>

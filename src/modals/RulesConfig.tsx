@@ -76,7 +76,6 @@ const activeRule = activeTab === 'bindingRules'
     dragPosition: 'start',
   });
 
-  // Draggable functions
     const sensors = useSensors(
       useSensor(PointerSensor, {
         activationConstraint: {
@@ -89,7 +88,13 @@ const activeRule = activeTab === 'bindingRules'
     );
 
     const handleDragEnd = (event: DragEndEvent) => {
-      if (!workingConfig) return;
+      if (!workingConfig) {
+        return;
+      }
+
+      if(element){
+        return;
+      }
       
       const { active, over } = event;
       
@@ -128,10 +133,10 @@ const activeRule = activeTab === 'bindingRules'
       }
     };
 
-
-  // Rule Editing functions
   const handleRuleDelete = (rule: YamlBindRule | YamlStylingRule) => {
-    if (!workingConfig) return;
+    if (!workingConfig) {
+      return;
+    }
     
     setIsLoading(true);
     const updatedWorkingConfig = { ...workingConfig };
@@ -152,7 +157,9 @@ const activeRule = activeTab === 'bindingRules'
   };
 
   const handleRuleSubmit = (rule: YamlBindRule | YamlStylingRule) => {
-    if (!workingConfig) return;
+    if (!workingConfig) {
+      return;
+    }
     
     setIsLoading(true);
     const updatedWorkingConfig = { ...workingConfig };
@@ -172,15 +179,25 @@ const activeRule = activeTab === 'bindingRules'
     setIsLoading(false);
   };
 
-  const handleRuleEdit = (rule: YamlBindRule | YamlStylingRule, oldRuleName: string) => {
-    if (!workingConfig) return;
+  const handleRuleEdit = (rule: YamlBindRule | YamlStylingRule, oldRule:  YamlBindRule | YamlStylingRule) => {
+    if (!workingConfig) {
+      return;
+    }
     
     setIsLoading(true);
     const updatedWorkingConfig = { ...workingConfig };
+    const oldRuleObject = JSON.stringify(oldRule)
   
     if (rule instanceof YamlBindRule) {
-      const ruleIndex = updatedWorkingConfig.bindingRules.findIndex(r => r.name === oldRuleName);
-      
+      const ruleIndex = updatedWorkingConfig.bindingRules.findIndex(r => {
+        if(r.name === oldRule.name){
+          if(JSON.stringify(r) === oldRuleObject){
+            return true
+          }
+        }
+        return false
+      });
+
       if (ruleIndex !== -1) {
         updatedWorkingConfig.bindingRules[ruleIndex] = rule;
       }
@@ -193,7 +210,14 @@ const activeRule = activeTab === 'bindingRules'
       setActiveTab('bindingRules');
 
     } else if (rule instanceof YamlStylingRule) {
-      const ruleIndex = updatedWorkingConfig.stylingRules.findIndex(r => r.name === oldRuleName);
+      const ruleIndex = updatedWorkingConfig.stylingRules.findIndex(r => {
+        if(r.name === oldRule.name){
+          if(JSON.stringify(r) === oldRuleObject){
+            return true
+          }
+        }
+        return false
+      });
       
       if (ruleIndex !== -1) {
         updatedWorkingConfig.stylingRules[ruleIndex] = rule;
@@ -213,7 +237,9 @@ const activeRule = activeTab === 'bindingRules'
   };
 
   const updateElementRules = (config: YamlParsedConfig | null) => {
-    if (!config) return;
+    if (!config) {
+      return;
+    }
     
     setIsLoading(true);
     let filteredRules;
@@ -284,7 +310,9 @@ const activeRule = activeTab === 'bindingRules'
     onClose(); 
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   const setActiveRule = (rule: YamlBindRule | YamlStylingRule) => {
     if (rule instanceof YamlBindRule) {
@@ -399,7 +427,7 @@ const activeRule = activeTab === 'bindingRules'
                     overflow-x: hidden;
                   `}
                 >
-                  <DndContext 
+                {!element && <DndContext 
                     modifiers={[restrictToVerticalAxis]}
                     sensors={sensors}
                     collisionDetection={closestCenter}
@@ -418,7 +446,19 @@ const activeRule = activeTab === 'bindingRules'
                         />
                       ))}
                     </SortableContext>
-                  </DndContext>
+                  </DndContext>}
+                {element && 
+                    <>
+                    {rulesToDisplay.map(rule => (
+                      <Tab
+                          key={rule.name}
+                          label={rule.name}
+                          active={activeRule ? JSON.stringify(activeRule) === JSON.stringify(rule) : false}
+                          onChangeTab={() => setActiveRule(rule)}
+                        />
+                      ))}
+                    </>
+                  }
                 </div>
                 
                 <div {...splitterProps}></div>

@@ -13,7 +13,7 @@ interface RuleDisplayProps extends customHtmlBase {
   height?: string;
   elements: string[]
   possibleClasses: Map<string, FlowClass>
-  onEditSubmit: (rule: YamlBindRule | YamlStylingRule, oldRule: string) => void;
+  onEditSubmit: (rule: YamlBindRule | YamlStylingRule, oldRule: YamlBindRule | YamlStylingRule) => void;
   onDelete: (rule: YamlBindRule | YamlStylingRule) => void
 }
 
@@ -58,7 +58,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
       elements={elements}
       isOpen={isEditModalOpen}
       onClose={() => setIsEditModalOpen(false)}
-      onSubmit={(newRule) =>onEditSubmit(newRule, rule.name)}/>}
+      onSubmit={(newRule) =>onEditSubmit(newRule, rule)}/>}
       <ConfirmModal 
         modalClass={css`top: 30%;`}
         isOpen={isDeleteModalOpen} 
@@ -101,7 +101,7 @@ export const RuleDisplay: React.FC<RuleDisplayProps> = ({
             rule={rule} 
             func={rule.function as FunctionElement}
         /></RuleInputWrapper>} 
-        {rule.getActions().areActions && <RuleInputWrapper isIcon={false}><ActionsDisplay label="General Actions:" textSize={textSize} action={rule.getActions().Action}></ActionsDisplay></RuleInputWrapper>}
+        {rule.getActions().areActions && <RuleInputWrapper isIcon={false}><ActionsDisplay label="Unconditional Actions:" textSize={textSize} action={rule.getActions().Action}></ActionsDisplay></RuleInputWrapper>}
 
       </div>
     </div>

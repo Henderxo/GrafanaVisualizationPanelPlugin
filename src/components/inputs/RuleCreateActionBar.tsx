@@ -142,7 +142,7 @@ export const RuleCreateActionBar: React.FC<RuleCreateActionBarProps> = () => {
                             <Text>Possible Actions:</Text>
                             </div>
                             <ButtonWrapper onClick={() => createActionInputs()}>   
-                                Add Global Action
+                                Add Unconditional Action
                             </ButtonWrapper>
                             <ButtonWrapper onClick={() => createIfInput()}>   
                                 Add Function

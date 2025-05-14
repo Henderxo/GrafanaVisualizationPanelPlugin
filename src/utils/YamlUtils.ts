@@ -14,11 +14,15 @@ import { validateRuleBase, ValidationResult } from './ValidationUtils';
       });
   
       return yamlString;
-    } catch (error) {
-      console.error('Error converting to YAML:', error);
+    } catch (e) {
+      ErrorService.displayError(ErrorType.YAML_PARSING, {
+        title: 'YAML Converting Error',
+        message: 'Failed to convert YAML configuration',
+        error: (e as Error).message
+      });
       return '';
     }
-  };
+  }
 
   function parseYamlConfig(yamlConfig: string): [{ bindingRules: YamlBindRule[], stylingRules: YamlStylingRule[] }, string | null] {
     try {
@@ -34,7 +38,7 @@ import { validateRuleBase, ValidationResult } from './ValidationUtils';
           if (validationResult.isValid) {
             bindingRules.push(new YamlBindRule(newRule)); 
           } else {
-            console.warn(`Invalid binding rule (Name: ${rule.name || 'Unnamed'}): ${validationResult.errors[0].message}`);
+            ErrorService.displayWarning('YAML Converting Error', `Invalid binding rule (Name: ${rule.name || 'Unnamed'}): ${validationResult.errors[0].message}`,);
           }
         });
       }

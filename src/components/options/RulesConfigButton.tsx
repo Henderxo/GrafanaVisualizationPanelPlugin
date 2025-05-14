@@ -30,7 +30,7 @@ export const RulesConfigButton: React.FC<StandardEditorProps<string, any, Simple
   
   const closeModal = () => setIsModalOpen(false);
   
-  if (!parsedYaml && typeof value === 'string') {
+  if (!parsedYaml) {
     return <div>Error parsing YAML configuration</div>;
   }
   

@@ -28,7 +28,9 @@ const bindDataToAllMapStrings = (fullMap: fullMermaidMap) => {
 };
 
 const bindDataToString = (inputString: string, element: BaseObject): string => {
-    if (!inputString) return inputString;
+    if (!inputString) {
+      return inputString;
+    }
     
     const elementData = element.data || null;
     

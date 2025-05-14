@@ -14,7 +14,6 @@ interface FileUploadProps extends StandardEditorProps<string, any, FileUploadSet
 
 export const FileUploadButton: React.FC<FileUploadProps> = ({ value, onChange, item, context }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-context
 
   return (
     <>

@@ -18,14 +18,17 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 2,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "grafana-testdata-datasource",
         "uid": "trlxrdZVk"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -35,58 +38,168 @@
       },
       "id": 1,
       "options": {
-        "seriesCountSize": "sm",
-        "showSeriesCount": false,
-        "text": "Default value of text input option"
+        "activeView": "mainDiagram",
+        "buttonTheme": "primary",
+        "diagramElements": [
+          "Router_1",
+          "Router_2",
+          "Firewall_1",
+          "Switch_1",
+          "Switch_2",
+          "Server_1",
+          "Server_2",
+          "DC_Kaunas",
+          "DC_Vilnius"
+        ],
+        "diagramMap": {
+          "classes": {},
+          "edges": [
+            {
+              "end": "Router_2",
+              "labelType": "text",
+              "length": 1,
+              "start": "Router_1",
+              "stroke": "normal",
+              "text": "Data Flow",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Firewall_1",
+              "labelType": "text",
+              "length": 1,
+              "start": "Router_1",
+              "stroke": "normal",
+              "text": "Security Pass",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Firewall_1",
+              "labelType": "text",
+              "length": 1,
+              "start": "Router_2",
+              "stroke": "dotted",
+              "text": "Backup",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Server_1",
+              "labelType": "text",
+              "length": 1,
+              "start": "Switch_1",
+              "stroke": "normal",
+              "text": "Replicates",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Server_2",
+              "labelType": "text",
+              "length": 1,
+              "start": "Switch_2",
+              "stroke": "normal",
+              "text": "Replicates",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Server_2",
+              "labelType": "text",
+              "length": 1,
+              "start": "Server_1",
+              "stroke": "dotted",
+              "text": "Backup Data",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Switch_1",
+              "labelType": "text",
+              "length": 1,
+              "start": "Router_1",
+              "stroke": "normal",
+              "text": "Backup",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Switch_2",
+              "labelType": "text",
+              "length": 1,
+              "start": "Router_2",
+              "stroke": "dotted",
+              "text": "Data Sync",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Server_1",
+              "labelType": "text",
+              "length": 1,
+              "start": "Firewall_1",
+              "stroke": "normal",
+              "text": "Secure Tunnel",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Server_2",
+              "labelType": "text",
+              "length": 1,
+              "start": "Server_1",
+              "stroke": "dotted",
+              "text": "Secure Replication",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Router_2",
+              "labelType": "text",
+              "length": 1,
+              "start": "Switch_1",
+              "stroke": "dotted",
+              "text": "Data Transfer",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Router_1",
+              "labelType": "text",
+              "length": 1,
+              "start": "Switch_2",
+              "stroke": "normal",
+              "text": "Monitor",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Server_1",
+              "labelType": "text",
+              "length": 1,
+              "start": "Router_2",
+              "stroke": "normal",
+              "text": "Security Sync",
+              "type": "arrow_point"
+            },
+            {
+              "end": "Router_1",
+              "labelType": "text",
+              "length": 1,
+              "start": "Server_2",
+              "stroke": "dotted",
+              "text": "Backup Sync",
+              "type": "arrow_point"
+            }
+          ],
+          "nodes": {},
+          "subGraphs": {}
+        },
+        "template": "graph TB\n  subgraph DC_Kaunas [Kaunas Data Center]\n    Router_1(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)\n    Router_2(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)\n    Firewall_1(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)\n  end\n\n  subgraph DC_Vilnius [Vilnius Data Center]\n    Switch_1(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)\n    Switch_2(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)\n    Server_1(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)\n    Server_2(CPU: $CPU, Memory: $Memory, Disk: $Disk, Status: $Status)\n  end\n  \n  %% Internal connections within Kaunas\n  Router_1 -->|Data Flow| Router_2\n  Router_1 -->|Security Pass| Firewall_1\n  Router_2 -.->|Backup| Firewall_1\n  \n  %% Internal connections within Vilnius\n  Switch_1 -->|Replicates| Server_1\n  Switch_2 -->|Replicates| Server_2\n  Server_1 -.->|Backup Data| Server_2\n  \n  %% Cross-Datacenter Connections\n  Router_1 -->|Backup| Switch_1\n  Router_2 -.->|Data Sync| Switch_2\n  Firewall_1 -->|Secure Tunnel| Server_1\n  Server_1 -.->|Secure Replication| Server_2\n\n  %% Miscellaneous Connections\n  Switch_1 -.->|Data Transfer| Router_2\n  Switch_2 -->|Monitor| Router_1\n  Router_2 -->|Security Sync| Server_1\n  Server_2 -.->|Backup Sync| Router_1\n\n  %% Class Definitions\n  classDef active fill:#4CAF50,stroke:#2E7D32,stroke-width:2px,font-weight:bold;\n  classDef inactive fill:#F44336,stroke:#B71C1C,stroke-width:2px,opacity:0.6;\n  classDef highUsage fill:#FFEB3B,stroke:#F57C00,stroke-width:2px;\n  classDef warning fill:#FF5722,stroke:#D32F2F,stroke-width:2px;\n  classDef lowDisk fill:#F44336,stroke:#B71C1C,stroke-width:2px;\n  classDef lowCapacity fill:#FFC107,stroke:#FF9800,stroke-width:2px;\n  classDef highPerformance fill:#3F51B5,stroke:#1A237E,stroke-width:2px;\n  classDef alert fill:#FF9800,stroke:#F44336,stroke-width:2px;\n  classDef unknown fill:#B0BEC5,stroke:#78909C,stroke-width:2px;\n",
+        "yamlConfig": "stylingRules:\n  - name: \"StyleRule1\"\n    function:\n      if:\n        condition: \"CPU < 50\"\n        action:\n          applyClass: [\"alert\"]\n      else_if:\n        - condition: \"CPU > 50\"\n          action:\n            applyClass: [\"warning\", \"inactive\"]\n      else:\n        action:\n          applyClass: [\"active\"]\n  - name: \"StyleRule2\"\n    elements: [\"Switch_2\"]\n    function:\n      if:\n        condition: \"CPU > 50\"\n        action:\n          applyClass: [\"active\"]\n  - name: \"StyleRule3\"\n    elements: [\"Switch_2\"]\n    priority: 5\n    function:\n      if:\n        condition: \"CPU > 50\"\n        action:\n          applyClass: [\"inactive\"]\n\nbindingRules:\n  - name: \"BindRule1\"\n    elements: [\"nodes\"]\n    bindData: [\"CPU=7777777777\"]\n    \n  - name: \"BindRule2\"\n    elements: [\"Router_1\", \"Router_2\"]\n    function:\n      if:\n        condition: \"CPU < 50\"\n        action:\n          bindData: [\"BOOM='ItExploded'\"]\n  - name: \"BindRule3\"\n    elements: [\"Firewall_1\"]\n    function:\n      if:\n        condition: \"CPU > 50\"\n        action:\n          bindData: []\n\n  - name: \"BindRule4\"\n    elements: [\"Server_1\", \"Server_2\"]\n    function:\n      if:\n        condition: \"CPU == 70\"\n        action:\n          bindData: []\n\n  - name: \"BindRule5\"\n    priority: 1\n    elements: [\"Switch_1\", \"Switch_2\"]\n    function:\n      if:\n        condition: \"CPU < 70\"\n        action:\n          bindData: []\n\n  - name: \"BindRule6\"\n    elements: [\"Switch_1\"]\n    function:\n      if:\n        condition: \"CPU == 50\"\n        action:\n          bindData: [\"CPU=7784\"]\n\n"
       },
+      "pluginVersion": "1.0.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-testdata-datasource",
-            "uid": "db84e60d-b92a-4089-82cb-34842fb1754b"
-          },
           "refId": "A",
-          "scenarioId": "raw_frame",
-          "rawFrameContent": "[\n  {\n    \"columns\": [\n      {\n        \"text\": \"Time\",\n        \"type\": \"time\"\n      },\n      {\n        \"text\": \"Label\",\n        \"type\": \"string\"\n      },\n      {\n        \"text\": \"Value\",\n        \"type\": \"number\"\n      }\n    ],\n    \"rows\": [\n      [1609459200000, \"A\", 10],\n      [1609462800000, \"B\", 20],\n      [1609466400000, \"C\", 15],\n      [1609470000000, \"D\", 25],\n      [1609473600000, \"E\", 30]\n    ]\n  },\n{\n    \"columns\": [\n      {\n        \"text\": \"Time\",\n        \"type\": \"time\"\n      },\n      {\n        \"text\": \"Label\",\n        \"type\": \"string\"\n      },\n      {\n        \"text\": \"Value\",\n        \"type\": \"number\"\n      }\n    ],\n    \"rows\": [\n      [1609459200000, \"A\", 40],\n      [1609462800000, \"B\", 50],\n      [1609466400000, \"C\", 45],\n      [1609470000000, \"D\", 55],\n      [1609473600000, \"E\", 60]\n    ]\n  }\n]"
+          "scenarioId": "csv_content"
         }
       ],
-      "title": "Sample Panel Title",
-      "type": "nedas-test2-panel"
-    },
-    {
-      "datasource": {
-        "type": "grafana-testdata-datasource",
-        "uid": "trlxrdZVk"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "seriesCountSize": "sm",
-        "showSeriesCount": false,
-        "text": "Default value of text input option"
-      },
-      "targets": [
-        {
-          "alias": "",
-          "datasource": {
-            "type": "grafana-testdata-datasource",
-            "uid": "db84e60d-b92a-4089-82cb-34842fb1754b"
-          },
-          "refId": "A",
-          "scenarioId": "no_data_points"
-        }
-      ],
-      "title": "Sample Panel Title",
-      "type": "nedas-test2-panel"
+      "title": "Panel Title",
+      "type": "nedas-vizbind-panel"
     }
   ],
-  "refresh": "",
-  "schemaVersion": 39,
+  "preload": false,
+  "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": []
@@ -96,9 +209,9 @@
     "to": "now"
   },
   "timepicker": {},
-  "timezone": "",
-  "title": "Provisioned Test2 dashboard",
-  "uid": "a538aeff-5a8a-42a5-901c-938d896fdd6f",
+  "timezone": "browser",
+  "title": "TestBoard",
+  "uid": "eel8jza8l46psa",
   "version": 1,
   "weekStart": ""
 }

@@ -1,4 +1,3 @@
-import { NoEmitOnErrorsPlugin } from 'webpack';
 import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } from '../types';
 
    const VALID_SHAPES = new Set<FlowVertexTypeParam>([
@@ -46,9 +45,8 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       Array.isArray(obj.classes) &&
       typeof obj.id === 'string' &&
       typeof obj.domId === 'string' &&
-      obj.labelType === 'text' &&
       Array.isArray(obj.styles)
-    );
+    );  
   }
   
    function isFlowSubGraph(obj: any): obj is FlowSubGraph {
@@ -74,28 +72,23 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
     if (data.config) {
       mermaidString += `%%{init: ${data.config}}%%\n`;
     }
-    // Start building the Mermaid flowchart string
+
     mermaidString += `${data.type}\n`;
     
-    // Track nodes that are part of subgraphs
     const nodesInSubgraphs = new Set<string>();
     
-    // Process subgraphs first if they exist
     if (data.subGraphs.size > 0) {
       for (const [, subgraph] of data.subGraphs) {
         mermaidString += `  subgraph ${subgraph.id} [${subgraph.title}]\n`;
         
-        // Add nodes to subgraph
         subgraph.nodes.forEach(nodeId => {
           nodesInSubgraphs.add(nodeId);
           const node = data.nodes.get(nodeId);
           
           if (node) {
-            // Format node with shape and properties based on node type
             let nodeText = formatNodeText(nodeId, node);
             mermaidString += `    ${nodeText}\n`;
           } else {
-            // If node details aren't available, just add the node ID
             mermaidString += `    ${nodeId}\n`;
           }
         });
@@ -105,7 +98,6 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       mermaidString += "\n";
     }
     
-    // Process any remaining nodes that aren't in subgraphs
     for (const [nodeId, node] of data.nodes) {
       if (!nodesInSubgraphs.has(nodeId)) {
         let nodeText = formatNodeText(nodeId, node);
@@ -114,7 +106,6 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
     }
     mermaidString += "\n";
     
-    // Add all nodes that appear in edges but aren't defined in nodes
     const edgeNodeIds = new Set<string>();
     data.edges.forEach(edge => {
       edgeNodeIds.add(edge.start);
@@ -131,12 +122,9 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       mermaidString += "\n";
     }
     
-    // Process all edges
     if (data.edges.length > 0) {
-      // Group edges by type for better organization
       const groupedEdges = groupEdges(data.edges);
       
-      // Add edges by group
       Object.entries(groupedEdges).forEach(([groupName, edges]) => {
         mermaidString += `  %%%% ${groupName}\n`;
         edges.forEach(edge => {
@@ -148,7 +136,6 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       });
     }
     
-    // Process class definitions
     if (data.classes.size > 0) {
       mermaidString += "  %%%% Class Definitions\n";
       for (const [classId, classStyle] of data.classes) {
@@ -157,25 +144,21 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       mermaidString += "\n";
     }
     
-    // Apply classes to nodes
     const nodeClasses = new Map<string, string[]>();
     const subgraphClasses = new Map<string, string[]>();
 
-    // Collect classes from nodes
     for (const [nodeId, node] of data.nodes) {
       if (node.classes && node.classes.length > 0) {
         nodeClasses.set(nodeId, node.classes);
       }
     }
 
-     // Collect classes from subgraphs
     for (const [subgraphId, subgraph] of data.subGraphs) {
       if (subgraph.classes && subgraph.classes.length > 0) {
         subgraphClasses.set(subgraphId, subgraph.classes);
       }
     }
     
-    // Apply classes
     if (nodeClasses.size > 0) {
       mermaidString += "  %%%% Apply classes to nodes\n";
       nodeClasses.forEach((classes, nodeId) => {
@@ -221,21 +204,18 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
     return mermaidString;
   }
   
-  /**
-   * Formats a node's text representation based on its properties
-   */
   function formatNodeText(nodeId: string, node: FlowVertex): string {
     let nodeProp: string[] = []
     let nodeContent = node.text || nodeId;
     if(node.type){
       if(node.type && node.type === 'lean_right'){
-        nodeProp.push(`shape: ${'lean-right'}`)
+        nodeProp.push(`shape: lean-right`)
       }else if(node.type === 'lean_left'){
-        nodeProp.push(`shape: ${'lean-left'}`)
+        nodeProp.push(`shape: lean-left`)
       } else if(node.type === 'round'){
-        nodeProp.push(`shape: ${'rounded'}`)
+        nodeProp.push(`shape: rounded`)
       } else if(node.type === 'square'){
-        nodeProp.push(`shape: ${'rect'}`)
+        nodeProp.push(`shape: rect`)
       }else{
         nodeProp.push(`shape: ${node.type??'round'}`)
       }
@@ -254,16 +234,19 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       nodeProp.push(`pos: ${node.pos}`)
     }
     if(node.assetWidth){
-      nodeProp.push(`assetWidth: ${node.assetWidth}`)
+      nodeProp.push(`w: ${node.assetWidth}`)
     }
     if(node.assetHeight){
-      nodeProp.push(`assetHeight: ${node.assetHeight}`)
+      nodeProp.push(`h: ${node.assetHeight}`)
     }
     if(node.form){
       nodeProp.push(`form: ${node.form}`)
     }
     if(node.labelType){
       nodeProp.push(`labelType: "${node.labelType}"`)
+    }
+    if(node.constraint){
+      nodeProp.push(`constraint: ${node.constraint}`)
     }
     if(node.labelType === 'text'){
       nodeProp.push(`label: '${nodeContent}'`) 
@@ -276,81 +259,13 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
     if(node.img){
       nodeProp.push(`img: ${node.img}`)
     }
-    // if (node.img) {
-    //   return ;
-    // }
-    
-    // let nodeShape = '';
-    // if (node.type) {
-    //   switch (node.type) {
-    //     case 'circle':
-    //       nodeShape = '((default))';
-    //       break;
-    //     case 'doublecircle':
-    //       nodeShape = '(((default)))';
-    //       break;
-    //     case 'square': 
-    //       nodeShape = '[default]';
-    //       break;
-    //     case 'rect':
-    //       nodeShape = '[/default\\]';
-    //       break;
-    //     case 'diamond':
-    //       nodeShape = '{default}';
-    //       break;
-    //     case 'hexagon':
-    //       nodeShape = '{{default}}';
-    //       break;
-    //     case 'cylinder':
-    //       nodeShape = '[(default)]';
-    //       break;
-    //     case 'stadium':
-    //       nodeShape = '([default])';
-    //       break;
-    //     case 'round':
-    //       nodeShape = '(default)';
-    //       break;
-    //     case 'ellipse':
-    //       nodeShape = '((default))';
-    //       break;
-    //     case 'subroutine':
-    //       nodeShape = '[[default]]';
-    //       break;
-    //     case 'odd':
-    //       nodeShape = '>default]';
-    //       break;
-    //     case 'trapezoid':
-    //       nodeShape = '[/default/]';
-    //       break;
-    //     case 'inv_trapezoid':
-    //       nodeShape = '[\\default\\]';
-    //       break;
-    //     case 'lean_right':
-    //       nodeShape = '[/default/]';
-    //       break;
-    //     case 'lean_left':
-    //       nodeShape = '[\\default]';
-    //       break;
-    //     default:
-    //       nodeShape = '(default)';
-    //   }
-    // } else {
-      // Default shape if none specified
-    //   nodeShape = '(default)';
-    // }
-    
-    // Format node content with any properties
-    
-    
-    // Return the formatted node representation
+
+
     return `${nodeId}@{ ${nodeProp.join(', ')} }`
   }
   
-  /**
-   * Groups edges by connection type for better organization in the chart
-   */
+ 
   function groupEdges(edges: FlowEdge[]): Record<string, FlowEdge[]> {
-    // Group edges by some property
     const groups: Record<string, FlowEdge[]> = {
       'Standard Connections': [],
     'Dotted Connections': [],
@@ -373,7 +288,6 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
       }
     });
     
-    // Remove empty groups
     Object.keys(groups).forEach(key => {
       if (groups[key].length === 0) {
         delete groups[key];
@@ -383,11 +297,7 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
     return groups;
   }
   
-  /**
-   * Determines the line style based on edge properties
-   */
   function getLineStyle(edge: FlowEdge): string {
-    console.log(edge)
     if (edge.stroke === 'dotted') {
       return '-.->';
     } else if (edge.stroke === 'thick') {
@@ -410,5 +320,6 @@ import { FlowClass, FlowEdge, FlowSubGraph, FlowVertex, FlowVertexTypeParam } fr
     }
   }
 
-
-  export {generateDynamicMermaidFlowchart, getLineStyle, isValidShape, extractMermaidConfigString, isFlowVertex, isFlowSubGraph, extractMermaidDiagramType}
+  export {
+    generateDynamicMermaidFlowchart, getLineStyle, isValidShape, extractMermaidConfigString, isFlowVertex, isFlowSubGraph, extractMermaidDiagramType
+  }

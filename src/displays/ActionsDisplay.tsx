@@ -35,7 +35,9 @@ export const ActionsDisplay: React.FC<{
   customLabels
 }) => {
   const theme = useTheme2();
-  const actionNames = Object.keys(action);
+  const actionNames = (Object.keys(action) as (keyof Action)[]).filter(
+    key => action[key] !== undefined
+  );
 
   const getEmptyTextForAction = (actionName: string): string => {
     if (customEmptyText) {
